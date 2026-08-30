@@ -342,13 +342,13 @@ export class SaltWatchCard extends HTMLElement {
     return `
       :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); }
       * { box-sizing:border-box; }
-      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:linear-gradient(135deg,color-mix(in srgb,var(--sw-card-background) 96%,var(--primary-text-color,#f4f6f7)),var(--sw-card-background)); border:1px solid color-mix(in srgb,var(--divider-color,#536069) 64%,transparent); border-radius:var(--ha-card-border-radius,24px); box-shadow:var(--ha-card-box-shadow,0 28px 70px rgba(0,0,0,.32)); cursor:pointer; }
+      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border:1px solid color-mix(in srgb,var(--divider-color,#536069) 64%,transparent); border-radius:var(--ha-card-border-radius,24px); box-shadow:var(--ha-card-box-shadow,0 28px 70px rgba(0,0,0,.32)); cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .mode-tank .tank-panel { padding-block:8px; border-right:0; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 9%,transparent),transparent 62%),linear-gradient(90deg,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 5%,transparent),transparent); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -369,11 +369,11 @@ export class SaltWatchCard extends HTMLElement {
       header { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
-      .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
+      .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 0 1px color-mix(in srgb,currentColor 22%,transparent),0 0 8px color-mix(in srgb,currentColor 14%,transparent),inset 0 1px 1px rgba(255,255,255,.24); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
       .without-threshold-summary .reading { padding-bottom:0; }
-      .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; text-shadow:0 7px 24px rgba(0,0,0,.28); }
+      .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
       .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
@@ -381,8 +381,8 @@ export class SaltWatchCard extends HTMLElement {
       .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
-      .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 7px color-mix(in srgb,var(--sw-warning) 24%,transparent); }
-      .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 7px color-mix(in srgb,var(--sw-low) 24%,transparent); }
+      .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
+      .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; }
         .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
