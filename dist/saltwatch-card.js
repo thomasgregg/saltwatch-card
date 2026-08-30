@@ -89,8 +89,8 @@ class R extends HTMLElement {
       show_status: !0,
       show_low_marker: !0,
       display_mode: "both"
-    }, j = P("saltwatch", "salt_status"), v = P("saltwatch", "low_salt_threshold");
-    return j && (n.status_entity = j), v && (n.threshold_entity = v), n;
+    }, j = P("saltwatch", "salt_status"), i = P("saltwatch", "low_salt_threshold");
+    return j && (n.status_entity = j), i && (n.threshold_entity = i), n;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
@@ -125,7 +125,7 @@ class R extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", d = j !== "tank", o = this.config.show_low_marker !== !1, s = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, w = 132, H = 474, X = H - w, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
+    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", i = j !== "details", d = j !== "tank", o = this.config.show_low_marker !== !1, s = u(this.config.name || "SaltWatch"), v = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : v, w = 132, H = 474, X = H - w, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -145,7 +145,7 @@ class R extends HTMLElement {
       <style>${this.styles()}</style>
       <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${s}: ${u(l)}, ${u(n.label)}">
         <div class="card-shell mode-${j}">
-          ${v ? `<section class="tank-panel" aria-label="Tank level visualization">
+          ${i ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(r, g, G, a, W, x, n.tone)}
           </section>` : ""}
           ${d ? `<section class="content-panel${o ? "" : " without-threshold-summary"}">
@@ -154,7 +154,7 @@ class R extends HTMLElement {
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${u(n.label)}</div>` : ""}
             </header>` : ""}
             <div class="reading${r === void 0 ? " state-reading" : ""}">
-              ${r === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${i}</div>`}
+              ${r === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${v}</div>`}
               <div class="level-label">${r === void 0 ? u(n.label) : "Estimated salt level"}</div>
             </div>
             ${o ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
@@ -183,11 +183,11 @@ class R extends HTMLElement {
   }
   tankSvg(t, f, r, c, x, P, n) {
     const j = Array.from({ length: 21 }, (o, s) => {
-      const i = 100 - s * 5, l = 474 - i / 100 * 342, w = i % 25 === 0, H = !w && i % 10 === 0, X = w ? 60 : H ? 67 : 71;
-      return `${w ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${w ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
-    }).join(""), v = t === void 0, d = Math.max(134, Math.min(470, x));
+      const v = 100 - s * 5, l = 474 - v / 100 * 342, w = v % 25 === 0, H = !w && v % 10 === 0, X = w ? 60 : H ? 67 : 71;
+      return `${w ? `<text x="52" y="${l + 5}" text-anchor="end">${v}%</text>` : ""}<path class="${w ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
+    }).join(""), i = t === void 0, d = Math.max(134, Math.min(470, x));
     return `
-      <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${v ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
+      <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${i ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -255,7 +255,7 @@ class R extends HTMLElement {
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${v ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${r}"/>`}
+          ${i ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${r}"/>`}
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${n}" data-threshold="${P}" data-threshold-y="${x.toFixed(1)}" d="M12 ${x.toFixed(1)}H326"/>
@@ -310,7 +310,7 @@ class R extends HTMLElement {
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
-        .card-shell { grid-template-columns:1fr; }
+        .card-shell { grid-template-columns:1fr; min-height:0; }
         .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
         .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(74%,370px); }
