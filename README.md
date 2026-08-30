@@ -31,7 +31,7 @@ Assistant.
 
 ## Features
 
-- Dense, layered salt crystals with an uneven top surface
+- Bright, realistically scaled compressed salt tablets with an uneven top surface
 - Detailed molded tank, lid, window, base, and material shading
 - Major, medium, and minor percentage scale ticks
 - Exact 0–100% vertical positioning from the selected entity

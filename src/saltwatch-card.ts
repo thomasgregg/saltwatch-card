@@ -1,3 +1,4 @@
+import saltTextureUrl from "../assets/salt-tablets.jpg?inline";
 import {
   clamp,
   deriveStatus,
@@ -135,14 +136,17 @@ export class SaltWatchCard extends HTMLElement {
     const tankHeight = tankBottom - tankTop;
     const saltY = level === undefined ? tankBottom : tankBottom - (level / 100) * tankHeight;
     const thresholdY = tankBottom - (threshold / 100) * tankHeight;
-    const moundAmplitude = 12;
+    const moundAmplitude = 14;
     const saltPath = [
-      `M96 ${(saltY + 3).toFixed(1)}`,
-      `C111 ${(saltY - 2).toFixed(1)} 121 ${(saltY - moundAmplitude).toFixed(1)} 138 ${(saltY - 10).toFixed(1)}`,
-      `C155 ${(saltY - 8).toFixed(1)} 168 ${(saltY - 1).toFixed(1)} 184 ${(saltY + 1).toFixed(1)}`,
-      `C201 ${(saltY + 5).toFixed(1)} 216 ${(saltY - 7).toFixed(1)} 235 ${(saltY - 4).toFixed(1)}`,
-      `C251 ${(saltY - 3).toFixed(1)} 263 ${(saltY + 6).toFixed(1)} 280 ${(saltY + 4).toFixed(1)}`,
-      `C296 ${(saltY + 2).toFixed(1)} 308 ${(saltY - 3).toFixed(1)} 324 ${(saltY + 2).toFixed(1)}`,
+      `M96 ${(saltY + 5).toFixed(1)}`,
+      `C105 ${(saltY + 2).toFixed(1)} 111 ${(saltY - 8).toFixed(1)} 120 ${(saltY - 9).toFixed(1)}`,
+      `C129 ${(saltY - moundAmplitude).toFixed(1)} 140 ${(saltY - 8).toFixed(1)} 149 ${(saltY - 3).toFixed(1)}`,
+      `C159 ${(saltY + 3).toFixed(1)} 168 ${(saltY + 5).toFixed(1)} 178 ${(saltY + 2).toFixed(1)}`,
+      `C188 ${(saltY - 1).toFixed(1)} 194 ${(saltY - 9).toFixed(1)} 205 ${(saltY - 9).toFixed(1)}`,
+      `C216 ${(saltY - 9).toFixed(1)} 223 ${(saltY + 1).toFixed(1)} 234 ${(saltY + 2).toFixed(1)}`,
+      `C246 ${(saltY + 4).toFixed(1)} 252 ${(saltY - 5).toFixed(1)} 263 ${(saltY - 4).toFixed(1)}`,
+      `C275 ${(saltY - 3).toFixed(1)} 282 ${(saltY + 6).toFixed(1)} 294 ${(saltY + 4).toFixed(1)}`,
+      `C306 ${(saltY + 2).toFixed(1)} 314 ${(saltY - 4).toFixed(1)} 324 ${(saltY + 1).toFixed(1)}`,
       `L324 ${tankBottom}`,
       `L96 ${tankBottom}`,
       "Z",
@@ -229,44 +233,11 @@ export class SaltWatchCard extends HTMLElement {
           <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".04"/><stop offset="1" stop-color="#625744" stop-opacity=".24"/>
           </linearGradient>
-          <linearGradient id="crystal-light" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#fffdf5"/><stop offset=".45" stop-color="#eee7d8"/><stop offset="1" stop-color="#beb39f"/>
-          </linearGradient>
-          <linearGradient id="crystal-warm" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#eee7d8"/><stop offset=".55" stop-color="#d8cebc"/><stop offset="1" stop-color="#a99e8b"/>
-          </linearGradient>
-          <pattern id="pellets" width="19" height="17" patternUnits="userSpaceOnUse" patternTransform="rotate(-1) scale(.8)">
-            <g stroke="#9f9584" stroke-width=".38" stroke-linejoin="round">
-              <path d="M-1 1 3-.5 6 1.8 4.7 5 1 5.6-1 3.5Z" fill="url(#crystal-light)"/>
-              <path d="m7 .5 4-1 3.2 2.4-.9 3.3-4.4.5-2.5-2.3Z" fill="url(#crystal-warm)"/>
-              <path d="m15 1 3.2-1.2 2.5 2.5-1.1 3.5-4.2-.2-1.7-2.3Z" fill="url(#crystal-light)"/>
-              <path d="m2 6.2 4.2-.8 2.5 2.8-1.5 3.4-4.4.1L.7 9Z" fill="url(#crystal-warm)"/>
-              <path d="m10 6 4.5-.2 2.1 3.2-2 3.1-4.1-.7-1.8-2.5Z" fill="url(#crystal-light)"/>
-              <path d="m17 6.4 3.2 1.5-.4 4.2-3.7 1-2-3.3Z" fill="url(#crystal-warm)"/>
-              <path d="m-1 12 3.7-.9 2.9 2.5-1.3 3.7H.2l-2-2.4Z" fill="url(#crystal-light)"/>
-              <path d="m6.4 12.4 4.1-.7 2.7 2.6-1.4 3.5-4.4.1-2.2-2.8Z" fill="url(#crystal-light)"/>
-              <path d="m14 12.7 3.6-1.1 2.8 2.8-1.6 3.5h-4.2l-1.8-2.9Z" fill="url(#crystal-warm)"/>
-            </g>
-            <g fill="none" stroke="#fffdf7" stroke-opacity=".7" stroke-width=".42"><path d="m1 2 3-.8"/><path d="m8.8 1.5 3-.5"/><path d="m3 7.4 3-.7"/><path d="m11 7.1 3-.2"/><path d="m7.5 13.4 3-.5"/></g>
-          </pattern>
-          <pattern id="salt-facets" width="37" height="31" patternUnits="userSpaceOnUse" patternTransform="rotate(4) scale(.86)">
-            <g fill="none" stroke="#766d60" stroke-opacity=".23" stroke-width=".65"><path d="m2 7 5 2 3-5"/><path d="m15 4 4 3 5-3"/><path d="m28 8 4-4 4 3"/><path d="m5 20 5-3 4 4"/><path d="m21 18 4-3 5 4"/><path d="m30 27 4-4 4 3"/></g>
-          </pattern>
-          <pattern id="pellet-variation" width="43" height="37" patternUnits="userSpaceOnUse" patternTransform="rotate(-7)">
-            <g stroke-linejoin="round">
-              <path d="m3 8 3-2 3 1-1 4-4 1Z" fill="#887d6c" opacity=".2"/>
-              <path d="m16 3 4-1 2 3-3 3-4-2Z" fill="#fffef7" opacity=".28"/>
-              <path d="m31 8 3-2 4 2-2 4-4-1Z" fill="#918571" opacity=".23"/>
-              <path d="m10 23 4-2 3 3-2 4-5-1Z" fill="#fffdf4" opacity=".23"/>
-              <path d="m25 18 3-3 4 2-1 5-4 1Z" fill="#7f7463" opacity=".2"/>
-              <path d="m36 29 4-1 2 3-3 4-4-2Z" fill="#fffef9" opacity=".26"/>
-              <path d="m4 34 4-3 3 2-1 4H6Z" fill="#817563" opacity=".18"/>
-            </g>
-          </pattern>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
           </pattern>
           <clipPath id="tank-window"><path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
+          <clipPath id="salt-shape"><path d="${saltPath}"/></clipPath>
           <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#000" flood-opacity=".62"/></filter>
           <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
             <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="noise"/>
@@ -307,7 +278,7 @@ export class SaltWatchCard extends HTMLElement {
         <g clip-path="url(#tank-window)">
           ${unavailable
             ? `<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
-            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><path class="salt-grains" d="${saltPath}" fill="url(#pellets)"/><path class="salt-variation" d="${saltPath}" fill="url(#pellet-variation)"/><path class="salt-facets" d="${saltPath}" fill="url(#salt-facets)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="M97 ${(saltY + 3).toFixed(1)} C112 ${(saltY - 2).toFixed(1)} 122 ${(saltY - 12).toFixed(1)} 138 ${(saltY - 10).toFixed(1)} C155 ${(saltY - 8).toFixed(1)} 168 ${(saltY - 1).toFixed(1)} 184 ${(saltY + 1).toFixed(1)} C201 ${(saltY + 5).toFixed(1)} 216 ${(saltY - 7).toFixed(1)} 235 ${(saltY - 4).toFixed(1)} C251 ${(saltY - 3).toFixed(1)} 263 ${(saltY + 6).toFixed(1)} 280 ${(saltY + 4).toFixed(1)} C296 ${(saltY + 2).toFixed(1)} 308 ${(saltY - 3).toFixed(1)} 323 ${(saltY + 2).toFixed(1)}"/>`}
+            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="96" y="110" width="228" height="364" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="M97 ${(saltY + 5).toFixed(1)} C105 ${(saltY + 2).toFixed(1)} 111 ${(saltY - 8).toFixed(1)} 120 ${(saltY - 9).toFixed(1)} C129 ${(saltY - 14).toFixed(1)} 140 ${(saltY - 8).toFixed(1)} 149 ${(saltY - 3).toFixed(1)} C159 ${(saltY + 3).toFixed(1)} 168 ${(saltY + 5).toFixed(1)} 178 ${(saltY + 2).toFixed(1)} C188 ${(saltY - 1).toFixed(1)} 194 ${(saltY - 9).toFixed(1)} 205 ${(saltY - 9).toFixed(1)} C216 ${(saltY - 9).toFixed(1)} 223 ${(saltY + 1).toFixed(1)} 234 ${(saltY + 2).toFixed(1)} C246 ${(saltY + 4).toFixed(1)} 252 ${(saltY - 5).toFixed(1)} 263 ${(saltY - 4).toFixed(1)} C275 ${(saltY - 3).toFixed(1)} 282 ${(saltY + 6).toFixed(1)} 294 ${(saltY + 4).toFixed(1)} C306 ${(saltY + 2).toFixed(1)} 314 ${(saltY - 4).toFixed(1)} 323 ${(saltY + 1).toFixed(1)}"/>`}
           <rect x="96" y="110" width="228" height="364" fill="url(#glass-sheen)" opacity=".38"/>
         </g>
         <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".15" stroke-width="4"/>
@@ -337,9 +308,7 @@ export class SaltWatchCard extends HTMLElement {
       .ruler .major { stroke-width:1.8; opacity:.92; }
       .ruler .medium { stroke-width:1.35; opacity:.74; }
       .ruler .minor { stroke-width:1; opacity:.72; }
-      .salt-grains { opacity:.98; filter:drop-shadow(0 .5px .35px rgba(73,64,51,.38)); }
-      .salt-variation { opacity:.9; mix-blend-mode:multiply; }
-      .salt-facets { opacity:.72; mix-blend-mode:multiply; }
+      .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
       .salt-highlight { fill:none; stroke:#fffdf5; stroke-width:2.2; opacity:.72; filter:drop-shadow(0 -2px 4px rgba(255,255,255,.24)); }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
