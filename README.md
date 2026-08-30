@@ -88,6 +88,10 @@ threshold_entity: number.saltwatch_low_salt_threshold
 
 Only `entity` is required.
 
+In Home Assistant sections dashboards, the card uses the full section width and
+lets its content determine the height. This keeps the stacked mobile layout from
+being clipped by fixed grid rows.
+
 | Option | Description | Default |
 | --- | --- | --- |
 | `entity` | Percentage sensor controlling the salt surface | Required |

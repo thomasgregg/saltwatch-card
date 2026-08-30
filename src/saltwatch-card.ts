@@ -128,8 +128,8 @@ export class SaltWatchCard extends HTMLElement {
     return 6;
   }
 
-  public getGridOptions(): Record<string, number> {
-    return { columns: 12, rows: 7, min_columns: 6, min_rows: 6 };
+  public getGridOptions(): Record<string, string> {
+    return { columns: "full" };
   }
 
   private openMoreInfo(): void {

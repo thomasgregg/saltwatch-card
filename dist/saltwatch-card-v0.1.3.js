@@ -78,7 +78,7 @@ class R extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], r = []) {
-    const w = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(w)], P = (...c) => x.find((d) => c.every((o) => d.includes(o))), n = {
+    const s = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(s)], P = (...c) => x.find((d) => c.every((o) => d.includes(o))), n = {
       entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: O,
       show_status: !0,
@@ -106,7 +106,7 @@ class R extends HTMLElement {
     return 6;
   }
   getGridOptions() {
-    return { columns: 12, rows: 7, min_columns: 6, min_rows: 6 };
+    return { columns: "full" };
   }
   openMoreInfo() {
     if (!this.config) return;
@@ -119,7 +119,7 @@ class R extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : h(f), w = N(b(this._hass, this.config.threshold_entity)), x = h(w ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", c = j !== "tank", d = this.config.show_low_marker !== !1, o = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
+    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : h(f), s = N(b(this._hass, this.config.threshold_entity)), x = h(s ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", c = j !== "tank", d = this.config.show_low_marker !== !1, o = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, w = 132, H = 474, X = H - w, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -174,10 +174,10 @@ class R extends HTMLElement {
       <circle class="symbol-dot" cx="48" cy="68" r="3.8"/>
     </svg>`;
   }
-  tankSvg(t, f, r, w, x, P, n) {
+  tankSvg(t, f, r, s, x, P, n) {
     const j = Array.from({ length: 21 }, (d, o) => {
-      const i = 100 - o * 5, l = 474 - i / 100 * 342, s = i % 25 === 0, H = !s && i % 10 === 0, X = s ? 60 : H ? 67 : 71;
-      return `${s ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${s ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
+      const i = 100 - o * 5, l = 474 - i / 100 * 342, w = i % 25 === 0, H = !w && i % 10 === 0, X = w ? 60 : H ? 67 : 71;
+      return `${w ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${w ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
     }).join(""), v = t === void 0, c = Math.max(134, Math.min(470, x));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${v ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
@@ -248,7 +248,7 @@ class R extends HTMLElement {
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${v ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${w.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${g}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${r}"/>`}
+          ${v ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${s.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${g}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${r}"/>`}
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${n}" data-threshold="${P}" data-threshold-y="${x.toFixed(1)}" d="M12 ${x.toFixed(1)}H326"/>
@@ -337,7 +337,7 @@ class R extends HTMLElement {
     `;
   }
 }
-const p = "saltwatch-card", z = "0.1.2";
+const p = "saltwatch-card", z = "0.1.3";
 customElements.get(p) || customElements.define(p, R);
 window.customCards = window.customCards || [];
 window.customCards.some((e) => e.type === p) || window.customCards.push({

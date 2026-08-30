@@ -71,6 +71,11 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain("var(--error-color");
   });
 
+  it("uses full-width, intrinsic-height sizing in sections dashboards", () => {
+    expect(card.getGridOptions()).toEqual({ columns: "full" });
+    expect(card.getGridOptions()).not.toHaveProperty("rows");
+  });
+
   it("does not render an internal title and preserves the status", async () => {
     card.setConfig({ ...config, name: "Water Softener", show_header: true });
     card.hass = makeHass();
