@@ -272,6 +272,9 @@ export class SaltWatchCard extends HTMLElement {
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
           </linearGradient>
+          <linearGradient id="lid-edge" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#dce0df"/><stop offset=".24" stop-color="#c1c9ca"/><stop offset=".72" stop-color="#9ba7ab"/><stop offset="1" stop-color="#c9cfcf"/>
+          </linearGradient>
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
           </linearGradient>
@@ -317,13 +320,13 @@ export class SaltWatchCard extends HTMLElement {
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
             <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5"/>
-            <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
+            <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#lid-edge)" stroke="#748086" stroke-width="2"/>
             <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#handle-face)" stroke="#748086" stroke-width="2.5"/>
             <path d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="3"/>
           </g>
           <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2"/>
           <path d="M65 105H355" stroke="#fff" stroke-opacity=".72" stroke-width="1.4"/>
-          <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
+          <path d="M64 113H356" stroke="#5f696e" stroke-opacity=".72" stroke-width="2"/>
           <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
         </g>
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
