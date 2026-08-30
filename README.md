@@ -52,7 +52,8 @@ npm run dev
 ```
 
 Open `http://127.0.0.1:5173/demo/`. The preview controls simulate level, low
-salt, sensor fault, and calibration states.
+salt, sensor fault, calibration states, and Home Assistant-style light and dark
+themes.
 
 ## Build and test
 

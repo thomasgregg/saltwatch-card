@@ -41,6 +41,8 @@ const showHeaderInput = document.querySelector<HTMLInputElement>("#show-header")
 const showStatusInput = document.querySelector<HTMLInputElement>("#show-status");
 const showLowMarkerInput = document.querySelector<HTMLInputElement>("#show-low-marker");
 const displayModeInput = document.querySelector<HTMLSelectElement>("#display-mode");
+const lightThemeInput = document.querySelector<HTMLInputElement>("#light-theme");
+const themeName = document.querySelector<HTMLElement>("#theme-name");
 const applyConfig = () => {
   card.setConfig(config);
   card.hass = hass;
@@ -60,6 +62,11 @@ showLowMarkerInput?.addEventListener("change", () => {
 displayModeInput?.addEventListener("change", () => {
   config.display_mode = displayModeInput.value as SaltWatchCardConfig["display_mode"];
   applyConfig();
+});
+lightThemeInput?.addEventListener("change", () => {
+  const lightTheme = lightThemeInput.checked;
+  document.documentElement.dataset.theme = lightTheme ? "light" : "dark";
+  if (themeName) themeName.textContent = lightTheme ? "Light theme" : "Dark theme";
 });
 levelInput?.addEventListener("input", () => {
   const value = levelInput.value;

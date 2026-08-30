@@ -10,32 +10,69 @@
         color-scheme: dark;
         --primary-text-color: #f4f6f7;
         --secondary-text-color: #aeb6bb;
-        --ha-card-background: #181d21;
+        --card-background-color: #181d21;
+        --ha-card-background: var(--card-background-color);
         --divider-color: #536069;
         --primary-color: #57c878;
+        --success-color: #58c97a;
+        --warning-color: #f2ae32;
+        --error-color: #ff5c64;
         --ha-card-border-radius: 20px;
+        --demo-page-start: #101519;
+        --demo-page-end: #090c0e;
+        --demo-page-glow: rgba(51, 88, 72, .22);
+        --demo-control-background: rgba(255,255,255,.025);
+        --demo-control-surface: #20272c;
+        --demo-control-hover: #293238;
+        --demo-control-border: rgba(255,255,255,.12);
+        --demo-switch-off: #536069;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      :root[data-theme="light"] {
+        color-scheme: light;
+        --primary-text-color: #202124;
+        --secondary-text-color: #5f6368;
+        --card-background-color: #ffffff;
+        --divider-color: #d4d9dc;
+        --primary-color: #188038;
+        --success-color: #188038;
+        --warning-color: #e37400;
+        --error-color: #d93025;
+        --ha-card-box-shadow: 0 2px 10px rgba(60,64,67,.18);
+        --demo-page-start: #f6f8f7;
+        --demo-page-end: #e9eeeb;
+        --demo-page-glow: rgba(87, 200, 120, .14);
+        --demo-control-background: rgba(255,255,255,.62);
+        --demo-control-surface: #ffffff;
+        --demo-control-hover: #f2f5f3;
+        --demo-control-border: rgba(32,33,36,.16);
+        --demo-switch-off: #aeb7bc;
       }
       * { box-sizing: border-box; }
       body {
         min-height: 100vh;
         margin: 0;
         background:
-          radial-gradient(circle at 14% 0%, rgba(51, 88, 72, .22), transparent 32rem),
-          linear-gradient(180deg, #101519, #090c0e);
+          radial-gradient(circle at 14% 0%, var(--demo-page-glow), transparent 32rem),
+          linear-gradient(180deg, var(--demo-page-start), var(--demo-page-end));
         color: var(--primary-text-color);
       }
       main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 64px; }
-      .eyebrow { margin: 0 0 6px; color: #57c878; font-size: 12px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+      .eyebrow { margin: 0 0 6px; color: var(--success-color); font-size: 12px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
       h1 { margin: 0; font-size: clamp(28px, 5vw, 48px); letter-spacing: -.045em; }
       .intro { margin: 10px 0 26px; color: var(--secondary-text-color); }
-      .controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; padding:14px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:rgba(255,255,255,.025); }
+      .controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:20px; padding:14px; border:1px solid var(--demo-control-border); border-radius:14px; background:var(--demo-control-background); }
       label { display:flex; align-items:center; gap:10px; color:var(--secondary-text-color); }
-      input[type="range"] { width:min(280px,42vw); accent-color:#f4ad32; }
-      input[type="checkbox"] { width:18px; height:18px; accent-color:#57c878; }
-      select { padding:8px 34px 8px 11px; border:1px solid rgba(255,255,255,.12); border-radius:9px; color:var(--primary-text-color); background:#20272c; font:inherit; }
-      button { padding:8px 13px; border:1px solid rgba(255,255,255,.12); border-radius:9px; color:var(--primary-text-color); background:#20272c; cursor:pointer; font:inherit; }
-      button:hover { background:#293238; }
+      input[type="range"] { width:min(280px,42vw); accent-color:var(--warning-color); }
+      input[type="checkbox"] { width:18px; height:18px; accent-color:var(--success-color); }
+      input[role="switch"] { position:relative; appearance:none; width:42px; height:24px; margin:0; border:0; border-radius:999px; background:var(--demo-switch-off); cursor:pointer; transition:background .18s ease; }
+      input[role="switch"]::after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .18s ease; }
+      input[role="switch"]:checked { background:var(--success-color); }
+      input[role="switch"]:checked::after { transform:translateX(18px); }
+      input[role="switch"]:focus-visible { outline:2px solid var(--primary-color); outline-offset:2px; }
+      select { padding:8px 34px 8px 11px; border:1px solid var(--demo-control-border); border-radius:9px; color:var(--primary-text-color); background:var(--demo-control-surface); font:inherit; }
+      button { padding:8px 13px; border:1px solid var(--demo-control-border); border-radius:9px; color:var(--primary-text-color); background:var(--demo-control-surface); cursor:pointer; font:inherit; }
+      button:hover { background:var(--demo-control-hover); }
       .demo-frame { max-width:1180px; }
     </style>
   </head>
@@ -54,6 +91,7 @@
         <label><input id="show-status" type="checkbox" checked /> Show status</label>
         <label><input id="show-low-marker" type="checkbox" checked /> Show low marker below percentage</label>
         <label>Content <select id="display-mode"><option value="both">Tank and percentage</option><option value="tank">Tank only</option><option value="details">Percentage only</option></select></label>
+        <label><input id="light-theme" type="checkbox" role="switch" /><span id="theme-name">Dark theme</span></label>
       </div>
       <div class="demo-frame"><saltwatch-card id="card"></saltwatch-card></div>
     </main>
