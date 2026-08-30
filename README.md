@@ -1,5 +1,10 @@
 # SaltWatch Card
 
+[![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
+[![Validate](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml/badge.svg)](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml)
+[![HACS custom repository](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
+[![License: MIT](https://img.shields.io/github/license/thomasgregg/saltwatch-card)](LICENSE)
+
 ### See your water-softener salt level at a glance
 
 SaltWatch Card is the visual Home Assistant companion for
@@ -72,6 +77,11 @@ screen as though it were current. The tank switches to an explicit no-reading
 state instead.
 
 ## Install with HACS
+
+[![Open your Home Assistant instance and open SaltWatch Card in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
+
+Select the button above to open SaltWatch Card directly in HACS, then download
+the latest release. If the button cannot find the repository, add it manually:
 
 1. In HACS, open **Custom repositories**.
 2. Add `https://github.com/thomasgregg/saltwatch-card` as a **Dashboard**
