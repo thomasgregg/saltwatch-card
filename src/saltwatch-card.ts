@@ -136,17 +136,22 @@ export class SaltWatchCard extends HTMLElement {
     const tankHeight = tankBottom - tankTop;
     const saltY = level === undefined ? tankBottom : tankBottom - (level / 100) * tankHeight;
     const thresholdY = tankBottom - (threshold / 100) * tankHeight;
-    const moundAmplitude = 14;
+    const surfacePath = [
+      `M96 ${(saltY + 4).toFixed(1)}`,
+      `Q104 ${(saltY - 3).toFixed(1)} 112 ${(saltY - 4).toFixed(1)}`,
+      `Q121 ${(saltY - 11).toFixed(1)} 130 ${(saltY - 8).toFixed(1)}`,
+      `Q140 ${(saltY - 3).toFixed(1)} 150 ${(saltY - 6).toFixed(1)}`,
+      `Q160 ${(saltY - 9).toFixed(1)} 170 ${(saltY - 3).toFixed(1)}`,
+      `Q180 ${(saltY + 2).toFixed(1)} 190 ${(saltY - 1).toFixed(1)}`,
+      `Q200 ${(saltY - 7).toFixed(1)} 210 ${(saltY - 6).toFixed(1)}`,
+      `Q221 ${(saltY - 3).toFixed(1)} 232 ${(saltY + 1).toFixed(1)}`,
+      `Q243 ${(saltY + 3).toFixed(1)} 254 ${(saltY - 2).toFixed(1)}`,
+      `Q265 ${(saltY - 7).toFixed(1)} 276 ${(saltY - 4).toFixed(1)}`,
+      `Q287 ${(saltY + 2).toFixed(1)} 298 ${(saltY + 1).toFixed(1)}`,
+      `Q311 ${(saltY - 4).toFixed(1)} 324 ${(saltY + 2).toFixed(1)}`,
+    ].join(" ");
     const saltPath = [
-      `M96 ${(saltY + 5).toFixed(1)}`,
-      `C105 ${(saltY + 2).toFixed(1)} 111 ${(saltY - 8).toFixed(1)} 120 ${(saltY - 9).toFixed(1)}`,
-      `C129 ${(saltY - moundAmplitude).toFixed(1)} 140 ${(saltY - 8).toFixed(1)} 149 ${(saltY - 3).toFixed(1)}`,
-      `C159 ${(saltY + 3).toFixed(1)} 168 ${(saltY + 5).toFixed(1)} 178 ${(saltY + 2).toFixed(1)}`,
-      `C188 ${(saltY - 1).toFixed(1)} 194 ${(saltY - 9).toFixed(1)} 205 ${(saltY - 9).toFixed(1)}`,
-      `C216 ${(saltY - 9).toFixed(1)} 223 ${(saltY + 1).toFixed(1)} 234 ${(saltY + 2).toFixed(1)}`,
-      `C246 ${(saltY + 4).toFixed(1)} 252 ${(saltY - 5).toFixed(1)} 263 ${(saltY - 4).toFixed(1)}`,
-      `C275 ${(saltY - 3).toFixed(1)} 282 ${(saltY + 6).toFixed(1)} 294 ${(saltY + 4).toFixed(1)}`,
-      `C306 ${(saltY + 2).toFixed(1)} 314 ${(saltY - 4).toFixed(1)} 324 ${(saltY + 1).toFixed(1)}`,
+      surfacePath,
       `L324 ${tankBottom}`,
       `L96 ${tankBottom}`,
       "Z",
@@ -157,7 +162,7 @@ export class SaltWatchCard extends HTMLElement {
       <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(displayLevel)}, ${escapeHtml(status.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(level, saltPath, saltY, thresholdY, threshold, status.tone)}
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>
           <section class="content-panel">
             <header>
@@ -190,6 +195,7 @@ export class SaltWatchCard extends HTMLElement {
   private tankSvg(
     level: number | undefined,
     saltPath: string,
+    surfacePath: string,
     saltY: number,
     thresholdY: number,
     threshold: number,
@@ -278,7 +284,7 @@ export class SaltWatchCard extends HTMLElement {
         <g clip-path="url(#tank-window)">
           ${unavailable
             ? `<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
-            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="96" y="110" width="228" height="364" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="M97 ${(saltY + 5).toFixed(1)} C105 ${(saltY + 2).toFixed(1)} 111 ${(saltY - 8).toFixed(1)} 120 ${(saltY - 9).toFixed(1)} C129 ${(saltY - 14).toFixed(1)} 140 ${(saltY - 8).toFixed(1)} 149 ${(saltY - 3).toFixed(1)} C159 ${(saltY + 3).toFixed(1)} 168 ${(saltY + 5).toFixed(1)} 178 ${(saltY + 2).toFixed(1)} C188 ${(saltY - 1).toFixed(1)} 194 ${(saltY - 9).toFixed(1)} 205 ${(saltY - 9).toFixed(1)} C216 ${(saltY - 9).toFixed(1)} 223 ${(saltY + 1).toFixed(1)} 234 ${(saltY + 2).toFixed(1)} C246 ${(saltY + 4).toFixed(1)} 252 ${(saltY - 5).toFixed(1)} 263 ${(saltY - 4).toFixed(1)} C275 ${(saltY - 3).toFixed(1)} 282 ${(saltY + 6).toFixed(1)} 294 ${(saltY + 4).toFixed(1)} C306 ${(saltY + 2).toFixed(1)} 314 ${(saltY - 4).toFixed(1)} 323 ${(saltY + 1).toFixed(1)}"/>`}
+            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
           <rect x="96" y="110" width="228" height="364" fill="url(#glass-sheen)" opacity=".38"/>
         </g>
         <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".15" stroke-width="4"/>
@@ -310,7 +316,7 @@ export class SaltWatchCard extends HTMLElement {
       .ruler .minor { stroke-width:1; opacity:.72; }
       .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
-      .salt-highlight { fill:none; stroke:#fffdf5; stroke-width:2.2; opacity:.72; filter:drop-shadow(0 -2px 4px rgba(255,255,255,.24)); }
+      .salt-highlight { fill:none; stroke:#fff; stroke-width:1.4; opacity:.58; filter:drop-shadow(0 -1px 3px rgba(255,255,255,.2)); }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
       .threshold { fill:none; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
       .threshold.tone-good,.threshold.tone-warning { stroke:var(--sw-warning); }
