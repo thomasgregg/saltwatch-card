@@ -162,6 +162,7 @@ export class SaltWatchCard extends HTMLElement {
     const displayMode = this.config.display_mode ?? "both";
     const showTank = displayMode !== "details";
     const showDetails = displayMode !== "tank";
+    const showLowMarkerSummary = this.config.show_low_marker !== false;
     const title = escapeHtml(this.config.name || "SaltWatch");
     const displayLevel = level === undefined ? "—" : `${Math.round(level)}%`;
     const accessibleLevel = level === undefined ? "No current reading" : displayLevel;
@@ -196,7 +197,7 @@ export class SaltWatchCard extends HTMLElement {
           ${showTank ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>` : ""}
-          ${showDetails ? `<section class="content-panel">
+          ${showDetails ? `<section class="content-panel${showLowMarkerSummary ? "" : " without-threshold-summary"}">
             ${this.config.show_header || this.config.show_status ? `<header>
               ${this.config.show_header ? `<div class="title">${title}</div>` : ""}
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>` : ""}
@@ -205,7 +206,7 @@ export class SaltWatchCard extends HTMLElement {
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
               <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>
             </div>
-            ${this.config.show_low_marker ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
+            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
               <span class="marker-line"></span>
               <span>Low marker</span>
               <strong>${Math.round(threshold)}%</strong>
@@ -371,6 +372,7 @@ export class SaltWatchCard extends HTMLElement {
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
+      .without-threshold-summary .reading { padding-bottom:0; }
       .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; text-shadow:0 7px 24px rgba(0,0,0,.28); }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }

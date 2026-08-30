@@ -95,6 +95,9 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".threshold")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-label")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-summary")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".content-panel")?.classList).toContain(
+      "without-threshold-summary",
+    );
   });
 
   it("supports tank-only and percentage-only display modes", async () => {
