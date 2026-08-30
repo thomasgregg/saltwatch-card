@@ -70,7 +70,7 @@ export class SaltWatchCard extends HTMLElement {
           name: "Card title",
           show_header: "Show title",
           show_status: "Show status",
-          show_low_marker: "Show low marker",
+          show_low_marker: "Show low marker below percentage",
           display_mode: "Card content",
           status_entity: "Salt status entity",
           threshold_entity: "Low threshold entity",
@@ -194,7 +194,7 @@ export class SaltWatchCard extends HTMLElement {
       <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(status.label)}">
         <div class="card-shell mode-${displayMode}">
           ${showTank ? `<section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, this.config.show_low_marker !== false)}
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>` : ""}
           ${showDetails ? `<section class="content-panel">
             ${this.config.show_header || this.config.show_status ? `<header>
@@ -247,7 +247,6 @@ export class SaltWatchCard extends HTMLElement {
     thresholdY: number,
     threshold: number,
     tone: string,
-    showLowMarker: boolean,
   ): string {
     const rulerMarks = Array.from({ length: 21 }, (_, index) => {
       const value = 100 - index * 5;
@@ -331,10 +330,10 @@ export class SaltWatchCard extends HTMLElement {
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
-        ${showLowMarker ? `<path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
+        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
-        </g>` : ""}
+        </g>
       </svg>`;
   }
 

@@ -92,7 +92,7 @@ Only `entity` is required.
 | `name` | Card heading | `SaltWatch` |
 | `show_header` | Show the card title; status remains visible | `true` |
 | `show_status` | Show the upper-right status indicator | `true` |
-| `show_low_marker` | Show the LOW line, badge, and footer summary | `true` |
+| `show_low_marker` | Show the low-marker summary beneath the percentage; the tank's LOW line and badge remain visible | `true` |
 | `display_mode` | Show `both`, `tank`, or `details` content | `both` |
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |

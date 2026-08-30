@@ -74,15 +74,15 @@ describe("SaltWatchCard", () => {
     );
   });
 
-  it("can hide the status and complete low marker independently", async () => {
+  it("can hide the status and low-marker summary without changing the tank marker", async () => {
     card.setConfig({ ...config, show_status: false, show_low_marker: false });
     card.hass = makeHass();
     await Promise.resolve();
 
     expect(card.shadowRoot?.querySelector(".title")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".status")).toBeNull();
-    expect(card.shadowRoot?.querySelector(".threshold")).toBeNull();
-    expect(card.shadowRoot?.querySelector(".threshold-label")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".threshold")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".threshold-label")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-summary")).toBeNull();
   });
 
