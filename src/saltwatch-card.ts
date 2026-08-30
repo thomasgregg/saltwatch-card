@@ -347,7 +347,7 @@ export class SaltWatchCard extends HTMLElement {
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
-      .mode-tank .tank-panel { border-right:0; }
+      .mode-tank .tank-panel { padding-block:8px; border-right:0; }
       .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 9%,transparent),transparent 62%),linear-gradient(90deg,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 5%,transparent),transparent); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }

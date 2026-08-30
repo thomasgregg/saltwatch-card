@@ -125,7 +125,7 @@ class R extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", o = j !== "tank", d = this.config.show_low_marker !== !1, w = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
+    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", o = j !== "tank", d = this.config.show_low_marker !== !1, w = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, g = H - x / 100 * X, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -135,7 +135,7 @@ class R extends HTMLElement {
       `Q253 ${(a - 4).toFixed(1)} 270 ${(a - 2).toFixed(1)}`,
       `Q288 ${(a + 1).toFixed(1)} 305 ${(a - 1).toFixed(1)}`,
       `Q315 ${(a - 3).toFixed(1)} 324 ${(a + 1).toFixed(1)}`
-    ].join(" "), g = [
+    ].join(" "), W = [
       G,
       `L324 ${H}`,
       `L96 ${H}`,
@@ -146,7 +146,7 @@ class R extends HTMLElement {
       <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${w}: ${u(l)}, ${u(n.label)}">
         <div class="card-shell mode-${j}">
           ${v ? `<section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(r, g, G, a, W, x, n.tone)}
+            ${this.tankSvg(r, W, G, a, g, x, n.tone)}
           </section>` : ""}
           ${o ? `<section class="content-panel${d ? "" : " without-threshold-summary"}">
             ${this.config.show_header || this.config.show_status ? `<header>
@@ -267,7 +267,7 @@ class R extends HTMLElement {
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
-      .mode-tank .tank-panel { border-right:0; }
+      .mode-tank .tank-panel { padding-block:8px; border-right:0; }
       .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 9%,transparent),transparent 62%),linear-gradient(90deg,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 5%,transparent),transparent); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
