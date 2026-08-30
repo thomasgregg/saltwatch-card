@@ -276,7 +276,7 @@ export class SaltWatchCard extends HTMLElement {
             <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
           </linearGradient>
           <linearGradient id="handle-face" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#626b70"/><stop offset=".18" stop-color="#3d454a"/><stop offset=".62" stop-color="#171d20"/><stop offset="1" stop-color="#30383c"/>
+            <stop offset="0" stop-color="#e8eae8"/><stop offset=".18" stop-color="#cfd5d5"/><stop offset=".62" stop-color="#aeb8bb"/><stop offset="1" stop-color="#d9dddb"/>
           </linearGradient>
           <linearGradient id="tank-glass" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#3b4449"/><stop offset=".48" stop-color="#333d41"/><stop offset="1" stop-color="#262e32"/>
@@ -318,7 +318,7 @@ export class SaltWatchCard extends HTMLElement {
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
             <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5"/>
             <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
-            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#handle-face)" stroke="#101518" stroke-width="3"/>
+            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#handle-face)" stroke="#748086" stroke-width="2.5"/>
             <path d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="3"/>
           </g>
           <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2"/>
