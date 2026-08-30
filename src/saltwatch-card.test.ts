@@ -60,6 +60,8 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.textContent).toContain("12 days");
     expect(card.shadowRoot?.textContent).toContain("Distance 34.8 cm");
     expect(card.shadowRoot?.querySelector(".salt-highlight")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".salt-fill")?.getAttribute("data-surface-y")).toBe("262.0");
+    expect(card.shadowRoot?.querySelector(".threshold")?.getAttribute("data-threshold-y")).toBe("405.6");
     expect(card.shadowRoot?.querySelector(".tank")?.getAttribute("aria-label")).toBe(
       "62 percent estimated salt level",
     );
