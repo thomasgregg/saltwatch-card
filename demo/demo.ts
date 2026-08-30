@@ -22,7 +22,6 @@ const hass: HomeAssistant = {
 const config: SaltWatchCardConfig = {
   type: "custom:saltwatch-card",
   entity: "sensor.saltwatch_salt_level",
-  show_header: true,
   show_status: true,
   show_low_marker: true,
   display_mode: "both",
@@ -37,7 +36,6 @@ card.hass = hass;
 
 const levelInput = document.querySelector<HTMLInputElement>("#level");
 const levelValue = document.querySelector<HTMLElement>("#level-value");
-const showHeaderInput = document.querySelector<HTMLInputElement>("#show-header");
 const showStatusInput = document.querySelector<HTMLInputElement>("#show-status");
 const showLowMarkerInput = document.querySelector<HTMLInputElement>("#show-low-marker");
 const displayModeInput = document.querySelector<HTMLSelectElement>("#display-mode");
@@ -47,10 +45,6 @@ const applyConfig = () => {
   card.setConfig(config);
   card.hass = hass;
 };
-showHeaderInput?.addEventListener("change", () => {
-  config.show_header = showHeaderInput.checked;
-  applyConfig();
-});
 showStatusInput?.addEventListener("change", () => {
   config.show_status = showStatusInput.checked;
   applyConfig();

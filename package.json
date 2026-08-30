@@ -1,11 +1,11 @@
 {
   "name": "saltwatch-card",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A detailed Home Assistant tank visualization for estimated water-softener salt level.",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build && cp dist/saltwatch-card.js dist/saltwatch-card-v0.1.1.js",
+    "build": "tsc --noEmit && vite build && cp dist/saltwatch-card.js dist/saltwatch-card-v0.1.2.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run test && npm run build"

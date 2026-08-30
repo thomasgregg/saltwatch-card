@@ -71,8 +71,8 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain("var(--error-color");
   });
 
-  it("can hide the title while preserving the status", async () => {
-    card.setConfig({ ...config, name: "Water Softener", show_header: false });
+  it("does not render an internal title and preserves the status", async () => {
+    card.setConfig({ ...config, name: "Water Softener", show_header: true });
     card.hass = makeHass();
     await Promise.resolve();
 
@@ -90,7 +90,7 @@ describe("SaltWatchCard", () => {
     card.hass = makeHass();
     await Promise.resolve();
 
-    expect(card.shadowRoot?.querySelector(".title")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector("header")).toBeNull();
     expect(card.shadowRoot?.querySelector(".status")).toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-label")).not.toBeNull();

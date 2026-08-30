@@ -34,8 +34,6 @@ export class SaltWatchCard extends HTMLElement {
           required: true,
           selector: { entity: { domain: "sensor" } },
         },
-        { name: "name", selector: { text: {} } },
-        { name: "show_header", selector: { boolean: {} } },
         { name: "show_status", selector: { boolean: {} } },
         { name: "show_low_marker", selector: { boolean: {} } },
         {
@@ -67,8 +65,6 @@ export class SaltWatchCard extends HTMLElement {
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: "Estimated salt level entity",
-          name: "Card title",
-          show_header: "Show title",
           show_status: "Show status",
           show_low_marker: "Show low marker below percentage",
           display_mode: "Card content",
@@ -94,7 +90,6 @@ export class SaltWatchCard extends HTMLElement {
     const config: Omit<SaltWatchCardConfig, "type"> = {
       entity: find("saltwatch", "salt_level") ?? find("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: DEFAULT_THRESHOLD,
-      show_header: true,
       show_status: true,
       show_low_marker: true,
       display_mode: "both",
@@ -117,7 +112,6 @@ export class SaltWatchCard extends HTMLElement {
     this.config = {
       ...config,
       low_threshold: config.low_threshold ?? DEFAULT_THRESHOLD,
-      show_header: config.show_header ?? true,
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
@@ -198,9 +192,8 @@ export class SaltWatchCard extends HTMLElement {
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>` : ""}
           ${showDetails ? `<section class="content-panel${showLowMarkerSummary ? "" : " without-threshold-summary"}">
-            ${this.config.show_header || this.config.show_status ? `<header>
-              ${this.config.show_header ? `<div class="title">${title}</div>` : ""}
-              ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>` : ""}
+            ${this.config.show_status ? `<header>
+              <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
             </header>` : ""}
             <div class="reading${level === undefined ? " state-reading" : ""}">
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
@@ -372,8 +365,7 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
-      header { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:22px; }
-      .title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
+      header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
@@ -405,8 +397,7 @@ export class SaltWatchCard extends HTMLElement {
         .tank-panel { padding:14px 14px 0; }
         .tank { width:min(76%,320px); }
         .content-panel { padding:20px 24px; }
-        header { align-items:center; flex-direction:row; gap:12px; }
-        .title { font-size:28px; }
+        header { align-items:center; }
         .status { font-size:18px; }
         .reading { margin:0; padding:20px 0; }
         .state-symbol { width:90px; }
@@ -416,8 +407,6 @@ export class SaltWatchCard extends HTMLElement {
       }
       @container (max-width:400px) {
         .content-panel { padding-inline:16px; }
-        header { gap:8px; }
-        .title { font-size:24px; }
         .status { gap:8px; font-size:15px; }
         .status-dot { width:14px; height:14px; }
       }

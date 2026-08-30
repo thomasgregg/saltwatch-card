@@ -91,8 +91,6 @@ Only `entity` is required.
 | Option | Description | Default |
 | --- | --- | --- |
 | `entity` | Percentage sensor controlling the salt surface | Required |
-| `name` | Card heading | `SaltWatch` |
-| `show_header` | Show the card title; status remains visible | `true` |
 | `show_status` | Show the upper-right status indicator | `true` |
 | `show_low_marker` | Show the low-marker summary beneath the percentage; the tank's LOW line and badge remain visible | `true` |
 | `display_mode` | Show `both`, `tank`, or `details` content | `both` |
@@ -103,7 +101,6 @@ Only `entity` is required.
 The visibility options can be combined independently:
 
 ```yaml
-show_header: false
 show_status: false
 show_low_marker: false
 display_mode: tank

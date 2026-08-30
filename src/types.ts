@@ -15,7 +15,9 @@ export type SaltWatchDisplayMode = "both" | "tank" | "details";
 export interface SaltWatchCardConfig {
   type: string;
   entity: string;
+  /** @deprecated Retained for configuration compatibility; no title is rendered. */
   name?: string;
+  /** @deprecated Retained for configuration compatibility; no title is rendered. */
   show_header?: boolean;
   show_status?: boolean;
   show_low_marker?: boolean;
