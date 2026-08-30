@@ -82,7 +82,7 @@ class R extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], r = []) {
-    const c = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(c)], P = (...o) => x.find((d) => o.every((w) => d.includes(w))), n = {
+    const c = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(c)], P = (...d) => x.find((o) => d.every((w) => o.includes(w))), n = {
       entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: O,
       show_header: !0,
@@ -125,7 +125,7 @@ class R extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", o = j !== "tank", d = this.config.show_low_marker !== !1, w = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
+    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", d = j !== "tank", o = this.config.show_low_marker !== !1, w = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -148,7 +148,7 @@ class R extends HTMLElement {
           ${v ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(r, g, G, a, W, x, n.tone)}
           </section>` : ""}
-          ${o ? `<section class="content-panel${d ? "" : " without-threshold-summary"}">
+          ${d ? `<section class="content-panel${o ? "" : " without-threshold-summary"}">
             ${this.config.show_header || this.config.show_status ? `<header>
               ${this.config.show_header ? `<div class="title">${w}</div>` : ""}
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${u(n.label)}</div>` : ""}
@@ -157,7 +157,7 @@ class R extends HTMLElement {
               ${r === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${i}</div>`}
               <div class="level-label">${r === void 0 ? u(n.label) : "Estimated salt level"}</div>
             </div>
-            ${d ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
+            ${o ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
               <span class="marker-line"></span>
               <span>Low marker</span>
               <strong>${Math.round(x)}%</strong>
@@ -182,10 +182,10 @@ class R extends HTMLElement {
     </svg>`;
   }
   tankSvg(t, f, r, c, x, P, n) {
-    const j = Array.from({ length: 21 }, (d, w) => {
+    const j = Array.from({ length: 21 }, (o, w) => {
       const i = 100 - w * 5, l = 474 - i / 100 * 342, s = i % 25 === 0, H = !s && i % 10 === 0, X = s ? 60 : H ? 67 : 71;
       return `${s ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${s ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
-    }).join(""), v = t === void 0, o = Math.max(134, Math.min(470, x));
+    }).join(""), v = t === void 0, d = Math.max(134, Math.min(470, x));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${v ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
@@ -198,8 +198,8 @@ class R extends HTMLElement {
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#697176"/><stop offset=".13" stop-color="#41484d"/><stop offset=".52" stop-color="#181d20"/><stop offset=".8" stop-color="#101518"/><stop offset="1" stop-color="#343b40"/>
           </linearGradient>
-          <linearGradient id="tank-glass" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#090d0f"/><stop offset=".13" stop-color="#1d2327"/><stop offset=".52" stop-color="#242a2e"/><stop offset=".88" stop-color="#121719"/><stop offset="1" stop-color="#080b0d"/>
+          <linearGradient id="tank-glass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#353d42"/><stop offset=".48" stop-color="#2d3539"/><stop offset="1" stop-color="#20272b"/>
           </linearGradient>
           <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
@@ -253,7 +253,7 @@ class R extends HTMLElement {
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${n}" data-threshold="${P}" data-threshold-y="${x.toFixed(1)}" d="M12 ${x.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${n}" transform="translate(-42 ${o - 15})">
+        <g class="threshold-label tone-${n}" transform="translate(-42 ${d - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
         </g>
       </svg>`;
