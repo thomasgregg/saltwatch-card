@@ -32,11 +32,6 @@ percentage from 0 to 100.
 - [Using another percentage sensor](#using-another-percentage-sensor)
 - [Development](#development)
 
-> [!IMPORTANT]
-> SaltWatch reports the estimated position within the tank's calibrated range.
-> The percentage is a practical refill indicator, not a direct measurement of
-> salt weight or volume.
-
 ## Why use it?
 
 - **Understand the level instantly.** The salt surface moves with the sensor,
