@@ -1,95 +1,51 @@
 # SaltWatch Card
 
-**A purpose-built Home Assistant card for seeing your estimated water-softener
-salt level as a physical, granular tank.**
+### See your water-softener salt level at a glance
 
-SaltWatch Card turns a percentage sensor into a granular brine-tank
-visualization. The salt surface moves with the measured level, stays uneven so
-it reads as salt rather than liquid, and includes a precise scale and visible
-low-salt threshold.
+SaltWatch Card is the visual Home Assistant companion for
+[SaltWatch](https://github.com/thomasgregg/saltwatch). It turns SaltWatch's
+estimated salt-level sensor into a detailed tank that is easy to understand
+from across the room—no interpreting raw percentages and no guessing when it is
+time to refill.
 
-The card intentionally focuses on the visualization Home Assistant does not
-already provide. Use native Tile and Statistics Graph cards for controls,
-forecast, distance, and history.
+![SaltWatch Card showing an estimated salt level of 62 percent](images/saltwatch-card.jpg)
 
-The card is designed for [SaltWatch](https://github.com/thomasgregg/saltwatch)
-but works with any numeric percentage sensor.
-
-![SaltWatch Card showing a detailed granular tank at 62 percent](images/saltwatch-card.png)
+SaltWatch Card is built primarily for the entities provided by the SaltWatch
+project, but it can also visualize any Home Assistant sensor that reports a
+percentage from 0 to 100.
 
 > [!IMPORTANT]
-> The card visualizes the value supplied by the selected entity. SaltWatch's
-> value is an **estimated percentage of the calibrated vertical range**, not a
-> direct measurement of salt mass or volume.
+> SaltWatch reports the estimated position within the tank's calibrated range.
+> The percentage is a practical refill indicator, not a direct measurement of
+> salt weight or volume.
 
-## Current status
+## Why use it?
 
-SaltWatch Card is under active development. The focused tank card, graphical
-editor, responsive layout, configurable Home Assistant actions, localization,
-and explicit unavailable states are implemented.
+- **Understand the level instantly.** The salt surface moves with the sensor,
+  while the ruler and large percentage make the reading easy to scan.
+- **Know when to refill.** A clear orange LOW marker shows the threshold you
+  chose in SaltWatch.
+- **Spot problems quickly.** Good, low-salt, calibration, and sensor-fault
+  states have clear labels and familiar Home Assistant colors.
+- **Looks at home in Home Assistant.** The card follows the active light, dark,
+  or custom theme and uses native Home Assistant card styling.
+- **Fits your dashboard.** It adapts from a wide two-column card to a clean
+  mobile layout without losing the tank visualization.
+- **Feels like the real tank.** The molded container, granular salt texture,
+  uneven surface, scale, and subtle material lighting make the reading more
+  tangible than a standard gauge.
 
-## Features
+## Made for SaltWatch
 
-- Bright, realistically scaled compressed salt tablets with an uneven top surface
-- Detailed molded tank, lid, window, base, and material shading
-- Major, medium, and minor percentage scale ticks
-- Exact 0–100% vertical positioning from the selected entity
-- Dynamic low-salt threshold marker
-- `Good`, `Low Salt`, `Calibration Required`, and `Sensor Fault` states
-- Explicit `No current reading` presentation instead of a frozen old level
-- Responsive desktop, tablet, and narrow dashboard layouts
-- Automatic Home Assistant light, dark, and custom-theme colors
-- Home Assistant card-picker registration and graphical configuration form
-- Configurable tap, hold, and double-tap Home Assistant actions
-- English and German built-in labels, including accessible SVG descriptions
-- Keyboard-accessible tap action
-- No recorder calls or duplicate chart/control implementations
+[SaltWatch](https://github.com/thomasgregg/saltwatch) monitors the salt level in
+a water softener and exposes the result to Home Assistant. This card presents
+the most important SaltWatch information as one focused visual:
 
-## Development preview
+- the estimated salt level;
+- the configured low-salt threshold;
+- the current SaltWatch health status.
 
-```bash
-npm install
-npm run dev
-```
-
-Open `http://127.0.0.1:5173/demo/`. The preview controls simulate level, low
-salt, sensor fault, calibration states, and Home Assistant-style light and dark
-themes.
-
-## Build and test
-
-```bash
-npm run check
-npm run test:e2e
-```
-
-To exercise an installed card against a real Home Assistant dashboard, save an
-authenticated Playwright storage state and run:
-
-```bash
-HA_URL="https://home-assistant.example/dashboard/view" \
-HA_STORAGE_STATE=".auth/home-assistant.json" npm run test:ha
-```
-
-The production file is written to the stable `dist/saltwatch-card.js` filename
-used by HACS releases.
-
-## HACS installation
-
-Add this repository as a custom **Dashboard** repository in HACS, install
-**SaltWatch Card**, and reload Home Assistant. For local development, build the
-card and copy `dist/saltwatch-card.js` to Home Assistant's
-`/config/www/saltwatch-card/` directory, then add it under **Settings →
-Dashboards → Resources**:
-
-```text
-/local/saltwatch-card/saltwatch-card.js
-```
-
-Select **JavaScript module**, reload the browser, then choose **SaltWatch Card**
-from the dashboard card picker.
-
-## Configuration
+With the standard SaltWatch entity names, the configuration is simply:
 
 ```yaml
 type: custom:saltwatch-card
@@ -98,98 +54,110 @@ status_entity: sensor.saltwatch_salt_status
 threshold_entity: number.saltwatch_low_salt_threshold
 ```
 
-Only `entity` is required.
+The main `entity` is the only required option. The status and threshold entities
+make the experience richer, but the card can derive a useful state without
+them.
 
-In Home Assistant sections dashboards, the card uses the full section width and
-lets its content determine the height. This keeps the stacked mobile layout from
-being clipped by fixed grid rows.
+## What the states mean
 
-| Option | Description | Default |
+| State | What you see | What it tells you |
 | --- | --- | --- |
-| `entity` | Percentage sensor controlling the salt surface | Required |
-| `show_status` | Show the upper-right status indicator | `true` |
-| `show_low_marker` | Show the low-marker summary beneath the percentage; the tank's LOW line and badge remain visible | `true` |
-| `display_mode` | Show `both`, `tank`, or `details` content | `both` |
-| `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
-| `threshold_entity` | Number entity controlling the low marker | None |
-| `low_threshold` | Marker used when no threshold entity is supplied | `20` |
-| `tap_action` | Home Assistant action performed on tap or keyboard activation | `more-info` |
-| `hold_action` | Home Assistant action performed after holding | `none` |
-| `double_tap_action` | Home Assistant action performed on double tap | `none` |
+| **Good** | Green status | The reading is available and above the low threshold. |
+| **Low salt** | Orange warning | The estimated level has reached the refill threshold. |
+| **Calibration required** | Orange calibration symbol | SaltWatch needs calibration before it can provide a trustworthy level. |
+| **Sensor fault** | Red fault symbol | SaltWatch cannot currently provide a valid reading. |
 
-The visibility options can be combined independently:
+When the level is unavailable, the card never leaves an old percentage on
+screen as though it were current. The tank switches to an explicit no-reading
+state instead.
+
+## Install with HACS
+
+1. In HACS, open **Custom repositories**.
+2. Add `https://github.com/thomasgregg/saltwatch-card` as a **Dashboard**
+   repository.
+3. Find **SaltWatch Card** in HACS and install it.
+4. Reload your Home Assistant dashboard.
+5. Add **SaltWatch Card** from the dashboard card picker.
+
+The graphical editor lets you select entities and adjust the main options
+without writing YAML.
+
+## Card options
+
+| Option | What it does | Default |
+| --- | --- | --- |
+| `entity` | Supplies the estimated salt percentage and moves the salt surface. | Required |
+| `status_entity` | Supplies SaltWatch's Good, Low Salt, Calibration Required, or Sensor Fault status. | Derived from the level |
+| `threshold_entity` | Keeps the orange LOW marker synchronized with SaltWatch's adjustable threshold. | Not set |
+| `low_threshold` | Sets a fixed LOW marker when no threshold entity is available. | `20` |
+| `show_status` | Shows or hides the status label in the upper-right corner. | `true` |
+| `show_low_marker` | Shows or hides the low-marker summary below the percentage. The marker on the tank remains visible. | `true` |
+| `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the percentage and status (`details`). | `both` |
+| `tap_action` | Chooses what happens when the card is tapped. | `more-info` |
+| `hold_action` | Chooses what happens when the card is held. | `none` |
+| `double_tap_action` | Chooses what happens when the card is double-tapped. | `none` |
+
+### A simpler card
+
+The tank can stand on its own when you want a more visual dashboard:
+
+```yaml
+type: custom:saltwatch-card
+entity: sensor.saltwatch_salt_level
+status_entity: sensor.saltwatch_salt_status
+threshold_entity: number.saltwatch_low_salt_threshold
+display_mode: tank
+```
+
+Or keep the percentage while hiding secondary information:
 
 ```yaml
 show_status: false
 show_low_marker: false
-display_mode: tank
+display_mode: details
 ```
 
-The status and threshold accents use Home Assistant's native theme colors:
-`--success-color` for a good reading, `--warning-color` for low salt and
-calibration, and `--error-color` only for a sensor fault. The physical tank
-remains a stable light neutral illustration, while the card surface, text,
-dividers, and status states update automatically with the active theme.
+## Home Assistant friendly by design
 
-## Recommended native dashboard composition
+SaltWatch Card uses Home Assistant's native success, warning, and error theme
+colors. Low salt and calibration are orange warnings; red is reserved for an
+actual sensor fault. The card also supports Home Assistant's graphical card
+editor, keyboard interaction, configurable tap/hold actions, English and German
+labels, and responsive Sections dashboards.
 
-Keep SaltWatch Card focused on the tank and let Home Assistant render the
-controls, supporting sensor values, and history. This preserves native theming,
-editing, actions, accessibility, and recorder behavior.
+The card deliberately stays focused on the tank. Pair it with Home Assistant's
+native Tile and Statistics Graph cards when you also want threshold controls,
+history, distance, or refill forecasts.
+
+## Using another percentage sensor
+
+SaltWatch Card works with any numeric Home Assistant sensor whose value is a
+percentage between 0 and 100:
 
 ```yaml
-type: vertical-stack
-cards:
-  - type: custom:saltwatch-card
-    entity: sensor.saltwatch_salt_level
-    status_entity: sensor.saltwatch_salt_status
-    threshold_entity: number.saltwatch_low_salt_threshold
-
-  - type: grid
-    columns: 3
-    square: false
-    cards:
-      - type: tile
-        entity: number.saltwatch_low_salt_threshold
-        name: Low salt threshold
-        features:
-          - type: numeric-input
-            style: slider
-
-      - type: tile
-        entity: sensor.saltwatch_estimated_days_until_low_salt
-        name: Until low salt
-
-      - type: tile
-        entity: sensor.saltwatch_distance_to_salt
-        name: Distance to salt
-
-  - type: statistics-graph
-    entities:
-      - entity: sensor.saltwatch_salt_level
-        name: Salt level
-        color: "#f2ae32"
-    days_to_show: 14
-    period: hour
-    chart_type: line
-    stat_types:
-      - mean
-    min_y_axis: 0
-    max_y_axis: 100
-    hide_legend: true
+type: custom:saltwatch-card
+entity: sensor.my_salt_level
+low_threshold: 20
 ```
 
-SaltWatch's percentage sensor has `state_class: measurement`, so Home
-Assistant can retain and graph its long-term statistics. For exact recorder
-states instead of hourly statistics, use a native `history-graph` card with
-`hours_to_show: 336`.
+Without a status entity, the card automatically shows **Low salt** when the
+reading reaches the configured threshold.
 
-## Failure behavior
+## Development
 
-An unavailable, unknown, or non-numeric main entity removes the salt fill and
-shows a hatched tank. The card never keeps rendering an old percentage as if it
-were current. A configured Salt Status entity distinguishes sensor failure from
-required calibration.
+```bash
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173/demo/` to explore every state, display mode, and
+theme. Run the complete test and production build with:
+
+```bash
+npm run check
+npm run test:e2e
+```
 
 ## License
 
