@@ -21,6 +21,40 @@ test("renders every card mode without horizontal overflow", async ({ page }) => 
   }
 });
 
+test("switches between salt level, forecast, and both values", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+
+  await page.locator("#metric-mode").selectOption("forecast");
+  await expect(card.locator(".forecast-value")).toHaveText("18");
+  await expect(card.locator(".forecast-label")).toHaveText("Days until low salt");
+  await expect(card.locator(".level-metric")).toHaveCount(0);
+
+  await page.locator("#metric-mode").selectOption("both");
+  await expect(card.locator(".level")).toHaveText("62%");
+  await expect(card.locator(".forecast-value")).toHaveText("18");
+  await expect(card.locator(".metric-divider")).toBeVisible();
+
+  await page.locator("#forecast-state").selectOption("Learning");
+  await expect(card.locator(".forecast-symbol")).toBeVisible();
+  await expect(card.locator(".forecast-value")).not.toContainText("—");
+  await expect(card.locator(".forecast-label")).toHaveText("Forecast learning");
+  const levelValue = await card.locator(".level-metric .metric-value").boundingBox();
+  const forecastValue = await card.locator(".forecast-metric .metric-value").boundingBox();
+  const levelLabel = await card.locator(".level-metric .metric-label").boundingBox();
+  const forecastLabel = await card.locator(".forecast-metric .metric-label").boundingBox();
+  expect(levelValue).not.toBeNull();
+  expect(forecastValue).not.toBeNull();
+  expect(levelLabel).not.toBeNull();
+  expect(forecastLabel).not.toBeNull();
+  expect(Math.abs(levelValue!.height - forecastValue!.height)).toBeLessThanOrEqual(0.5);
+  if (page.viewportSize()!.width > 400) {
+    expect(Math.abs(levelLabel!.y - forecastLabel!.y)).toBeLessThanOrEqual(0.5);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    page.viewportSize()!.width,
+  );
+});
+
 test("updates state and theme through the demo host context", async ({ page }) => {
   const cardSurface = page.locator("saltwatch-card ha-card");
   const darkSurface = await cardSurface.evaluate((element) => getComputedStyle(element).backgroundColor);

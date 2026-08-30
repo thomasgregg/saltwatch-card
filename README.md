@@ -10,8 +10,9 @@
 SaltWatch Card is the visual Home Assistant companion for
 [SaltWatch](https://github.com/thomasgregg/saltwatch). It turns SaltWatch's
 estimated salt-level sensor into a detailed tank that is easy to understand
-from across the room—no interpreting raw percentages and no guessing when it is
-time to refill.
+from across the room—no interpreting raw percentages. It can also show
+SaltWatch's refill forecast, so you know how much salt remains and when the low
+threshold is likely to be reached.
 
 ![SaltWatch Card showing an estimated salt level of 62 percent](images/saltwatch-card.jpg)
 
@@ -38,6 +39,8 @@ percentage from 0 to 100.
   while the ruler and large percentage make the reading easy to scan.
 - **Know when to refill.** A clear orange LOW marker shows the threshold you
   chose in SaltWatch.
+- **Look ahead.** Optionally show SaltWatch's estimated days until low salt by
+  itself or beside the current level.
 - **Spot problems quickly.** Good, low-salt, calibration, and sensor-fault
   states have clear labels and familiar Home Assistant colors.
 - **Looks at home in Home Assistant.** The card follows the active light, dark,
@@ -55,6 +58,7 @@ a water softener and exposes the result to Home Assistant. This card presents
 the most important SaltWatch information as one focused visual:
 
 - the estimated salt level;
+- the estimated days until the low-salt threshold;
 - the configured low-salt threshold;
 - the current SaltWatch health status.
 
@@ -65,11 +69,13 @@ type: custom:saltwatch-card
 entity: sensor.saltwatch_salt_level
 status_entity: sensor.saltwatch_salt_status
 threshold_entity: number.saltwatch_low_salt_threshold
+forecast_entity: sensor.saltwatch_estimated_days_until_low_salt
+forecast_status_entity: sensor.saltwatch_forecast_status
 ```
 
 The main `entity` is the only required option. The status and threshold entities
-make the experience richer, but the card can derive a useful state without
-them.
+make the experience richer, while the forecast entities add the optional refill
+estimate. The card can derive a useful state without any of them.
 
 ## What the states mean
 
@@ -126,10 +132,13 @@ URL path, which is why the filesystem and resource paths are different.
 | `entity` | Supplies the estimated salt percentage and moves the salt surface. | Required |
 | `status_entity` | Supplies SaltWatch's Good, Low Salt, Calibration Required, or Sensor Fault status. | Derived from the level |
 | `threshold_entity` | Keeps the orange LOW marker synchronized with SaltWatch's adjustable threshold. | Not set |
+| `forecast_entity` | Supplies SaltWatch's estimated days until the low-salt threshold. | Suggested automatically for SaltWatch |
+| `forecast_status_entity` | Explains when the forecast is learning, confirming a refill, or temporarily unavailable. | Suggested automatically for SaltWatch |
 | `low_threshold` | Sets a fixed LOW marker when no threshold entity is available. | `20` |
 | `show_status` | Shows or hides the status label in the upper-right corner. | `true` |
-| `show_low_marker` | Shows or hides the low-marker summary below the percentage. The marker on the tank remains visible. | `true` |
-| `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the percentage and status (`details`). | `both` |
+| `show_low_marker` | Shows or hides the low-marker summary below the values. The marker on the tank remains visible. | `true` |
+| `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
+| `metric_mode` | Shows the current level (`level`), refill forecast (`forecast`), or both values side by side (`both`). | `level` |
 | `tap_action` | Chooses what happens when the card is tapped. | `more-info` |
 | `hold_action` | Chooses what happens when the card is held. | `none` |
 | `double_tap_action` | Chooses what happens when the card is double-tapped. | `none` |
@@ -162,9 +171,9 @@ actual sensor fault. The card also supports Home Assistant's graphical card
 editor, keyboard interaction, configurable tap/hold actions, English and German
 labels, and responsive Sections dashboards.
 
-The card deliberately stays focused on the tank. Pair it with Home Assistant's
-native Tile and Statistics Graph cards when you also want threshold controls,
-history, distance, or refill forecasts.
+The card deliberately stays focused on the tank and its refill timing. Pair it
+with Home Assistant's native Tile and Statistics Graph cards when you also want
+threshold controls, measurement history, or distance details.
 
 ## Using another percentage sensor
 

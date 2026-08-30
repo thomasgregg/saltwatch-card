@@ -22,6 +22,8 @@ function makeHass(level = "62", status = "Good"): HomeAssistant {
     states: {
       "sensor.saltwatch_salt_level": makeEntity("sensor.saltwatch_salt_level", level),
       "sensor.saltwatch_salt_status": makeEntity("sensor.saltwatch_salt_status", status),
+      "sensor.saltwatch_estimated_days_until_low_salt": makeEntity("sensor.saltwatch_estimated_days_until_low_salt", "18"),
+      "sensor.saltwatch_forecast_status": makeEntity("sensor.saltwatch_forecast_status", "Available"),
       "number.saltwatch_low_salt_threshold": makeEntity("number.saltwatch_low_salt_threshold", "20"),
     },
   };
@@ -114,6 +116,29 @@ describe("SaltWatchCard", () => {
     expect(() => card.setConfig({ ...config, low_threshold: 101 })).toThrow(/between 0 and 100/);
   });
 
+  it("discovers forecast entities and exposes all value layouts in the editor", () => {
+    const stub = SaltWatchCard.getStubConfig(makeHass());
+    expect(stub.metric_mode).toBe("level");
+    expect(stub.forecast_entity).toBe("sensor.saltwatch_estimated_days_until_low_salt");
+    expect(stub.forecast_status_entity).toBe("sensor.saltwatch_forecast_status");
+
+    const form = SaltWatchCard.getConfigForm() as {
+      schema: Array<{
+        name?: string;
+        selector?: { select?: { options?: Array<{ value: string }> } };
+        schema?: Array<{ name: string }>;
+      }>;
+    };
+    const metricMode = form.schema.find((item) => item.name === "metric_mode");
+    expect(metricMode?.selector?.select?.options?.map((option) => option.value)).toEqual([
+      "level",
+      "forecast",
+      "both",
+    ]);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(true);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_status_entity"))).toBe(true);
+  });
+
   it("exposes native action selectors in the graphical editor", () => {
     const form = SaltWatchCard.getConfigForm() as {
       schema: Array<{
@@ -159,6 +184,62 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("SaltWatch");
   });
 
+  it("supports level, forecast, and dual value layouts", () => {
+    expect(card.shadowRoot?.querySelector(".metrics-level .level")?.textContent).toBe("62%");
+    expect(card.shadowRoot?.querySelector(".forecast-metric")).toBeNull();
+
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    expect(card.shadowRoot?.querySelector(".metrics-forecast .forecast-value")?.textContent).toBe("18");
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Days until low salt");
+    expect(card.shadowRoot?.querySelector(".level-metric")).toBeNull();
+
+    card.setConfig({
+      ...config,
+      metric_mode: "both",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    expect(card.shadowRoot?.querySelector(".metrics-both .level")?.textContent).toBe("62%");
+    expect(card.shadowRoot?.querySelector(".metrics-both .forecast-value")?.textContent).toBe("18");
+    expect(card.shadowRoot?.querySelector(".metric-divider")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("18 Days until low salt");
+  });
+
+  it("shows forecast progress instead of a stale value", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    const hass = makeHass();
+    hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
+      "sensor.saltwatch_estimated_days_until_low_salt",
+      "unavailable",
+    );
+    hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+      "sensor.saltwatch_forecast_status",
+      "Learning",
+    );
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector(".forecast-symbol")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).not.toContain("—");
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Forecast learning");
+    expect(card.shadowRoot?.querySelector(".forecast-metric")?.classList).toContain("unavailable");
+
+    hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+      "sensor.saltwatch_forecast_status",
+      "Insufficient Change",
+    );
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("No clear usage trend");
+  });
+
   it("uses a centered base aligned with the tank body", () => {
     expect(card.shadowRoot?.querySelector(".tank-base")?.getAttribute("d"))
       .toBe("M112 492H308L302 518H275L267 511H153L145 518H118Z");
@@ -177,6 +258,10 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain(".tone-fault .status-dot { background:var(--sw-fault); }");
     expect(styles).toContain(".tone-fault .state-symbol { color:var(--sw-fault); }");
     expect(styles).toContain(".marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning);");
+    expect(styles).toContain(".forecast-symbol { display:block;");
+    expect(styles).toContain("stroke:currentColor;");
+    expect(styles).toContain("background:color-mix(in srgb,var(--divider-color) 52%,transparent);");
+    expect(styles).toContain(".forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }");
   });
 
   it("can hide the status and low-marker summary without changing the tank marker", () => {

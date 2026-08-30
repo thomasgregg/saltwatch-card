@@ -4,6 +4,7 @@ import {
   localize,
   resolveLocale,
 } from "./localize";
+import type { SupportedLocale } from "./localize";
 import {
   clamp,
   deriveStatus,
@@ -59,6 +60,37 @@ function validatedAction(value: unknown, fallback: LovelaceActionConfig): Lovela
     throw new Error("Card actions must use a supported Home Assistant action.");
   }
   return value as LovelaceActionConfig;
+}
+
+function formatForecastDays(value: number, locale: SupportedLocale): string {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
+}
+
+function forecastStatusLabel(state: string | undefined, locale: SupportedLocale): string {
+  const normalized = state?.trim().toLowerCase() ?? "";
+  if (normalized.includes("confirming") && normalized.includes("refill")) {
+    return localize("forecastConfirmingRefill", locale);
+  }
+  if (normalized.includes("insufficient")) {
+    return localize("forecastInsufficientChange", locale);
+  }
+  if (normalized.includes("waiting") && normalized.includes("measurement")) {
+    return localize("forecastWaitingForMeasurement", locale);
+  }
+  if (normalized.includes("waiting") && normalized.includes("time")) {
+    return localize("forecastWaitingForTime", locale);
+  }
+  if (normalized.includes("learning")) return localize("forecastLearning", locale);
+  if (normalized.includes("initializing")) return localize("forecastInitializing", locale);
+  if (normalized.includes("calibration")) return localize("calibrationRequired", locale);
+  if (normalized.includes("fault") || normalized.includes("error")) {
+    return localize("sensorFault", locale);
+  }
+  if (normalized.includes("low")) return localize("lowThresholdReached", locale);
+  if (!normalized || normalized === "available" || normalized === "unknown" || normalized === "unavailable") {
+    return localize("forecastUnavailable", locale);
+  }
+  return state?.trim() || localize("forecastUnavailable", locale);
 }
 
 export class SaltWatchCard extends HTMLElement {
@@ -136,11 +168,32 @@ export class SaltWatchCard extends HTMLElement {
           },
         },
         {
+          name: "metric_mode",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "level", label: localize("saltLevelOnly") },
+                { value: "forecast", label: localize("forecastOnly") },
+                { value: "both", label: localize("levelAndForecast") },
+              ],
+            },
+          },
+        },
+        {
           type: "grid",
           name: "",
           schema: [
             { name: "status_entity", selector: { entity: {} } },
             { name: "threshold_entity", selector: { entity: {} } },
+          ],
+        },
+        {
+          type: "grid",
+          name: "",
+          schema: [
+            { name: "forecast_entity", selector: { entity: { domain: "sensor" } } },
+            { name: "forecast_status_entity", selector: { entity: {} } },
           ],
         },
         {
@@ -177,8 +230,11 @@ export class SaltWatchCard extends HTMLElement {
           show_status: localize("showStatus"),
           show_low_marker: localize("showLowMarker"),
           display_mode: localize("cardContent"),
+          metric_mode: localize("valueDisplay"),
           status_entity: localize("statusEntity"),
           threshold_entity: localize("thresholdEntity"),
+          forecast_entity: localize("forecastEntity"),
+          forecast_status_entity: localize("forecastStatusEntity"),
           low_threshold: localize("fallbackThreshold"),
           tap_action: localize("tapAction"),
           hold_action: localize("holdAction"),
@@ -211,12 +267,17 @@ export class SaltWatchCard extends HTMLElement {
       show_status: true,
       show_low_marker: true,
       display_mode: "both",
+      metric_mode: "level",
       tap_action: DEFAULT_TAP_ACTION,
     };
     const status = find("saltwatch", "salt_status");
     const threshold = find("saltwatch", "low_salt_threshold");
+    const forecast = find("saltwatch", "estimated_days_until_low_salt");
+    const forecastStatus = find("saltwatch", "forecast_status");
     if (status) config.status_entity = status;
     if (threshold) config.threshold_entity = threshold;
+    if (forecast) config.forecast_entity = forecast;
+    if (forecastStatus) config.forecast_status_entity = forecastStatus;
     return config;
   }
 
@@ -229,6 +290,9 @@ export class SaltWatchCard extends HTMLElement {
     const displayMode = config.display_mode === "tank" || config.display_mode === "details"
       ? config.display_mode
       : "both";
+    const metricMode = config.metric_mode === "forecast" || config.metric_mode === "both"
+      ? config.metric_mode
+      : "level";
     const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
     this.config = {
       ...config,
@@ -236,6 +300,7 @@ export class SaltWatchCard extends HTMLElement {
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
+      metric_mode: metricMode,
       tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION),
       hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION),
       double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION),
@@ -267,6 +332,9 @@ export class SaltWatchCard extends HTMLElement {
       this.config.entity,
       this.config.status_entity,
       this.config.threshold_entity,
+      ...(this.config.metric_mode === "level"
+        ? []
+        : [this.config.forecast_entity, this.config.forecast_status_entity]),
     ].map((entityId) => `${entityId ?? ""}:${entity(this.states, entityId)?.state ?? "missing"}`).join("|");
   }
 
@@ -289,6 +357,7 @@ export class SaltWatchCard extends HTMLElement {
       ? localize(status.translationKey, locale)
       : status.label;
     const displayMode = this.config.display_mode ?? "both";
+    const metricMode = this.config.metric_mode ?? "level";
     const showTank = displayMode !== "details";
     const showDetails = displayMode !== "tank";
     const showLowMarkerSummary = this.config.show_low_marker !== false;
@@ -298,6 +367,40 @@ export class SaltWatchCard extends HTMLElement {
     const accessibleLevel = level === undefined
       ? localize("noCurrentReading", locale)
       : displayLevel;
+    const rawForecast = entityNumber(entity(this.states, this.config.forecast_entity));
+    const forecastDays = rawForecast === undefined || rawForecast < 0
+      ? undefined
+      : Math.round(rawForecast);
+    const forecastDisplay = forecastDays === undefined
+      ? "—"
+      : formatForecastDays(forecastDays, locale);
+    const forecastState = entity(this.states, this.config.forecast_status_entity)?.state;
+    const forecastLabel = forecastDays === undefined
+      ? forecastStatusLabel(forecastState, locale)
+      : forecastDays === 0
+        ? localize("lowThresholdReached", locale)
+        : localize(forecastDays === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", locale);
+    const levelMetric = `<div class="metric level-metric">
+      <div class="metric-value level">${displayLevel}</div>
+      <div class="metric-label level-label">${escapeHtml(metricMode === "both" ? localize("saltLevel", locale) : localize("estimatedLevel", locale))}</div>
+    </div>`;
+    const forecastMetric = `<div class="metric forecast-metric${forecastDays === undefined ? " unavailable" : ""}">
+      <div class="metric-value forecast-value">${forecastDays === undefined ? this.forecastSymbol() : forecastDisplay}</div>
+      <div class="metric-label forecast-label">${escapeHtml(forecastLabel)}</div>
+    </div>`;
+    const metricsMarkup = metricMode === "both"
+      ? `${levelMetric}<span class="metric-divider" aria-hidden="true"></span>${forecastMetric}`
+      : metricMode === "forecast"
+        ? forecastMetric
+        : levelMetric;
+    const accessibleForecast = forecastDays === undefined
+      ? forecastLabel
+      : `${forecastDisplay} ${forecastLabel}`;
+    const accessibleMetrics = metricMode === "both"
+      ? `${accessibleLevel}, ${accessibleForecast}`
+      : metricMode === "forecast"
+        ? accessibleForecast
+        : accessibleLevel;
 
     const tankTop = 132;
     const tankBottom = 474;
@@ -324,7 +427,7 @@ export class SaltWatchCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${status.tone}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(statusLabel)}">
+      <ha-card class="tone-${status.tone}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
         <div class="card-shell mode-${displayMode}">
           ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale)}
@@ -333,11 +436,13 @@ export class SaltWatchCard extends HTMLElement {
             ${this.config.show_status ? `<header>
               <div class="status"><span class="status-dot"></span>${escapeHtml(statusLabel)}</div>
             </header>` : ""}
-            <div class="reading${level === undefined ? " state-reading" : ""}">
-              ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
+            <div class="reading metric-mode-${metricMode}${level === undefined ? " state-reading" : ""}">
+              ${level === undefined ? this.stateSymbol(status.tone) : `<div class="metrics metrics-${metricMode}">${metricsMarkup}</div>`}
               ${level === undefined && this.config.show_status
                 ? ""
-                : `<div class="level-label">${level === undefined ? escapeHtml(statusLabel) : escapeHtml(localize("estimatedLevel", locale))}</div>`}
+                : level === undefined
+                  ? `<div class="level-label">${escapeHtml(statusLabel)}</div>`
+                  : ""}
             </div>
             ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, locale) }))}">
               <span class="marker-line"></span>
@@ -449,6 +554,15 @@ export class SaltWatchCard extends HTMLElement {
       <circle cx="48" cy="48" r="34"/>
       <path d="M48 27V55"/>
       <circle class="symbol-dot" cx="48" cy="68" r="3.8"/>
+    </svg>`;
+  }
+
+  private forecastSymbol(): string {
+    return `<svg class="forecast-symbol" viewBox="0 0 96 96" aria-hidden="true">
+      <rect x="10" y="17" width="76" height="68" rx="10"/>
+      <path d="M29 9V27M67 9V27M10 36H86"/>
+      <circle cx="62" cy="61" r="15"/>
+      <path d="M62 52V61L68 65"/>
     </svg>`;
   }
 
@@ -588,11 +702,23 @@ export class SaltWatchCard extends HTMLElement {
       .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
       .reading { margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
-      .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
+      .metrics { display:grid; align-items:center; min-width:0; }
+      .metrics-level,.metrics-forecast { grid-template-columns:minmax(0,1fr); }
+      .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:24px; }
+      .metric { min-width:0; }
+      .metric-value { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
+      .forecast-value { letter-spacing:-.055em; }
+      .forecast-symbol { display:block; width:clamp(88px,10cqw,112px); height:auto; fill:none; stroke:currentColor; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
+      .metric-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
+      .metrics-both .metric-value { display:flex; align-items:center; height:1em; font-size:clamp(68px,7.8cqw,94px); line-height:.86; }
+      .metrics-both .forecast-symbol { width:1em; height:1em; }
+      .metrics-both .metric-label { margin-top:18px; font-size:clamp(16px,1.85cqw,20px); }
+      .metric-divider { align-self:center; width:1px; height:108px; background:color-mix(in srgb,var(--divider-color) 52%,transparent); }
+      .forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
       .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
-      .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
+      .state-reading .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
       .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
@@ -606,8 +732,11 @@ export class SaltWatchCard extends HTMLElement {
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
-        .level { font-size:clamp(110px,24cqw,154px); }
-        .level-label { font-size:26px; }
+        .metric-value { font-size:clamp(110px,24cqw,154px); }
+        .forecast-symbol { margin-inline:auto; }
+        .metric-label,.state-reading .level-label { font-size:26px; }
+        .metrics-both .metric-value { justify-content:center; font-size:clamp(72px,15cqw,100px); }
+        .metrics-both .metric-label { font-size:20px; }
         .threshold-summary { padding-top:22px; }
       }
       @container (max-width:520px) {
@@ -618,14 +747,21 @@ export class SaltWatchCard extends HTMLElement {
         .status { font-size:18px; }
         .reading { margin:0; padding:20px 0; }
         .state-symbol { width:90px; }
-        .level { font-size:clamp(94px,29cqw,126px); }
-        .level-label { margin-top:22px; font-size:21px; }
+        .metric-value { font-size:clamp(94px,29cqw,126px); }
+        .metric-label,.state-reading .level-label { margin-top:22px; font-size:21px; }
+        .metrics-both { gap:14px; }
+        .metrics-both .metric-value { font-size:clamp(58px,16cqw,78px); }
+        .metrics-both .metric-label { margin-top:14px; font-size:17px; }
+        .metric-divider { height:92px; }
         .threshold-summary { padding-top:18px; font-size:16px; }
       }
       @container (max-width:400px) {
         .content-panel { padding-inline:16px; }
         .status { gap:8px; font-size:15px; }
         .status-dot { width:14px; height:14px; }
+        .metrics-both { grid-template-columns:1fr; gap:18px; }
+        .metrics-both .metric-value { font-size:clamp(76px,25cqw,100px); }
+        .metric-divider { width:100%; height:1px; }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
