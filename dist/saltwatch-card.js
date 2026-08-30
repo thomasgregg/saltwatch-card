@@ -62,10 +62,10 @@ class D extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], a = []) {
-    const s = [...f, ...a, ...Object.keys(t.states)], n = [...new Set(s)], H = (...w) => n.find((P) => w.every((c) => P.includes(c))), x = {
-      entity: H("saltwatch", "salt_level") ?? H("salt", "level") ?? "sensor.saltwatch_salt_level",
+    const c = [...f, ...a, ...Object.keys(t.states)], n = [...new Set(c)], P = (...s) => n.find((H) => s.every((w) => H.includes(w))), x = {
+      entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: p
-    }, v = H("saltwatch", "salt_status"), j = H("saltwatch", "low_salt_threshold");
+    }, v = P("saltwatch", "salt_status"), j = P("saltwatch", "low_salt_threshold");
     return v && (x.status_entity = v), j && (x.threshold_entity = j), x;
   }
   setConfig(t) {
@@ -96,23 +96,20 @@ class D extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = O(this._hass, this.config.entity), f = G(t), a = f === void 0 ? void 0 : b(f), s = G(O(this._hass, this.config.threshold_entity)), n = b(s ?? this.config.low_threshold ?? p), H = O(this._hass, this.config.status_entity), x = W(H?.state, a, n), v = d(this.config.name || "SaltWatch"), j = a === void 0 ? "—" : `${Math.round(a)}%`, w = 132, P = 474, c = P - w, e = a === void 0 ? P : P - a / 100 * c, o = P - n / 100 * c, i = [
-      `M96 ${(e + 4).toFixed(1)}`,
-      `Q104 ${(e - 3).toFixed(1)} 112 ${(e - 4).toFixed(1)}`,
-      `Q121 ${(e - 11).toFixed(1)} 130 ${(e - 8).toFixed(1)}`,
-      `Q140 ${(e - 3).toFixed(1)} 150 ${(e - 6).toFixed(1)}`,
-      `Q160 ${(e - 9).toFixed(1)} 170 ${(e - 3).toFixed(1)}`,
-      `Q180 ${(e + 2).toFixed(1)} 190 ${(e - 1).toFixed(1)}`,
-      `Q200 ${(e - 7).toFixed(1)} 210 ${(e - 6).toFixed(1)}`,
-      `Q221 ${(e - 3).toFixed(1)} 232 ${(e + 1).toFixed(1)}`,
-      `Q243 ${(e + 3).toFixed(1)} 254 ${(e - 2).toFixed(1)}`,
-      `Q265 ${(e - 7).toFixed(1)} 276 ${(e - 4).toFixed(1)}`,
-      `Q287 ${(e + 2).toFixed(1)} 298 ${(e + 1).toFixed(1)}`,
-      `Q311 ${(e - 4).toFixed(1)} 324 ${(e + 2).toFixed(1)}`
-    ].join(" "), l = [
+    const t = O(this._hass, this.config.entity), f = G(t), a = f === void 0 ? void 0 : b(f), c = G(O(this._hass, this.config.threshold_entity)), n = b(c ?? this.config.low_threshold ?? p), P = O(this._hass, this.config.status_entity), x = W(P?.state, a, n), v = d(this.config.name || "SaltWatch"), j = a === void 0 ? "—" : `${Math.round(a)}%`, s = 132, H = 474, w = H - s, e = a === void 0 ? H : H - a / 100 * w, o = H - n / 100 * w, i = [
+      `M96 ${(e + 2).toFixed(1)}`,
+      `Q108 ${(e - 2).toFixed(1)} 120 ${(e - 3).toFixed(1)}`,
+      `Q132 ${(e - 6).toFixed(1)} 145 ${(e - 4).toFixed(1)}`,
+      `Q159 ${(e - 1).toFixed(1)} 174 ${(e - 2).toFixed(1)}`,
+      `Q189 ${(e - 4).toFixed(1)} 204 ${(e - 3).toFixed(1)}`,
+      `Q220 ${(e + 1).toFixed(1)} 236 ${(e - 1).toFixed(1)}`,
+      `Q253 ${(e - 4).toFixed(1)} 270 ${(e - 2).toFixed(1)}`,
+      `Q288 ${(e + 1).toFixed(1)} 305 ${(e - 1).toFixed(1)}`,
+      `Q315 ${(e - 3).toFixed(1)} 324 ${(e + 1).toFixed(1)}`
+    ].join(" "), X = [
       i,
-      `L324 ${P}`,
-      `L96 ${P}`,
+      `L324 ${H}`,
+      `L96 ${H}`,
       "Z"
     ].join(" ");
     this.shadowRoot.innerHTML = `
@@ -120,7 +117,7 @@ class D extends HTMLElement {
       <ha-card class="tone-${x.tone}" tabindex="0" role="button" aria-label="${v}: ${d(j)}, ${d(x.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(a, l, i, e, o, n, x.tone)}
+            ${this.tankSvg(a, X, i, e, o, n, x.tone)}
           </section>
           <section class="content-panel">
             <header>
@@ -139,16 +136,16 @@ class D extends HTMLElement {
           </section>
         </div>
       </ha-card>`;
-    const X = this.shadowRoot.querySelector("ha-card");
-    X?.addEventListener("click", () => this.openMoreInfo()), X?.addEventListener("keydown", (u) => {
+    const l = this.shadowRoot.querySelector("ha-card");
+    l?.addEventListener("click", () => this.openMoreInfo()), l?.addEventListener("keydown", (u) => {
       u instanceof KeyboardEvent && (u.key === "Enter" || u.key === " ") && (u.preventDefault(), this.openMoreInfo());
     });
   }
-  tankSvg(t, f, a, s, n, H, x) {
-    const v = Array.from({ length: 21 }, (P, c) => {
-      const e = 100 - c * 5, o = 474 - e / 100 * 342, i = e % 25 === 0, l = !i && e % 10 === 0, X = i ? 60 : l ? 67 : 71;
-      return `${i ? `<text x="52" y="${o + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : l ? "medium" : "minor"}" d="M${X} ${o}H78"/>`;
-    }).join(""), j = t === void 0, w = Math.max(134, Math.min(470, n));
+  tankSvg(t, f, a, c, n, P, x) {
+    const v = Array.from({ length: 21 }, (H, w) => {
+      const e = 100 - w * 5, o = 474 - e / 100 * 342, i = e % 25 === 0, X = !i && e % 10 === 0, l = i ? 60 : X ? 67 : 71;
+      return `${i ? `<text x="52" y="${o + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : X ? "medium" : "minor"}" d="M${l} ${o}H78"/>`;
+    }).join(""), j = t === void 0, s = Math.max(134, Math.min(470, n));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${j ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
@@ -216,17 +213,16 @@ class D extends HTMLElement {
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)" stroke="#70797f" stroke-width="4"/>
         <g clip-path="url(#tank-window)">
-          ${j ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${s.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${k}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${a}"/>`}
+          ${j ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${k}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${a}"/>`}
           <rect x="96" y="110" width="228" height="364" fill="url(#glass-sheen)" opacity=".38"/>
         </g>
         <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".15" stroke-width="4"/>
         <path d="M322 145V443Q322 466 300 472" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="5"/>
         <path d="M108 119Q100 126 100 144" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/>
-        <path class="threshold tone-${x}" data-threshold="${H}" data-threshold-y="${n.toFixed(1)}" d="M12 ${n.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${x}" transform="translate(-42 ${w - 15})">
+        <path class="threshold tone-${x}" data-threshold="${P}" data-threshold-y="${n.toFixed(1)}" d="M12 ${n.toFixed(1)}H326"/>
+        <g class="threshold-label tone-${x}" transform="translate(-42 ${s - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
         </g>
-        <text class="threshold-value" x="334" y="${w + 5}" text-anchor="start">${Math.round(H)}%</text>
       </svg>`;
   }
   styles() {
@@ -257,7 +253,6 @@ class D extends HTMLElement {
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label.tone-fault rect { fill:var(--sw-fault); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
-      .threshold-value { fill:var(--secondary-text-color,#aeb6bb); font:14px system-ui,sans-serif; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }

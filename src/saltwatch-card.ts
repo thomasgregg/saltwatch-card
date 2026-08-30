@@ -137,18 +137,15 @@ export class SaltWatchCard extends HTMLElement {
     const saltY = level === undefined ? tankBottom : tankBottom - (level / 100) * tankHeight;
     const thresholdY = tankBottom - (threshold / 100) * tankHeight;
     const surfacePath = [
-      `M96 ${(saltY + 4).toFixed(1)}`,
-      `Q104 ${(saltY - 3).toFixed(1)} 112 ${(saltY - 4).toFixed(1)}`,
-      `Q121 ${(saltY - 11).toFixed(1)} 130 ${(saltY - 8).toFixed(1)}`,
-      `Q140 ${(saltY - 3).toFixed(1)} 150 ${(saltY - 6).toFixed(1)}`,
-      `Q160 ${(saltY - 9).toFixed(1)} 170 ${(saltY - 3).toFixed(1)}`,
-      `Q180 ${(saltY + 2).toFixed(1)} 190 ${(saltY - 1).toFixed(1)}`,
-      `Q200 ${(saltY - 7).toFixed(1)} 210 ${(saltY - 6).toFixed(1)}`,
-      `Q221 ${(saltY - 3).toFixed(1)} 232 ${(saltY + 1).toFixed(1)}`,
-      `Q243 ${(saltY + 3).toFixed(1)} 254 ${(saltY - 2).toFixed(1)}`,
-      `Q265 ${(saltY - 7).toFixed(1)} 276 ${(saltY - 4).toFixed(1)}`,
-      `Q287 ${(saltY + 2).toFixed(1)} 298 ${(saltY + 1).toFixed(1)}`,
-      `Q311 ${(saltY - 4).toFixed(1)} 324 ${(saltY + 2).toFixed(1)}`,
+      `M96 ${(saltY + 2).toFixed(1)}`,
+      `Q108 ${(saltY - 2).toFixed(1)} 120 ${(saltY - 3).toFixed(1)}`,
+      `Q132 ${(saltY - 6).toFixed(1)} 145 ${(saltY - 4).toFixed(1)}`,
+      `Q159 ${(saltY - 1).toFixed(1)} 174 ${(saltY - 2).toFixed(1)}`,
+      `Q189 ${(saltY - 4).toFixed(1)} 204 ${(saltY - 3).toFixed(1)}`,
+      `Q220 ${(saltY + 1).toFixed(1)} 236 ${(saltY - 1).toFixed(1)}`,
+      `Q253 ${(saltY - 4).toFixed(1)} 270 ${(saltY - 2).toFixed(1)}`,
+      `Q288 ${(saltY + 1).toFixed(1)} 305 ${(saltY - 1).toFixed(1)}`,
+      `Q315 ${(saltY - 3).toFixed(1)} 324 ${(saltY + 1).toFixed(1)}`,
     ].join(" ");
     const saltPath = [
       surfacePath,
@@ -294,7 +291,6 @@ export class SaltWatchCard extends HTMLElement {
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
         </g>
-        <text class="threshold-value" x="334" y="${labelY + 5}" text-anchor="start">${Math.round(threshold)}%</text>
       </svg>`;
   }
 
@@ -326,7 +322,6 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label.tone-fault rect { fill:var(--sw-fault); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
-      .threshold-value { fill:var(--secondary-text-color,#aeb6bb); font:14px system-ui,sans-serif; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
