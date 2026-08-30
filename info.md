@@ -1,7 +1,9 @@
 # SaltWatch Card
 
-Visualize estimated water-softener salt level as a granular, dynamically filled
-tank with low-level threshold, health state, forecast, distance, and real Home
-Assistant history.
+Visualize estimated water-softener salt level as a detailed granular tank with
+an uneven salt surface, precise percentage scale, low marker, and health state.
+
+Use Home Assistant's native Tile and Statistics Graph cards alongside it for
+threshold controls, forecast, distance, and history.
 
 See the repository README for installation and configuration.

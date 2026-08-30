@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildSparklinePath,
   clamp,
   deriveStatus,
-  historyValues,
   parseFinite,
-  relativeUpdated,
 } from "./model";
 
 describe("SaltWatch card model", () => {
@@ -37,18 +34,4 @@ describe("SaltWatch card model", () => {
     expect(deriveStatus("Good", 20.1, 20)).toEqual({ label: "Good", tone: "good" });
   });
 
-  it("filters invalid history without inventing values", () => {
-    expect(historyValues([{ s: "84" }, { s: "unknown" }, { s: "105" }])).toEqual([84, 100]);
-  });
-
-  it("creates an SVG path only when real history exists", () => {
-    expect(buildSparklinePath([], 100, 50)).toBe("");
-    expect(buildSparklinePath([80, 60], 100, 50)).toBe("M3.0 11.8 L97.0 20.6");
-  });
-
-  it("formats the entity update age", () => {
-    const now = Date.parse("2026-08-30T10:00:00Z");
-    expect(relativeUpdated("2026-08-30T09:59:45Z", now)).toBe("Updated now");
-    expect(relativeUpdated("2026-08-30T09:55:00Z", now)).toBe("Updated 5m ago");
-  });
 });

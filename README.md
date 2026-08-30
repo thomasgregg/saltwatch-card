@@ -1,18 +1,21 @@
 # SaltWatch Card
 
 **A purpose-built Home Assistant card for seeing your estimated water-softener
-salt level, health, and refill forecast at a glance.**
+salt level as a physical, granular tank.**
 
 SaltWatch Card turns a percentage sensor into a granular brine-tank
-visualization. The salt surface moves with the measured level, stays subtly
-uneven so it reads as salt rather than liquid, and includes a visible low-salt
-threshold. Optional SaltWatch entities add status, distance, forecast, and real
-Home Assistant history.
+visualization. The salt surface moves with the measured level, stays uneven so
+it reads as salt rather than liquid, and includes a precise scale and visible
+low-salt threshold.
+
+The card intentionally focuses on the visualization Home Assistant does not
+already provide. Use native Tile and Statistics Graph cards for controls,
+forecast, distance, and history.
 
 The card is designed for [SaltWatch](https://github.com/thomasgregg/saltwatch)
 but works with any numeric percentage sensor.
 
-![SaltWatch Card showing a granular tank at 62 percent with forecast and history](images/saltwatch-card.png)
+![SaltWatch Card showing a detailed granular tank at 62 percent](images/saltwatch-card.png)
 
 > [!IMPORTANT]
 > The card visualizes the value supplied by the selected entity. SaltWatch's
@@ -21,23 +24,24 @@ but works with any numeric percentage sensor.
 
 ## Current status
 
-SaltWatch Card is under active initial development. The card, graphical editor,
-responsive layout, real history sparkline, and explicit unavailable states are
+SaltWatch Card is under active initial development. The focused tank card,
+graphical editor, responsive layout, and explicit unavailable states are
 implemented. The first tagged HACS release will follow device testing in Home
 Assistant.
 
 ## Features
 
-- Granular salt fill with a gently uneven top surface
+- Dense, layered salt crystals with an uneven top surface
+- Detailed molded tank, lid, window, base, and material shading
+- Major, medium, and minor percentage scale ticks
 - Exact 0–100% vertical positioning from the selected entity
 - Dynamic low-salt threshold marker
 - `Good`, `Low Salt`, `Calibration Required`, and `Sensor Fault` states
 - Explicit `No current reading` presentation instead of a frozen old level
-- Optional days-until-low forecast and distance measurement
-- Real recorder history with refill jumps; no fabricated chart data
 - Responsive desktop, tablet, and narrow dashboard layouts
 - Home Assistant card-picker registration and graphical configuration form
 - Keyboard-accessible more-info action
+- No recorder calls or duplicate chart/control implementations
 
 ## Development preview
 
@@ -78,10 +82,6 @@ type: custom:saltwatch-card
 entity: sensor.saltwatch_salt_level
 status_entity: sensor.saltwatch_salt_status
 threshold_entity: number.saltwatch_low_salt_threshold
-forecast_entity: sensor.saltwatch_estimated_days_until_low_salt
-distance_entity: sensor.saltwatch_distance_to_salt
-show_history: true
-history_hours: 336
 ```
 
 Only `entity` is required.
@@ -92,11 +92,60 @@ Only `entity` is required.
 | `name` | Card heading | `SaltWatch` |
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |
-| `forecast_entity` | Numeric estimated days until low salt | None |
-| `distance_entity` | Numeric lid-to-salt distance sensor | None |
 | `low_threshold` | Marker used when no threshold entity is supplied | `20` |
-| `show_history` | Load and show actual Home Assistant recorder history | `true` |
-| `history_hours` | Recorder history window, 24–720 hours | `336` |
+
+## Recommended native dashboard composition
+
+Keep SaltWatch Card focused on the tank and let Home Assistant render the
+controls, supporting sensor values, and history. This preserves native theming,
+editing, actions, accessibility, and recorder behavior.
+
+```yaml
+type: vertical-stack
+cards:
+  - type: custom:saltwatch-card
+    entity: sensor.saltwatch_salt_level
+    status_entity: sensor.saltwatch_salt_status
+    threshold_entity: number.saltwatch_low_salt_threshold
+
+  - type: grid
+    columns: 3
+    square: false
+    cards:
+      - type: tile
+        entity: number.saltwatch_low_salt_threshold
+        name: Low salt threshold
+        features:
+          - type: numeric-input
+            style: slider
+
+      - type: tile
+        entity: sensor.saltwatch_estimated_days_until_low_salt
+        name: Until low salt
+
+      - type: tile
+        entity: sensor.saltwatch_distance_to_salt
+        name: Distance to salt
+
+  - type: statistics-graph
+    entities:
+      - entity: sensor.saltwatch_salt_level
+        name: Salt level
+        color: "#f2ae32"
+    days_to_show: 14
+    period: hour
+    chart_type: line
+    stat_types:
+      - mean
+    min_y_axis: 0
+    max_y_axis: 100
+    hide_legend: true
+```
+
+SaltWatch's percentage sensor has `state_class: measurement`, so Home
+Assistant can retain and graph its long-term statistics. For exact recorder
+states instead of hourly statistics, use a native `history-graph` card with
+`hours_to_show: 336`.
 
 ## Failure behavior
 

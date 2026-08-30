@@ -8,16 +8,7 @@ export interface HassEntity {
 
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
-  callWS<T>(message: Record<string, unknown>): Promise<T>;
 }
-
-export interface HistoryState {
-  s: string;
-  lu?: number;
-  lc?: number;
-}
-
-export type HistoryResponse = Record<string, HistoryState[]>;
 
 export interface SaltWatchCardConfig {
   type: string;
@@ -25,11 +16,7 @@ export interface SaltWatchCardConfig {
   name?: string;
   status_entity?: string;
   threshold_entity?: string;
-  forecast_entity?: string;
-  distance_entity?: string;
   low_threshold?: number;
-  history_hours?: number;
-  show_history?: boolean;
 }
 
 export interface CustomCardRegistration {

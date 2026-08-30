@@ -12,7 +12,7 @@ if (!window.customCards.some((card) => card.type === CARD_TAG)) {
   window.customCards.push({
     type: CARD_TAG,
     name: "SaltWatch Card",
-    description: "Visualize estimated water-softener salt level, health, and refill forecast.",
+    description: "Visualize estimated water-softener salt level in a detailed granular tank.",
     preview: true,
     documentationURL: "https://github.com/thomasgregg/saltwatch-card",
     getEntitySuggestion: (hass, entityId) => {

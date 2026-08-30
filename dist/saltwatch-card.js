@@ -1,64 +1,32 @@
-const z = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "nan"]);
-function L(o) {
+const F = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "nan"]);
+function C(o) {
   if (typeof o == "number")
     return Number.isFinite(o) ? o : void 0;
-  if (typeof o != "string" || z.has(o.trim().toLowerCase()))
+  if (typeof o != "string" || F.has(o.trim().toLowerCase()))
     return;
   const t = Number(o);
   return Number.isFinite(t) ? t : void 0;
 }
-function g(o, t = 0, s = 100) {
-  return Math.min(s, Math.max(t, o));
+function $(o, t = 0, r = 100) {
+  return Math.min(r, Math.max(t, o));
 }
-function w(o) {
-  return L(o?.state);
+function M(o) {
+  return C(o?.state);
 }
-function A(o, t, s) {
+function Q(o, t, r) {
   const e = o?.trim().toLowerCase() ?? "";
-  return e.includes("fault") || e.includes("error") ? { label: "Sensor fault", tone: "fault" } : e.includes("calibration") ? { label: "Calibration required", tone: "warning" } : t === void 0 ? { label: "No current reading", tone: "fault" } : e.includes("low") || t <= s ? { label: "Low salt", tone: "low" } : { label: o?.trim() || "Good", tone: "good" };
+  return e.includes("fault") || e.includes("error") ? { label: "Sensor fault", tone: "fault" } : e.includes("calibration") ? { label: "Calibration required", tone: "warning" } : t === void 0 ? { label: "No current reading", tone: "fault" } : e.includes("low") || t <= r ? { label: "Low salt", tone: "low" } : { label: o?.trim() || "Good", tone: "good" };
 }
-function D(o) {
-  return o ? o.map((t) => L(t.s)).filter((t) => t !== void 0).map((t) => g(t)) : [];
-}
-function Z(o, t, s, e = 3) {
-  if (o.length < 2) return "";
-  const a = t - e * 2, i = s - e * 2;
-  return o.map((n, r) => {
-    const l = e + r / (o.length - 1) * a, c = e + (100 - g(n)) / 100 * i;
-    return `${r === 0 ? "M" : "L"}${l.toFixed(1)} ${c.toFixed(1)}`;
-  }).join(" ");
-}
-function G(o, t = Date.now()) {
-  if (!o) return "Update unknown";
-  const s = Date.parse(o);
-  if (!Number.isFinite(s)) return "Update unknown";
-  const e = Math.max(0, Math.floor((t - s) / 1e3));
-  if (e < 60) return "Updated now";
-  const a = Math.floor(e / 60);
-  if (a < 60) return `Updated ${a}m ago`;
-  const i = Math.floor(a / 60);
-  return i < 24 ? `Updated ${i}h ago` : `Updated ${Math.floor(i / 24)}d ago`;
-}
-function f(o) {
+function u(o) {
   return String(o).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
-const M = 20, S = 336, T = 900 * 1e3;
-function x(o, t) {
+const k = 20;
+function v(o, t) {
   return t ? o?.states[t] : void 0;
 }
-function V() {
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5 16.5 4 20 7.5 7.5 20 4 16.5Zm4.2-.7 1.4 1.4m1.1-4.1 1.4 1.4m1.1-4.1 1.4 1.4"/></svg>';
-}
-function U() {
-  return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>';
-}
-class O extends HTMLElement {
+class S extends HTMLElement {
   config;
   _hass;
-  history = [];
-  historyRequestKey = "";
-  historyRequestedAt = 0;
-  historyGeneration = 0;
   constructor() {
     super(), this.attachShadow({ mode: "open" });
   }
@@ -76,90 +44,46 @@ class O extends HTMLElement {
           name: "",
           schema: [
             { name: "status_entity", selector: { entity: {} } },
-            { name: "threshold_entity", selector: { entity: {} } },
-            { name: "forecast_entity", selector: { entity: { domain: "sensor" } } },
-            { name: "distance_entity", selector: { entity: { domain: "sensor" } } }
+            { name: "threshold_entity", selector: { entity: {} } }
           ]
         },
         {
-          type: "grid",
-          name: "",
-          schema: [
-            {
-              name: "low_threshold",
-              selector: { number: { min: 0, max: 100, step: 1, mode: "box" } }
-            },
-            {
-              name: "history_hours",
-              selector: { number: { min: 24, max: 720, step: 24, mode: "box" } }
-            }
-          ]
-        },
-        { name: "show_history", selector: { boolean: {} } }
+          name: "low_threshold",
+          selector: { number: { min: 0, max: 100, step: 1, mode: "box" } }
+        }
       ],
       computeLabel: (t) => ({
         entity: "Estimated salt level entity",
         name: "Card title",
         status_entity: "Salt status entity",
         threshold_entity: "Low threshold entity",
-        forecast_entity: "Days until low entity",
-        distance_entity: "Distance to salt entity",
-        low_threshold: "Fallback low threshold",
-        history_hours: "History window in hours",
-        show_history: "Show level history"
+        low_threshold: "Fallback low threshold"
       })[t.name] ?? t.name
     };
   }
-  static getStubConfig(t, s = [], e = []) {
-    const a = [...s, ...e, ...Object.keys(t.states)], i = [...new Set(a)], n = (...m) => i.find((v) => m.every((k) => v.includes(k))), r = {
+  static getStubConfig(t, r = [], e = []) {
+    const f = [...r, ...e, ...Object.keys(t.states)], i = [...new Set(f)], n = (...x) => i.find((l) => x.every((d) => l.includes(d))), s = {
       entity: n("saltwatch", "salt_level") ?? n("salt", "level") ?? "sensor.saltwatch_salt_level",
-      low_threshold: M,
-      history_hours: S,
-      show_history: !0
-    }, l = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), h = n("saltwatch", "estimated_days_until_low_salt"), p = n("saltwatch", "distance_to_salt");
-    return l && (r.status_entity = l), c && (r.threshold_entity = c), h && (r.forecast_entity = h), p && (r.distance_entity = p), r;
+      low_threshold: k
+    }, p = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold");
+    return p && (s.status_entity = p), c && (s.threshold_entity = c), s;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     this.config = {
       ...t,
-      low_threshold: t.low_threshold ?? M,
-      history_hours: t.history_hours ?? S,
-      show_history: t.show_history ?? !0
-    }, this.history = [], this.historyRequestKey = "", this.historyGeneration += 1, this.render(), this.loadHistoryIfNeeded();
+      low_threshold: t.low_threshold ?? k
+    }, this.render();
   }
   set hass(t) {
-    this._hass = t, this.render(), this.loadHistoryIfNeeded();
+    this._hass = t, this.render();
   }
   getCardSize() {
-    return 8;
+    return 6;
   }
   getGridOptions() {
-    return { columns: 12, rows: 9, min_columns: 6, min_rows: 7 };
-  }
-  async loadHistoryIfNeeded() {
-    if (!this._hass || !this.config?.show_history) return;
-    const t = g(this.config.history_hours ?? S, 24, 720), s = `${this.config.entity}:${t}`;
-    if (s === this.historyRequestKey && Date.now() - this.historyRequestedAt < T) return;
-    this.historyRequestKey = s, this.historyRequestedAt = Date.now();
-    const a = ++this.historyGeneration, i = /* @__PURE__ */ new Date(), n = new Date(i.getTime() - t * 60 * 60 * 1e3);
-    try {
-      const r = await this._hass.callWS({
-        type: "history/history_during_period",
-        start_time: n.toISOString(),
-        end_time: i.toISOString(),
-        entity_ids: [this.config.entity],
-        minimal_response: !0,
-        no_attributes: !0,
-        significant_changes_only: !1
-      });
-      if (a !== this.historyGeneration) return;
-      this.history = D(r[this.config.entity]), this.render();
-    } catch {
-      if (a !== this.historyGeneration) return;
-      this.history = [], this.render();
-    }
+    return { columns: 12, rows: 7, min_columns: 6, min_rows: 6 };
   }
   openMoreInfo() {
     if (!this.config) return;
@@ -172,76 +96,62 @@ class O extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = x(this._hass, this.config.entity), s = w(t), e = s === void 0 ? void 0 : g(s), a = w(x(this._hass, this.config.threshold_entity)), i = g(a ?? this.config.low_threshold ?? M), n = x(this._hass, this.config.status_entity), r = A(n?.state, e, i), l = w(x(this._hass, this.config.forecast_entity)), c = x(this._hass, this.config.distance_entity), h = e === void 0 ? void 0 : w(c), p = f(this.config.name || "SaltWatch"), m = e === void 0 ? "—" : `${Math.round(e)}%`, v = G(t?.last_updated), k = 132, u = 474, H = u - k, d = e === void 0 ? u : u - e / 100 * H, q = u - i / 100 * H, E = [
-      `M96 ${(d + 2).toFixed(1)}`,
-      `C126 ${(d - 8).toFixed(1)} 154 ${(d - 6).toFixed(1)} 181 ${(d - 1).toFixed(1)}`,
-      `C211 ${(d + 5).toFixed(1)} 240 ${(d - 5).toFixed(1)} 270 ${(d + 2).toFixed(1)}`,
-      `C290 ${(d + 5).toFixed(1)} 306 ${(d + 3).toFixed(1)} 324 ${(d + 1).toFixed(1)}`,
-      `L324 ${u}`,
-      `L96 ${u}`,
+    const t = v(this._hass, this.config.entity), r = M(t), e = r === void 0 ? void 0 : $(r), f = M(v(this._hass, this.config.threshold_entity)), i = $(f ?? this.config.low_threshold ?? k), n = v(this._hass, this.config.status_entity), s = Q(n?.state, e, i), p = u(this.config.name || "SaltWatch"), c = e === void 0 ? "—" : `${Math.round(e)}%`, x = 132, l = 474, d = l - x, a = e === void 0 ? l : l - e / 100 * d, h = l - i / 100 * d, y = [
+      `M96 ${(a + 3).toFixed(1)}`,
+      `C111 ${(a - 2).toFixed(1)} 121 ${(a - 12).toFixed(1)} 138 ${(a - 10).toFixed(1)}`,
+      `C155 ${(a - 8).toFixed(1)} 168 ${(a - 1).toFixed(1)} 184 ${(a + 1).toFixed(1)}`,
+      `C201 ${(a + 5).toFixed(1)} 216 ${(a - 7).toFixed(1)} 235 ${(a - 4).toFixed(1)}`,
+      `C251 ${(a - 3).toFixed(1)} 263 ${(a + 6).toFixed(1)} 280 ${(a + 4).toFixed(1)}`,
+      `C296 ${(a + 2).toFixed(1)} 308 ${(a - 3).toFixed(1)} 324 ${(a + 2).toFixed(1)}`,
+      `L324 ${l}`,
+      `L96 ${l}`,
       "Z"
-    ].join(" "), _ = this.config.show_history !== !1, $ = _ ? [...this.history] : [];
-    e !== void 0 && $.at(-1) !== e && $.push(e);
-    const F = Z($, 360, 92, 5), Q = e === void 0 ? "Unavailable" : r.tone === "low" ? "0 days" : l === void 0 ? "Learning" : `${Math.max(0, Math.round(l))} days`, R = e === void 0 ? "measurement unavailable" : l === void 0 && r.tone !== "low" ? "forecast not ready" : "until low salt";
+    ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${r.tone}" tabindex="0" role="button" aria-label="${p}: ${f(m)}, ${f(r.label)}">
+      <ha-card class="tone-${s.tone}" tabindex="0" role="button" aria-label="${p}: ${u(c)}, ${u(s.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(e, E, d, q, i, r.tone)}
+            ${this.tankSvg(e, y, a, h, i, s.tone)}
           </section>
           <section class="content-panel">
             <header>
               <div class="title">${p}</div>
-              <div class="status"><span class="status-dot"></span>${f(r.label)}</div>
+              <div class="status"><span class="status-dot"></span>${u(s.label)}</div>
             </header>
             <div class="reading">
-              <div class="level">${m}</div>
-              <div class="level-label">${e === void 0 ? f(r.label) : "Estimated salt level"}</div>
+              <div class="level">${c}</div>
+              <div class="level-label">${e === void 0 ? u(s.label) : "Estimated salt level"}</div>
             </div>
-            <div class="forecast${_ ? "" : " no-history"}">
-              <div class="forecast-copy">
-                <strong>${f(Q)}</strong>
-                <span>${f(R)}</span>
-              </div>
-              ${_ ? `<div class="chart" aria-label="Salt level history">
-                <svg viewBox="0 0 360 92" preserveAspectRatio="none" role="img">
-                  <path class="chart-grid" d="M5 23 H355 M5 69 H355" />
-                  ${e !== void 0 && F ? `<path class="chart-line" d="${F}"/><circle class="chart-dot" cx="355" cy="${this.sparklineLastY(e)}" r="3.5"/>` : `<text x="180" y="50" text-anchor="middle">${e === void 0 ? "Measurement unavailable" : "History is learning"}</text>`}
-                </svg>
-              </div>` : ""}
+            <div class="threshold-summary" aria-label="Low salt marker at ${Math.round(i)} percent">
+              <span class="marker-line"></span>
+              <span>Low marker</span>
+              <strong>${Math.round(i)}%</strong>
             </div>
-            <footer>
-              <div>${V()}<span>${h === void 0 ? "Distance unavailable" : `Distance ${h.toFixed(1)} cm`}</span></div>
-              <div>${U()}<span>${f(v)}</span></div>
-            </footer>
           </section>
         </div>
       </ha-card>`;
-    const C = this.shadowRoot.querySelector("ha-card");
-    C?.addEventListener("click", () => this.openMoreInfo()), C?.addEventListener("keydown", (y) => {
-      y instanceof KeyboardEvent && (y.key === "Enter" || y.key === " ") && (y.preventDefault(), this.openMoreInfo());
+    const b = this.shadowRoot.querySelector("ha-card");
+    b?.addEventListener("click", () => this.openMoreInfo()), b?.addEventListener("keydown", (m) => {
+      m instanceof KeyboardEvent && (m.key === "Enter" || m.key === " ") && (m.preventDefault(), this.openMoreInfo());
     });
   }
-  sparklineLastY(t) {
-    return t === void 0 ? "46" : (5 + (100 - t) / 100 * 82).toFixed(1);
-  }
-  tankSvg(t, s, e, a, i, n) {
-    const r = [100, 75, 50, 25, 0].map((h) => {
-      const p = 474 - h / 100 * 342;
-      return `<text x="54" y="${p + 5}" text-anchor="end">${h}%</text><path d="M62 ${p}h14"/>`;
-    }).join(""), l = t === void 0, c = Math.max(134, Math.min(470, a));
+  tankSvg(t, r, e, f, i, n) {
+    const s = Array.from({ length: 21 }, (x, l) => {
+      const d = 100 - l * 5, a = 474 - d / 100 * 342, h = d % 25 === 0, w = !h && d % 10 === 0, y = h ? 60 : w ? 67 : 71;
+      return `${h ? `<text x="52" y="${a + 5}" text-anchor="end">${d}%</text>` : ""}<path class="${h ? "major" : w ? "medium" : "minor"}" d="M${y} ${a}H78"/>`;
+    }).join(""), p = t === void 0, c = Math.max(134, Math.min(470, f));
     return `
-      <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${l ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
+      <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${p ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#626a70"/><stop offset=".13" stop-color="#2c3338"/><stop offset=".52" stop-color="#12171a"/><stop offset=".82" stop-color="#343b40"/><stop offset="1" stop-color="#171c20"/>
+            <stop offset="0" stop-color="#747b80"/><stop offset=".09" stop-color="#343b40"/><stop offset=".32" stop-color="#171c1f"/><stop offset=".7" stop-color="#0e1316"/><stop offset=".91" stop-color="#3b4247"/><stop offset="1" stop-color="#171c20"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#20262a"/><stop offset=".18" stop-color="#5d656b"/><stop offset=".35" stop-color="#252b2f"/><stop offset=".8" stop-color="#151a1d"/><stop offset="1" stop-color="#4e565c"/>
+            <stop offset="0" stop-color="#111619"/><stop offset=".15" stop-color="#626a6f"/><stop offset=".27" stop-color="#282f33"/><stop offset=".76" stop-color="#111619"/><stop offset="1" stop-color="#555d62"/>
           </linearGradient>
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#646c72"/><stop offset=".22" stop-color="#353c41"/><stop offset=".72" stop-color="#151a1d"/><stop offset="1" stop-color="#30373c"/>
+            <stop offset="0" stop-color="#697176"/><stop offset=".13" stop-color="#41484d"/><stop offset=".52" stop-color="#181d20"/><stop offset=".8" stop-color="#101518"/><stop offset="1" stop-color="#343b40"/>
           </linearGradient>
           <linearGradient id="tank-glass" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#090d0f"/><stop offset=".13" stop-color="#1d2327"/><stop offset=".52" stop-color="#242a2e"/><stop offset=".88" stop-color="#121719"/><stop offset="1" stop-color="#080b0d"/>
@@ -249,24 +159,58 @@ class O extends HTMLElement {
           <linearGradient id="glass-sheen" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/><stop offset=".1" stop-color="#ffffff" stop-opacity=".03"/><stop offset=".48" stop-color="#ffffff" stop-opacity="0"/><stop offset=".86" stop-color="#ffffff" stop-opacity=".045"/><stop offset="1" stop-color="#ffffff" stop-opacity=".14"/>
           </linearGradient>
-          <pattern id="pellets" width="34" height="29" patternUnits="userSpaceOnUse" patternTransform="rotate(-2)">
-            <rect width="34" height="29" fill="#d9d0bd"/>
-            <path d="M1 4Q4 0 9 2l3 3-2 5-7 1-3-3Z" fill="#fffbed"/>
-            <path d="m14 1 7 1 2 4-4 5-7-2-1-4Z" fill="#e9e0cd"/>
-            <path d="m25 3 6-1 4 4-2 6-7 1-4-5Z" fill="#f8f2e3"/>
-            <path d="m5 14 7-2 5 4-2 6-8 1-4-4Z" fill="#eee6d5"/>
-            <path d="m19 13 7-1 4 4-1 6-8 2-4-5Z" fill="#fff9e9"/>
-            <path d="m31 15 5 3-1 7-6 2-4-5 1-5Z" fill="#d2c7b2"/>
-            <path d="m1 24 6-2 5 4-1 4H2Z" fill="#f9f3e4"/>
-            <path d="m13 25 6-2 5 3-1 4H14Z" fill="#d8cdb8"/>
-            <path d="m25 26 5-3 5 3-1 4h-8Z" fill="#f4eddd"/>
-            <g fill="none" stroke="#b8ad98" stroke-opacity=".45" stroke-width=".7"><path d="m3 8 6-3"/><path d="m15 7 6-3"/><path d="m26 9 6-3"/><path d="m7 20 7-4"/><path d="m20 20 7-4"/></g>
+          <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
+          </linearGradient>
+          <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".04"/><stop offset="1" stop-color="#625744" stop-opacity=".24"/>
+          </linearGradient>
+          <linearGradient id="crystal-light" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fffdf5"/><stop offset=".45" stop-color="#eee7d8"/><stop offset="1" stop-color="#beb39f"/>
+          </linearGradient>
+          <linearGradient id="crystal-warm" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#eee7d8"/><stop offset=".55" stop-color="#d8cebc"/><stop offset="1" stop-color="#a99e8b"/>
+          </linearGradient>
+          <pattern id="pellets" width="19" height="17" patternUnits="userSpaceOnUse" patternTransform="rotate(-1) scale(.8)">
+            <g stroke="#9f9584" stroke-width=".38" stroke-linejoin="round">
+              <path d="M-1 1 3-.5 6 1.8 4.7 5 1 5.6-1 3.5Z" fill="url(#crystal-light)"/>
+              <path d="m7 .5 4-1 3.2 2.4-.9 3.3-4.4.5-2.5-2.3Z" fill="url(#crystal-warm)"/>
+              <path d="m15 1 3.2-1.2 2.5 2.5-1.1 3.5-4.2-.2-1.7-2.3Z" fill="url(#crystal-light)"/>
+              <path d="m2 6.2 4.2-.8 2.5 2.8-1.5 3.4-4.4.1L.7 9Z" fill="url(#crystal-warm)"/>
+              <path d="m10 6 4.5-.2 2.1 3.2-2 3.1-4.1-.7-1.8-2.5Z" fill="url(#crystal-light)"/>
+              <path d="m17 6.4 3.2 1.5-.4 4.2-3.7 1-2-3.3Z" fill="url(#crystal-warm)"/>
+              <path d="m-1 12 3.7-.9 2.9 2.5-1.3 3.7H.2l-2-2.4Z" fill="url(#crystal-light)"/>
+              <path d="m6.4 12.4 4.1-.7 2.7 2.6-1.4 3.5-4.4.1-2.2-2.8Z" fill="url(#crystal-light)"/>
+              <path d="m14 12.7 3.6-1.1 2.8 2.8-1.6 3.5h-4.2l-1.8-2.9Z" fill="url(#crystal-warm)"/>
+            </g>
+            <g fill="none" stroke="#fffdf7" stroke-opacity=".7" stroke-width=".42"><path d="m1 2 3-.8"/><path d="m8.8 1.5 3-.5"/><path d="m3 7.4 3-.7"/><path d="m11 7.1 3-.2"/><path d="m7.5 13.4 3-.5"/></g>
+          </pattern>
+          <pattern id="salt-facets" width="37" height="31" patternUnits="userSpaceOnUse" patternTransform="rotate(4) scale(.86)">
+            <g fill="none" stroke="#766d60" stroke-opacity=".23" stroke-width=".65"><path d="m2 7 5 2 3-5"/><path d="m15 4 4 3 5-3"/><path d="m28 8 4-4 4 3"/><path d="m5 20 5-3 4 4"/><path d="m21 18 4-3 5 4"/><path d="m30 27 4-4 4 3"/></g>
+          </pattern>
+          <pattern id="pellet-variation" width="43" height="37" patternUnits="userSpaceOnUse" patternTransform="rotate(-7)">
+            <g stroke-linejoin="round">
+              <path d="m3 8 3-2 3 1-1 4-4 1Z" fill="#887d6c" opacity=".2"/>
+              <path d="m16 3 4-1 2 3-3 3-4-2Z" fill="#fffef7" opacity=".28"/>
+              <path d="m31 8 3-2 4 2-2 4-4-1Z" fill="#918571" opacity=".23"/>
+              <path d="m10 23 4-2 3 3-2 4-5-1Z" fill="#fffdf4" opacity=".23"/>
+              <path d="m25 18 3-3 4 2-1 5-4 1Z" fill="#7f7463" opacity=".2"/>
+              <path d="m36 29 4-1 2 3-3 4-4-2Z" fill="#fffef9" opacity=".26"/>
+              <path d="m4 34 4-3 3 2-1 4H6Z" fill="#817563" opacity=".18"/>
+            </g>
           </pattern>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
           </pattern>
           <clipPath id="tank-window"><path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
-          <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#000" flood-opacity=".55"/></filter>
+          <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#000" flood-opacity=".62"/></filter>
+          <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
+            <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="noise"/>
+            <feColorMatrix in="noise" values=".28 0 0 0 0  0 .28 0 0 0  0 0 .28 0 0  0 0 0 .12 0" result="grain"/>
+            <feComposite in="grain" in2="SourceAlpha" operator="in" result="masked-grain"/>
+            <feBlend in="SourceGraphic" in2="masked-grain" mode="soft-light"/>
+          </filter>
+          <filter id="inner-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#000" flood-opacity=".88"/></filter>
           <filter id="salt-shadow" x="-10%" y="-12%" width="120%" height="130%">
             <feTurbulence type="fractalNoise" baseFrequency=".08 .18" numOctaves="2" seed="13" result="noise"/>
             <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
@@ -275,26 +219,36 @@ class O extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-3" stdDeviation="4" flood-color="#fff" flood-opacity=".22"/>
           </filter>
         </defs>
-        <g class="ruler">${r}</g>
+        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${s}</g>
         <ellipse cx="211" cy="510" rx="132" ry="19" fill="#000" opacity=".4"/>
         <g filter="url(#frame-shadow)">
-          <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#111619" stroke-width="3"/>
-          <path d="M80 147V450Q80 483 111 491L94 499Q69 487 69 452V151Z" fill="url(#tank-edge)" opacity=".9"/>
-          <path d="M340 147V450Q340 483 309 491L326 499Q351 487 351 452V151Z" fill="url(#tank-edge)" opacity=".9"/>
-          <path d="M68 91Q68 68 91 63H329Q352 68 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#0d1113" stroke-width="3"/>
-          <path d="M60 105H360V122Q358 132 348 136H72Q62 132 60 122Z" fill="url(#tank-edge)" stroke="#0b0f11" stroke-width="2"/>
-          <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#lid-face)" stroke="#161b1e" stroke-width="3"/>
-          <path d="M160 43H260" stroke="#7c8489" stroke-opacity=".45" stroke-width="2"/>
-          <path d="M99 492H321L310 518H110Z" fill="url(#tank-edge)" stroke="#0b0e10" stroke-width="3"/>
+          <g filter="url(#polymer)">
+            <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#0a0e10" stroke-width="3"/>
+            <path d="M80 147V450Q80 483 111 491L94 499Q69 487 69 452V151Z" fill="url(#tank-edge)"/>
+            <path d="M340 147V450Q340 483 309 491L326 499Q351 487 351 452V151Z" fill="url(#tank-edge)"/>
+            <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#090d0f" stroke-width="3"/>
+            <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
+            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#lid-face)" stroke="#101518" stroke-width="3"/>
+            <path d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="3"/>
+          </g>
+          <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#8b9296" stroke-opacity=".34" stroke-width="2"/>
+          <path d="M65 105H355" stroke="#7d858a" stroke-opacity=".42" stroke-width="1.4"/>
+          <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
+          <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
+          <path d="M77 148V446Q77 473 96 486" fill="none" stroke="#8f979c" stroke-opacity=".22" stroke-width="2"/>
+          <path d="M343 148V446Q343 473 324 486" fill="none" stroke="#06090b" stroke-opacity=".72" stroke-width="3"/>
         </g>
-        <path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)" stroke="#687177" stroke-width="4"/>
+        <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
+        <path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)" stroke="#70797f" stroke-width="4"/>
         <g clip-path="url(#tank-window)">
-          ${l ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${e.toFixed(1)}" d="${s}" fill="url(#pellets)" filter="url(#salt-shadow)"/><path class="salt-highlight" d="M98 ${(e + 2).toFixed(1)} C128 ${(e - 8).toFixed(1)} 154 ${(e - 6).toFixed(1)} 182 ${(e - 1).toFixed(1)} C211 ${(e + 5).toFixed(1)} 240 ${(e - 5).toFixed(1)} 270 ${(e + 2).toFixed(1)} C291 ${(e + 5).toFixed(1)} 306 ${(e + 3).toFixed(1)} 322 ${(e + 1).toFixed(1)}"/>`}
+          ${p ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${e.toFixed(1)}" d="${r}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><path class="salt-grains" d="${r}" fill="url(#pellets)"/><path class="salt-variation" d="${r}" fill="url(#pellet-variation)"/><path class="salt-facets" d="${r}" fill="url(#salt-facets)"/><path class="salt-depth" d="${r}" fill="url(#salt-shade)"/><path class="salt-highlight" d="M97 ${(e + 3).toFixed(1)} C112 ${(e - 2).toFixed(1)} 122 ${(e - 12).toFixed(1)} 138 ${(e - 10).toFixed(1)} C155 ${(e - 8).toFixed(1)} 168 ${(e - 1).toFixed(1)} 184 ${(e + 1).toFixed(1)} C201 ${(e + 5).toFixed(1)} 216 ${(e - 7).toFixed(1)} 235 ${(e - 4).toFixed(1)} C251 ${(e - 3).toFixed(1)} 263 ${(e + 6).toFixed(1)} 280 ${(e + 4).toFixed(1)} C296 ${(e + 2).toFixed(1)} 308 ${(e - 3).toFixed(1)} 323 ${(e + 2).toFixed(1)}"/>`}
           <rect x="96" y="110" width="228" height="364" fill="url(#glass-sheen)" opacity=".38"/>
         </g>
-        <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".11" stroke-width="5"/>
-        <path class="threshold tone-${n}" data-threshold="${i}" data-threshold-y="${a.toFixed(1)}" d="M58 ${a.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${n}" transform="translate(4 ${c - 15})">
+        <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".15" stroke-width="4"/>
+        <path d="M322 145V443Q322 466 300 472" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="5"/>
+        <path d="M108 119Q100 126 100 144" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/>
+        <path class="threshold tone-${n}" data-threshold="${i}" data-threshold-y="${f.toFixed(1)}" d="M12 ${f.toFixed(1)}H326"/>
+        <g class="threshold-label tone-${n}" transform="translate(-42 ${c - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
         </g>
         <text class="threshold-value" x="334" y="${c + 5}" text-anchor="start">${Math.round(i)}%</text>
@@ -307,12 +261,20 @@ class O extends HTMLElement {
       ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:linear-gradient(135deg,color-mix(in srgb,var(--ha-card-background,#181d21) 96%,#253039),color-mix(in srgb,var(--ha-card-background,#181d21) 86%,#050708)); border:1px solid color-mix(in srgb,var(--divider-color,#536069) 64%,transparent); border-radius:var(--ha-card-border-radius,24px); box-shadow:var(--ha-card-box-shadow,0 28px 70px rgba(0,0,0,.32)); cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
-      .card-shell { display:grid; grid-template-columns:minmax(420px,.96fr) minmax(480px,1.14fr); min-height:690px; }
-      .tank-panel { display:grid; place-items:center; padding:26px 18px 20px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.052),transparent 54%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
-      .tank { width:min(100%,465px); height:auto; overflow:visible; }
-      .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.4; font:15px system-ui,sans-serif; }
+      .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.052),transparent 54%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank { width:min(100%,425px); height:auto; overflow:visible; }
+      .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
-      .salt-highlight { fill:none; stroke:#fffaf0; stroke-width:3; opacity:.55; filter:drop-shadow(0 -2px 4px rgba(255,255,255,.18)); }
+      .ruler .scale-spine { opacity:.28; stroke-width:.8; }
+      .ruler .major { stroke-width:1.8; opacity:.92; }
+      .ruler .medium { stroke-width:1.35; opacity:.74; }
+      .ruler .minor { stroke-width:1; opacity:.72; }
+      .salt-grains { opacity:.98; filter:drop-shadow(0 .5px .35px rgba(73,64,51,.38)); }
+      .salt-variation { opacity:.9; mix-blend-mode:multiply; }
+      .salt-facets { opacity:.72; mix-blend-mode:multiply; }
+      .salt-depth { opacity:.9; mix-blend-mode:multiply; }
+      .salt-highlight { fill:none; stroke:#fffdf5; stroke-width:2.2; opacity:.72; filter:drop-shadow(0 -2px 4px rgba(255,255,255,.24)); }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
       .threshold { fill:none; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
       .threshold.tone-good,.threshold.tone-warning { stroke:var(--sw-warning); }
@@ -323,39 +285,27 @@ class O extends HTMLElement {
       .threshold-label.tone-fault rect { fill:var(--sw-fault); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .threshold-value { fill:var(--secondary-text-color,#aeb6bb); font:14px system-ui,sans-serif; }
-      .content-panel { min-width:0; display:flex; flex-direction:column; padding:50px 48px 34px; }
+      .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
       .status { display:flex; align-items:center; gap:13px; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
-      .reading { margin:66px 0 48px; }
-      .level { font-size:clamp(116px,13.5cqw,166px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; text-shadow:0 7px 24px rgba(0,0,0,.28); }
+      .reading { margin:auto 0; padding:54px 0 48px; }
+      .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; text-shadow:0 7px 24px rgba(0,0,0,.28); }
       .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
-      .forecast { margin-top:auto; display:grid; grid-template-columns:1fr; gap:15px; min-height:230px; padding:30px 32px 24px; border:1px solid color-mix(in srgb,var(--divider-color,#536069) 55%,transparent); border-radius:19px; background:linear-gradient(145deg,rgba(255,255,255,.027),rgba(0,0,0,.07)); box-shadow:inset 0 1px 0 rgba(255,255,255,.018); }
-      .forecast.no-history { grid-template-columns:1fr; }
-      .forecast-copy { display:flex; flex-direction:column; }
-      .forecast-copy strong { font-size:clamp(42px,5.4cqw,58px); line-height:.9; font-weight:670; letter-spacing:-.055em; }
-      .forecast-copy span { margin-top:14px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(18px,2.2cqw,23px); }
-      .chart { min-width:0; height:112px; margin-top:2px; }
-      .chart svg { width:100%; height:100%; overflow:visible; }
-      .chart-grid { fill:none; stroke:color-mix(in srgb,var(--divider-color,#536069) 45%,transparent); stroke-width:1; stroke-dasharray:3 4; }
-      .chart-line { fill:none; stroke:var(--sw-warning); stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; filter:drop-shadow(0 2px 4px rgba(242,174,50,.14)); }
-      .chart-dot { fill:var(--sw-warning); }
-      .chart text { fill:var(--secondary-text-color,#aeb6bb); font:15px system-ui,sans-serif; }
-      footer { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:28px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
-      footer div { display:flex; align-items:center; gap:9px; min-width:0; }
-      footer div:last-child { justify-content:flex-end; }
-      footer svg { width:29px; height:29px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+      .threshold-summary { display:flex; align-items:center; gap:12px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
+      .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
+      .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 7px rgba(242,174,50,.24); }
+      .tone-low .marker-line { background:var(--sw-low); }.tone-fault .marker-line { background:var(--sw-fault); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; }
         .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
-        .tank { width:min(78%,400px); }
+        .tank { width:min(78%,390px); }
         .content-panel { padding:34px; }
-        .reading { margin:45px 0 38px; text-align:center; }
+        .reading { margin:0; padding:45px 0 38px; text-align:center; }
         .level { font-size:clamp(110px,24cqw,154px); }
         .level-label { font-size:26px; }
-        .forecast-copy { align-items:flex-start; }
       }
       @container (max-width:520px) {
         .tank-panel { padding:14px 14px 0; }
@@ -364,17 +314,10 @@ class O extends HTMLElement {
         header { align-items:flex-start; flex-direction:column; gap:12px; }
         .title { font-size:28px; }
         .status { font-size:18px; }
-        .reading { margin:38px 0 32px; }
+        .reading { margin:0; padding:38px 0 32px; }
         .level { font-size:clamp(94px,29cqw,126px); }
         .level-label { margin-top:22px; font-size:21px; }
-        .forecast { min-height:225px; padding:26px 24px 22px; }
-        .forecast-copy { align-items:center; }
-        .forecast-copy strong { font-size:44px; }
-        .forecast-copy span { font-size:19px; }
-        footer { grid-template-columns:1fr; }
-        footer div:last-child { justify-content:flex-start; }
-        footer { font-size:16px; }
-        footer svg { width:23px; height:23px; }
+        .threshold-summary { font-size:16px; }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
@@ -383,25 +326,25 @@ class O extends HTMLElement {
     `;
   }
 }
-const b = "saltwatch-card", N = "0.1.0";
-customElements.get(b) || customElements.define(b, O);
+const g = "saltwatch-card", _ = "0.1.0";
+customElements.get(g) || customElements.define(g, S);
 window.customCards = window.customCards || [];
-window.customCards.some((o) => o.type === b) || window.customCards.push({
-  type: b,
+window.customCards.some((o) => o.type === g) || window.customCards.push({
+  type: g,
   name: "SaltWatch Card",
-  description: "Visualize estimated water-softener salt level, health, and refill forecast.",
+  description: "Visualize estimated water-softener salt level in a detailed granular tank.",
   preview: !0,
   documentationURL: "https://github.com/thomasgregg/saltwatch-card",
   getEntitySuggestion: (o, t) => {
-    const s = o.states[t];
-    return t.startsWith("sensor.") && t.toLowerCase().includes("salt") && s?.attributes.unit_of_measurement === "%" ? { config: { type: "custom:saltwatch-card", entity: t } } : null;
+    const r = o.states[t];
+    return t.startsWith("sensor.") && t.toLowerCase().includes("salt") && r?.attributes.unit_of_measurement === "%" ? { config: { type: "custom:saltwatch-card", entity: t } } : null;
   }
 });
 console.info(
-  `%c SALTWATCH-CARD %c ${N} `,
+  `%c SALTWATCH-CARD %c ${_} `,
   "color:#102820;background:#f4ad32;font-weight:700;padding:2px 5px;border-radius:3px 0 0 3px",
   "color:#f4f6f7;background:#263139;font-weight:700;padding:2px 5px;border-radius:0 3px 3px 0"
 );
 export {
-  O as SaltWatchCard
+  S as SaltWatchCard
 };
