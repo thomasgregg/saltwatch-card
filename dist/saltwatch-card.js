@@ -322,7 +322,7 @@ class R extends HTMLElement {
       }
       @container (max-width:520px) {
         .tank-panel { padding:14px 14px 0; }
-        .tank { width:min(92%,340px); }
+        .tank { width:min(84%,340px); }
         .content-panel { padding:28px 24px 25px; }
         header { align-items:center; flex-direction:row; gap:12px; }
         .title { font-size:28px; }
