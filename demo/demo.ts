@@ -25,6 +25,7 @@ const config: SaltWatchCardConfig = {
   show_header: true,
   show_status: true,
   show_low_marker: true,
+  display_mode: "both",
   status_entity: "sensor.saltwatch_salt_status",
   threshold_entity: "number.saltwatch_low_salt_threshold",
 };
@@ -39,6 +40,7 @@ const levelValue = document.querySelector<HTMLElement>("#level-value");
 const showHeaderInput = document.querySelector<HTMLInputElement>("#show-header");
 const showStatusInput = document.querySelector<HTMLInputElement>("#show-status");
 const showLowMarkerInput = document.querySelector<HTMLInputElement>("#show-low-marker");
+const displayModeInput = document.querySelector<HTMLSelectElement>("#display-mode");
 const applyConfig = () => {
   card.setConfig(config);
   card.hass = hass;
@@ -53,6 +55,10 @@ showStatusInput?.addEventListener("change", () => {
 });
 showLowMarkerInput?.addEventListener("change", () => {
   config.show_low_marker = showLowMarkerInput.checked;
+  applyConfig();
+});
+displayModeInput?.addEventListener("change", () => {
+  config.display_mode = displayModeInput.value as SaltWatchCardConfig["display_mode"];
   applyConfig();
 });
 levelInput?.addEventListener("input", () => {

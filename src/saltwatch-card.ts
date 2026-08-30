@@ -39,6 +39,19 @@ export class SaltWatchCard extends HTMLElement {
         { name: "show_status", selector: { boolean: {} } },
         { name: "show_low_marker", selector: { boolean: {} } },
         {
+          name: "display_mode",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "both", label: "Tank and percentage" },
+                { value: "tank", label: "Tank only" },
+                { value: "details", label: "Percentage only" },
+              ],
+            },
+          },
+        },
+        {
           type: "grid",
           name: "",
           schema: [
@@ -58,6 +71,7 @@ export class SaltWatchCard extends HTMLElement {
           show_header: "Show title",
           show_status: "Show status",
           show_low_marker: "Show low marker",
+          display_mode: "Card content",
           status_entity: "Salt status entity",
           threshold_entity: "Low threshold entity",
           low_threshold: "Fallback low threshold",
@@ -83,6 +97,7 @@ export class SaltWatchCard extends HTMLElement {
       show_header: true,
       show_status: true,
       show_low_marker: true,
+      display_mode: "both",
     };
     const status = find("saltwatch", "salt_status");
     const threshold = find("saltwatch", "low_salt_threshold");
@@ -96,12 +111,16 @@ export class SaltWatchCard extends HTMLElement {
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     }
 
+    const displayMode = config.display_mode === "tank" || config.display_mode === "details"
+      ? config.display_mode
+      : "both";
     this.config = {
       ...config,
       low_threshold: config.low_threshold ?? DEFAULT_THRESHOLD,
       show_header: config.show_header ?? true,
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
+      display_mode: displayMode,
     };
     this.render();
   }
@@ -140,6 +159,9 @@ export class SaltWatchCard extends HTMLElement {
     const threshold = clamp(thresholdEntityValue ?? this.config.low_threshold ?? DEFAULT_THRESHOLD);
     const statusEntity = entity(this._hass, this.config.status_entity);
     const status = deriveStatus(statusEntity?.state, level, threshold);
+    const displayMode = this.config.display_mode ?? "both";
+    const showTank = displayMode !== "details";
+    const showDetails = displayMode !== "tank";
     const title = escapeHtml(this.config.name || "SaltWatch");
     const displayLevel = level === undefined ? "—" : `${Math.round(level)}%`;
     const accessibleLevel = level === undefined ? "No current reading" : displayLevel;
@@ -170,11 +192,11 @@ export class SaltWatchCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(status.label)}">
-        <div class="card-shell">
-          <section class="tank-panel" aria-label="Tank level visualization">
+        <div class="card-shell mode-${displayMode}">
+          ${showTank ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, this.config.show_low_marker !== false)}
-          </section>
-          <section class="content-panel">
+          </section>` : ""}
+          ${showDetails ? `<section class="content-panel">
             ${this.config.show_header || this.config.show_status ? `<header>
               ${this.config.show_header ? `<div class="title">${title}</div>` : ""}
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>` : ""}
@@ -188,7 +210,7 @@ export class SaltWatchCard extends HTMLElement {
               <span>Low marker</span>
               <strong>${Math.round(threshold)}%</strong>
             </div>` : ""}
-          </section>
+          </section>` : ""}
         </div>
       </ha-card>`;
 
@@ -324,6 +346,9 @@ export class SaltWatchCard extends HTMLElement {
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
+      .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; }
+      .mode-tank .tank-panel { border-right:0; }
+      .mode-details .content-panel { min-height:560px; }
       .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.11),transparent 62%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
@@ -361,6 +386,7 @@ export class SaltWatchCard extends HTMLElement {
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; }
         .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+        .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(78%,390px); }
         .content-panel { padding:34px; }
         .reading { margin:0; padding:45px 0 38px; text-align:center; }

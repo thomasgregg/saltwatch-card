@@ -86,6 +86,22 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".threshold-summary")).toBeNull();
   });
 
+  it("supports tank-only and percentage-only display modes", async () => {
+    card.setConfig({ ...config, display_mode: "tank" });
+    card.hass = makeHass();
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector(".tank-panel")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".content-panel")).toBeNull();
+
+    card.setConfig({ ...config, display_mode: "details" });
+    card.hass = makeHass();
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector(".tank-panel")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".content-panel")).not.toBeNull();
+  });
+
   it("removes the salt and shows an explicit unavailable state", async () => {
     card.hass = makeHass("unavailable", "Sensor Fault");
     await Promise.resolve();

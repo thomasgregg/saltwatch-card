@@ -93,6 +93,7 @@ Only `entity` is required.
 | `show_header` | Show the card title; status remains visible | `true` |
 | `show_status` | Show the upper-right status indicator | `true` |
 | `show_low_marker` | Show the LOW line, badge, and footer summary | `true` |
+| `display_mode` | Show `both`, `tank`, or `details` content | `both` |
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |
 | `low_threshold` | Marker used when no threshold entity is supplied | `20` |
@@ -103,6 +104,7 @@ The visibility options can be combined independently:
 show_header: false
 show_status: false
 show_low_marker: false
+display_mode: tank
 ```
 
 ## Recommended native dashboard composition

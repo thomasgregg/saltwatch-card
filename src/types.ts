@@ -10,6 +10,8 @@ export interface HomeAssistant {
   states: Record<string, HassEntity>;
 }
 
+export type SaltWatchDisplayMode = "both" | "tank" | "details";
+
 export interface SaltWatchCardConfig {
   type: string;
   entity: string;
@@ -17,6 +19,7 @@ export interface SaltWatchCardConfig {
   show_header?: boolean;
   show_status?: boolean;
   show_low_marker?: boolean;
+  display_mode?: SaltWatchDisplayMode;
   status_entity?: string;
   threshold_entity?: string;
   low_threshold?: number;

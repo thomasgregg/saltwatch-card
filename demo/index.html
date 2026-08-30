@@ -33,6 +33,7 @@
       label { display:flex; align-items:center; gap:10px; color:var(--secondary-text-color); }
       input[type="range"] { width:min(280px,42vw); accent-color:#f4ad32; }
       input[type="checkbox"] { width:18px; height:18px; accent-color:#57c878; }
+      select { padding:8px 34px 8px 11px; border:1px solid rgba(255,255,255,.12); border-radius:9px; color:var(--primary-text-color); background:#20272c; font:inherit; }
       button { padding:8px 13px; border:1px solid rgba(255,255,255,.12); border-radius:9px; color:var(--primary-text-color); background:#20272c; cursor:pointer; font:inherit; }
       button:hover { background:#293238; }
       .demo-frame { max-width:1180px; }
@@ -52,6 +53,7 @@
         <label><input id="show-header" type="checkbox" checked /> Show title</label>
         <label><input id="show-status" type="checkbox" checked /> Show status</label>
         <label><input id="show-low-marker" type="checkbox" checked /> Show low marker</label>
+        <label>Content <select id="display-mode"><option value="both">Tank and percentage</option><option value="tank">Tank only</option><option value="details">Percentage only</option></select></label>
       </div>
       <div class="demo-frame"><saltwatch-card id="card"></saltwatch-card></div>
     </main>
