@@ -375,7 +375,7 @@ export class SaltWatchCard extends HTMLElement {
       header { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
-      .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 0 1px color-mix(in srgb,currentColor 22%,transparent),0 0 8px color-mix(in srgb,currentColor 14%,transparent),inset 0 1px 1px rgba(255,255,255,.24); }
+      .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
       .without-threshold-summary .reading { padding-bottom:0; }
