@@ -60,6 +60,17 @@ describe("SaltWatchCard", () => {
     );
   });
 
+  it("inherits Home Assistant surface and semantic theme colors", async () => {
+    card.hass = makeHass();
+    await Promise.resolve();
+
+    const styles = card.shadowRoot?.querySelector("style")?.textContent ?? "";
+    expect(styles).toContain("var(--card-background-color");
+    expect(styles).toContain("var(--success-color");
+    expect(styles).toContain("var(--warning-color");
+    expect(styles).toContain("var(--error-color");
+  });
+
   it("can hide the title while preserving the status", async () => {
     card.setConfig({ ...config, name: "Water Softener", show_header: false });
     card.hass = makeHass();

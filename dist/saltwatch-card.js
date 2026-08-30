@@ -82,7 +82,7 @@ class V extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], r = []) {
-    const s = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(s)], P = (...c) => x.find((d) => c.every((i) => d.includes(i))), n = {
+    const s = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(s)], P = (...c) => x.find((o) => c.every((i) => o.includes(i))), n = {
       entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: p,
       show_header: !0,
@@ -125,7 +125,7 @@ class V extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = O(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), s = N(O(this._hass, this.config.threshold_entity)), x = k(s ?? this.config.low_threshold ?? p), P = O(this._hass, this.config.status_entity), n = S(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", c = j !== "tank", d = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, w = r === void 0 ? "No current reading" : i, l = 132, H = 474, o = H - l, a = r === void 0 ? H : H - r / 100 * o, b = H - x / 100 * o, G = [
+    const t = O(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), s = N(O(this._hass, this.config.threshold_entity)), x = k(s ?? this.config.low_threshold ?? p), P = O(this._hass, this.config.status_entity), n = S(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", c = j !== "tank", o = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, w = r === void 0 ? "No current reading" : i, l = 132, H = 474, d = H - l, a = r === void 0 ? H : H - r / 100 * d, b = H - x / 100 * d, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -143,14 +143,14 @@ class V extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${d}: ${u(w)}, ${u(n.label)}">
+      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${o}: ${u(w)}, ${u(n.label)}">
         <div class="card-shell mode-${j}">
           ${v ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(r, W, G, a, b, x, n.tone)}
           </section>` : ""}
           ${c ? `<section class="content-panel">
             ${this.config.show_header || this.config.show_status ? `<header>
-              ${this.config.show_header ? `<div class="title">${d}</div>` : ""}
+              ${this.config.show_header ? `<div class="title">${o}</div>` : ""}
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${u(n.label)}</div>` : ""}
             </header>` : ""}
             <div class="reading${r === void 0 ? " state-reading" : ""}">
@@ -182,9 +182,9 @@ class V extends HTMLElement {
     </svg>`;
   }
   tankSvg(t, f, r, s, x, P, n) {
-    const j = Array.from({ length: 21 }, (d, i) => {
-      const w = 100 - i * 5, l = 474 - w / 100 * 342, H = w % 25 === 0, o = !H && w % 10 === 0, a = H ? 60 : o ? 67 : 71;
-      return `${H ? `<text x="52" y="${l + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${H ? "major" : o ? "medium" : "minor"}" d="M${a} ${l}H78"/>`;
+    const j = Array.from({ length: 21 }, (o, i) => {
+      const w = 100 - i * 5, l = 474 - w / 100 * 342, H = w % 25 === 0, d = !H && w % 10 === 0, a = H ? 60 : d ? 67 : 71;
+      return `${H ? `<text x="52" y="${l + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${H ? "major" : d ? "medium" : "minor"}" d="M${a} ${l}H78"/>`;
     }).join(""), v = t === void 0, c = Math.max(134, Math.min(470, x));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${v ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
@@ -260,15 +260,15 @@ class V extends HTMLElement {
   }
   styles() {
     return `
-      :host { display:block; container-type:inline-size; --sw-good:#58c97a; --sw-low:#f05d5e; --sw-warning:#f2ae32; --sw-fault:#ff5c64; }
+      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); }
       * { box-sizing:border-box; }
-      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:linear-gradient(135deg,color-mix(in srgb,var(--ha-card-background,#181d21) 96%,#253039),color-mix(in srgb,var(--ha-card-background,#181d21) 86%,#050708)); border:1px solid color-mix(in srgb,var(--divider-color,#536069) 64%,transparent); border-radius:var(--ha-card-border-radius,24px); box-shadow:var(--ha-card-box-shadow,0 28px 70px rgba(0,0,0,.32)); cursor:pointer; }
+      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:linear-gradient(135deg,color-mix(in srgb,var(--sw-card-background) 96%,var(--primary-text-color,#f4f6f7)),var(--sw-card-background)); border:1px solid color-mix(in srgb,var(--divider-color,#536069) 64%,transparent); border-radius:var(--ha-card-border-radius,24px); box-shadow:var(--ha-card-box-shadow,0 28px 70px rgba(0,0,0,.32)); cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .mode-tank .tank-panel { border-right:0; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.11),transparent 62%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 9%,transparent),transparent 62%),linear-gradient(90deg,color-mix(in srgb,var(--primary-text-color,#f4f6f7) 5%,transparent),transparent); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -300,8 +300,8 @@ class V extends HTMLElement {
       .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
-      .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 7px rgba(242,174,50,.24); }
-      .tone-low .marker-line { background:var(--sw-low); }
+      .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 7px color-mix(in srgb,var(--sw-warning) 24%,transparent); }
+      .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 7px color-mix(in srgb,var(--sw-low) 24%,transparent); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; }
         .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }

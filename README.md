@@ -39,6 +39,7 @@ Assistant.
 - `Good`, `Low Salt`, `Calibration Required`, and `Sensor Fault` states
 - Explicit `No current reading` presentation instead of a frozen old level
 - Responsive desktop, tablet, and narrow dashboard layouts
+- Automatic Home Assistant light, dark, and custom-theme colors
 - Home Assistant card-picker registration and graphical configuration form
 - Keyboard-accessible more-info action
 - No recorder calls or duplicate chart/control implementations
@@ -106,6 +107,12 @@ show_status: false
 show_low_marker: false
 display_mode: tank
 ```
+
+The surrounding card follows Home Assistant's `--card-background-color`,
+`--success-color`, `--warning-color`, and `--error-color` theme variables. The
+physical tank illustration intentionally remains dark, while the card surface,
+text, dividers, and status states update automatically when the active theme or
+day/night mode changes.
 
 ## Recommended native dashboard composition
 
