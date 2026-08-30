@@ -7,7 +7,7 @@ function D(e) {
   const t = Number(e);
   return Number.isFinite(t) ? t : void 0;
 }
-function h(e, t = 0, f = 100) {
+function k(e, t = 0, f = 100) {
   return Math.min(f, Math.max(t, e));
 }
 function N(e) {
@@ -17,7 +17,7 @@ function S(e, t, f) {
   const a = e?.trim().toLowerCase() ?? "";
   return a.includes("fault") || a.includes("error") ? { label: "Sensor fault", tone: "fault" } : a.includes("calibration") ? { label: "Calibration required", tone: "warning" } : t === void 0 ? { label: "No current reading", tone: "fault" } : a.includes("low") || t <= f ? { label: "Low salt", tone: "low" } : { label: e?.trim() || "Good", tone: "good" };
 }
-function o(e) {
+function u(e) {
   return String(e).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 const b = 20;
@@ -82,7 +82,7 @@ class V extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], a = []) {
-    const d = [...f, ...a, ...Object.keys(t.states)], x = [...new Set(d)], P = (...w) => x.find((s) => w.every((u) => s.includes(u))), n = {
+    const d = [...f, ...a, ...Object.keys(t.states)], x = [...new Set(d)], P = (...w) => x.find((s) => w.every((o) => s.includes(o))), n = {
       entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: b,
       show_header: !0,
@@ -125,7 +125,7 @@ class V extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = G(this._hass, this.config.entity), f = N(t), a = f === void 0 ? void 0 : h(f), d = N(G(this._hass, this.config.threshold_entity)), x = h(d ?? this.config.low_threshold ?? b), P = G(this._hass, this.config.status_entity), n = S(P?.state, a, x), j = this.config.display_mode ?? "both", i = j !== "details", w = j !== "tank", s = o(this.config.name || "SaltWatch"), u = a === void 0 ? "—" : `${Math.round(a)}%`, A = a === void 0 ? "No current reading" : u, c = 132, H = 474, v = H - c, r = a === void 0 ? H : H - a / 100 * v, p = H - x / 100 * v, O = [
+    const t = G(this._hass, this.config.entity), f = N(t), a = f === void 0 ? void 0 : k(f), d = N(G(this._hass, this.config.threshold_entity)), x = k(d ?? this.config.low_threshold ?? b), P = G(this._hass, this.config.status_entity), n = S(P?.state, a, x), j = this.config.display_mode ?? "both", i = j !== "details", w = j !== "tank", s = u(this.config.name || "SaltWatch"), o = a === void 0 ? "—" : `${Math.round(a)}%`, A = a === void 0 ? "No current reading" : o, c = 132, H = 474, v = H - c, r = a === void 0 ? H : H - a / 100 * v, p = H - x / 100 * v, O = [
       `M96 ${(r + 2).toFixed(1)}`,
       `Q108 ${(r - 2).toFixed(1)} 120 ${(r - 3).toFixed(1)}`,
       `Q132 ${(r - 6).toFixed(1)} 145 ${(r - 4).toFixed(1)}`,
@@ -143,7 +143,7 @@ class V extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${s}: ${o(A)}, ${o(n.label)}">
+      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${s}: ${u(A)}, ${u(n.label)}">
         <div class="card-shell mode-${j}">
           ${i ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(a, W, O, r, p, x, n.tone, this.config.show_low_marker !== !1)}
@@ -151,11 +151,11 @@ class V extends HTMLElement {
           ${w ? `<section class="content-panel">
             ${this.config.show_header || this.config.show_status ? `<header>
               ${this.config.show_header ? `<div class="title">${s}</div>` : ""}
-              ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${o(n.label)}</div>` : ""}
+              ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${u(n.label)}</div>` : ""}
             </header>` : ""}
             <div class="reading${a === void 0 ? " state-reading" : ""}">
-              ${a === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${u}</div>`}
-              <div class="level-label">${a === void 0 ? o(n.label) : "Estimated salt level"}</div>
+              ${a === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${o}</div>`}
+              <div class="level-label">${a === void 0 ? u(n.label) : "Estimated salt level"}</div>
             </div>
             ${this.config.show_low_marker ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
               <span class="marker-line"></span>
@@ -165,8 +165,8 @@ class V extends HTMLElement {
           </section>` : ""}
         </div>
       </ha-card>`;
-    const k = this.shadowRoot.querySelector("ha-card");
-    k?.addEventListener("click", () => this.openMoreInfo()), k?.addEventListener("keydown", (l) => {
+    const h = this.shadowRoot.querySelector("ha-card");
+    h?.addEventListener("click", () => this.openMoreInfo()), h?.addEventListener("keydown", (l) => {
       l instanceof KeyboardEvent && (l.key === "Enter" || l.key === " ") && (l.preventDefault(), this.openMoreInfo());
     });
   }
@@ -182,7 +182,7 @@ class V extends HTMLElement {
     </svg>`;
   }
   tankSvg(t, f, a, d, x, P, n, j) {
-    const i = Array.from({ length: 21 }, (u, A) => {
+    const i = Array.from({ length: 21 }, (o, A) => {
       const c = 100 - A * 5, H = 474 - c / 100 * 342, v = c % 25 === 0, r = !v && c % 10 === 0, p = v ? 60 : r ? 67 : 71;
       return `${v ? `<text x="52" y="${H + 5}" text-anchor="end">${c}%</text>` : ""}<path class="${v ? "major" : r ? "medium" : "minor"}" d="M${p} ${H}H78"/>`;
     }).join(""), w = t === void 0, s = Math.max(134, Math.min(470, x));
@@ -287,9 +287,9 @@ class V extends HTMLElement {
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
-      header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
-      .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
-      .status { display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
+      header { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:22px; }
+      .title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
+      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
@@ -318,7 +318,7 @@ class V extends HTMLElement {
         .tank-panel { padding:14px 14px 0; }
         .tank { width:min(92%,340px); }
         .content-panel { padding:28px 24px 25px; }
-        header { align-items:flex-start; flex-direction:column; gap:12px; }
+        header { align-items:center; flex-direction:row; gap:12px; }
         .title { font-size:28px; }
         .status { font-size:18px; }
         .reading { margin:0; padding:38px 0 32px; }
@@ -326,6 +326,13 @@ class V extends HTMLElement {
         .level { font-size:clamp(94px,29cqw,126px); }
         .level-label { margin-top:22px; font-size:21px; }
         .threshold-summary { font-size:16px; }
+      }
+      @container (max-width:400px) {
+        .content-panel { padding-inline:16px; }
+        header { gap:8px; }
+        .title { font-size:24px; }
+        .status { gap:8px; font-size:15px; }
+        .status-dot { width:14px; height:14px; }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }

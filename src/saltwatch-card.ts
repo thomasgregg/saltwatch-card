@@ -367,9 +367,9 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
-      header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
-      .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
-      .status { display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
+      header { min-width:0; display:flex; align-items:center; justify-content:space-between; gap:22px; }
+      .title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
+      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
@@ -398,7 +398,7 @@ export class SaltWatchCard extends HTMLElement {
         .tank-panel { padding:14px 14px 0; }
         .tank { width:min(92%,340px); }
         .content-panel { padding:28px 24px 25px; }
-        header { align-items:flex-start; flex-direction:column; gap:12px; }
+        header { align-items:center; flex-direction:row; gap:12px; }
         .title { font-size:28px; }
         .status { font-size:18px; }
         .reading { margin:0; padding:38px 0 32px; }
@@ -406,6 +406,13 @@ export class SaltWatchCard extends HTMLElement {
         .level { font-size:clamp(94px,29cqw,126px); }
         .level-label { margin-top:22px; font-size:21px; }
         .threshold-summary { font-size:16px; }
+      }
+      @container (max-width:400px) {
+        .content-panel { padding-inline:16px; }
+        header { gap:8px; }
+        .title { font-size:24px; }
+        .status { gap:8px; font-size:15px; }
+        .status-dot { width:14px; height:14px; }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
