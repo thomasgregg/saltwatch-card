@@ -78,13 +78,14 @@ describe("SaltWatchCard", () => {
     );
   });
 
-  it("inherits Home Assistant surface and accessible semantic theme colors", () => {
+  it("inherits Home Assistant surface and state theme colors", () => {
     const styles = card.shadowRoot?.querySelector("style")?.textContent ?? "";
     expect(styles).toContain("var(--card-background-color");
     expect(styles).toContain("--sw-panel-divider:");
-    expect(styles).toContain("--sw-good:var(--ha-color-on-success-normal);");
-    expect(styles).toContain("--sw-warning:var(--ha-color-on-warning-normal);");
-    expect(styles).toContain("--sw-low:var(--ha-color-on-danger-normal);");
+    expect(styles).toContain("--sw-good:var(--success-color);");
+    expect(styles).toContain("--sw-warning:var(--warning-color);");
+    expect(styles).toContain("--sw-low:var(--warning-color);");
+    expect(styles).toContain("--sw-fault:var(--error-color);");
     expect(styles).not.toMatch(/--sw-(?:good|low|warning|fault):var\([^;]+,/);
   });
 
@@ -163,12 +164,14 @@ describe("SaltWatchCard", () => {
       .toBe("M112 492H308L302 518H275L267 511H153L145 518H118Z");
   });
 
-  it("uses one Home Assistant semantic color for every state accent", () => {
+  it("uses HA warning colors for low states and danger only for faults", () => {
     const styles = card.shadowRoot?.querySelector("style")?.textContent;
     expect(styles).toContain(".threshold { color:var(--sw-warning); fill:none; stroke:currentColor;");
     expect(styles).toContain(".threshold.tone-low { color:var(--sw-low); }");
     expect(styles).toContain(".threshold-label rect { fill:var(--sw-warning); }");
     expect(styles).toContain(".threshold-label.tone-low rect { fill:var(--sw-low); }");
+    expect(styles).toContain(".threshold-label text { fill:var(--text-light-primary-color);");
+    expect(styles).toContain(".tone-low .status { color:var(--sw-low); }");
     expect(styles).toContain(".tone-warning .status-dot { background:var(--sw-warning); }");
     expect(styles).toContain(".tone-warning .state-symbol { color:var(--sw-warning); }");
     expect(styles).toContain(".tone-fault .status-dot { background:var(--sw-fault); }");

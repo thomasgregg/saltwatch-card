@@ -125,12 +125,11 @@ show_low_marker: false
 display_mode: tank
 ```
 
-The status, threshold, and fault accents use Home Assistant's modern semantic
-theme tokens: `--ha-color-on-success-normal`,
-`--ha-color-on-warning-normal`, and `--ha-color-on-danger-normal`. Home
-Assistant supplies their light- and dark-mode values. The physical tank remains
-a stable light neutral illustration, while the card surface, text, dividers,
-and status states update automatically with the active theme.
+The status and threshold accents use Home Assistant's native theme colors:
+`--success-color` for a good reading, `--warning-color` for low salt and
+calibration, and `--error-color` only for a sensor fault. The physical tank
+remains a stable light neutral illustration, while the card surface, text,
+dividers, and status states update automatically with the active theme.
 
 ## Recommended native dashboard composition
 

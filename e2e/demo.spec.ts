@@ -35,7 +35,7 @@ test("updates state and theme through the demo host context", async ({ page }) =
     .not.toBe(darkSurface);
 });
 
-test("keeps every low-state accent on the same HA semantic color", async ({ page }) => {
+test("keeps every low-state accent on the same HA warning color", async ({ page }) => {
   const readAccents = () => page.locator("saltwatch-card").evaluate((card) => {
     const root = card.shadowRoot;
     const property = (selector: string, name: string) => {
@@ -58,7 +58,7 @@ test("keeps every low-state accent on the same HA semantic color", async ({ page
   await page.locator("#light-theme").check();
   const lightAccents = await readAccents();
   expect(new Set(lightAccents).size).toBe(1);
-  expect(lightAccents[0]).not.toBe(darkAccents[0]);
+  expect(lightAccents[0]).toBe(darkAccents[0]);
 });
 
 test("keeps the user's mobile scroll position stable", async ({ page }, testInfo) => {

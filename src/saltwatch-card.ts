@@ -554,7 +554,7 @@ export class SaltWatchCard extends HTMLElement {
 
   private styles(): string {
     return `
-      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--ha-color-on-success-normal); --sw-low:var(--ha-color-on-danger-normal); --sw-warning:var(--ha-color-on-warning-normal); --sw-fault:var(--ha-color-on-danger-normal); }
+      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
       * { box-sizing:border-box; }
       ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
       ha-card[role="button"] { cursor:pointer; }
@@ -580,7 +580,7 @@ export class SaltWatchCard extends HTMLElement {
       .threshold.tone-low { color:var(--sw-low); }
       .threshold-label rect { fill:var(--sw-warning); }
       .threshold-label.tone-low rect { fill:var(--sw-low); }
-      .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
+      .threshold-label text { fill:var(--text-light-primary-color); font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
