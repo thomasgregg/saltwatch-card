@@ -377,7 +377,7 @@ export class SaltWatchCard extends HTMLElement {
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
-      .reading { margin:auto 0; padding:54px 0 48px; }
+      .reading { margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
@@ -385,7 +385,7 @@ export class SaltWatchCard extends HTMLElement {
       .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
       .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
       .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
-      .threshold-summary { display:flex; align-items:center; gap:12px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
+      .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
@@ -395,7 +395,7 @@ export class SaltWatchCard extends HTMLElement {
         .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(78%,390px); }
         .content-panel { padding:34px; }
-        .reading { margin:0; padding:45px 0 38px; text-align:center; }
+        .reading { margin:0; padding:28px 0 32px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
         .level { font-size:clamp(110px,24cqw,154px); }
         .level-label { font-size:26px; }
@@ -407,7 +407,7 @@ export class SaltWatchCard extends HTMLElement {
         header { align-items:center; flex-direction:row; gap:12px; }
         .title { font-size:28px; }
         .status { font-size:18px; }
-        .reading { margin:0; padding:38px 0 32px; }
+        .reading { margin:0; padding:24px 0 28px; }
         .state-symbol { width:90px; }
         .level { font-size:clamp(94px,29cqw,126px); }
         .level-label { margin-top:22px; font-size:21px; }
