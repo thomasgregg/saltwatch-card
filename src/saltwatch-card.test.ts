@@ -46,7 +46,6 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.textContent).toContain("Estimated salt level");
     expect(card.shadowRoot?.textContent).toContain("Low marker");
     expect(card.shadowRoot?.querySelector(".salt-highlight")).not.toBeNull();
-    expect(card.shadowRoot?.querySelector(".surface-shadow")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-value")).toBeNull();
     expect(card.shadowRoot?.querySelector(".tank-glass")?.hasAttribute("stroke")).toBe(false);
