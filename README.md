@@ -19,6 +19,19 @@ SaltWatch Card is built primarily for the entities provided by the SaltWatch
 project, but it can also visualize any Home Assistant sensor that reports a
 percentage from 0 to 100.
 
+## Contents
+
+- [Why use it?](#why-use-it)
+- [Made for SaltWatch](#made-for-saltwatch)
+- [What the states mean](#what-the-states-mean)
+- [Installation](#installation)
+  - [HACS](#hacs)
+  - [Manual installation](#manual-installation)
+- [Card options](#card-options)
+- [Home Assistant friendly by design](#home-assistant-friendly-by-design)
+- [Using another percentage sensor](#using-another-percentage-sensor)
+- [Development](#development)
+
 > [!IMPORTANT]
 > SaltWatch reports the estimated position within the tank's calibrated range.
 > The percentage is a practical refill indicator, not a direct measurement of
@@ -76,7 +89,9 @@ When the level is unavailable, the card never leaves an old percentage on
 screen as though it were current. The tank switches to an explicit no-reading
 state instead.
 
-## Install with HACS
+## Installation
+
+### HACS
 
 [![Open your Home Assistant instance and open SaltWatch Card in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 
@@ -92,6 +107,22 @@ the latest release. If the button cannot find the repository, add it manually:
 
 The graphical editor lets you select entities and adjust the main options
 without writing YAML.
+
+### Manual installation
+
+1. Download `saltwatch-card.js` from the
+   [latest release](https://github.com/thomasgregg/saltwatch-card/releases/latest).
+2. Create the directory if needed, then copy the file to
+   `/config/www/saltwatch-card/saltwatch-card.js` in Home Assistant. If this is
+   the first time you have created `/config/www/`, restart Home Assistant.
+3. Open **Settings → Dashboards**, select the three-dot menu, and open
+   **Resources**.
+4. Add `/local/saltwatch-card/saltwatch-card.js` as a **JavaScript module**.
+5. Reload the browser, then add **SaltWatch Card** from the dashboard card
+   picker.
+
+The `/config/www/` directory is exposed by Home Assistant under the `/local/`
+URL path, which is why the filesystem and resource paths are different.
 
 ## Card options
 
