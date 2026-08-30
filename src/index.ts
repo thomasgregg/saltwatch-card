@@ -1,7 +1,7 @@
 import { SaltWatchCard } from "./saltwatch-card";
 
 const CARD_TAG = "saltwatch-card";
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 
 if (!customElements.get(CARD_TAG)) {
   customElements.define(CARD_TAG, SaltWatchCard);

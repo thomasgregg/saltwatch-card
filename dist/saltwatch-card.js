@@ -348,7 +348,7 @@ class R extends HTMLElement {
     `;
   }
 }
-const A = "saltwatch-card", z = "0.1.0";
+const A = "saltwatch-card", z = "0.1.1";
 customElements.get(A) || customElements.define(A, R);
 window.customCards = window.customCards || [];
 window.customCards.some((e) => e.type === A) || window.customCards.push({
