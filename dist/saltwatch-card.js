@@ -82,7 +82,7 @@ class R extends HTMLElement {
     };
   }
   static getStubConfig(t, f = [], r = []) {
-    const c = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(c)], P = (...d) => x.find((o) => d.every((w) => o.includes(w))), n = {
+    const c = [...f, ...r, ...Object.keys(t.states)], x = [...new Set(c)], P = (...o) => x.find((d) => o.every((s) => d.includes(s))), n = {
       entity: P("saltwatch", "salt_level") ?? P("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: O,
       show_header: !0,
@@ -125,7 +125,7 @@ class R extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", d = j !== "tank", o = this.config.show_low_marker !== !1, w = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, s = 132, H = 474, X = H - s, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
+    const t = b(this._hass, this.config.entity), f = N(t), r = f === void 0 ? void 0 : k(f), c = N(b(this._hass, this.config.threshold_entity)), x = k(c ?? this.config.low_threshold ?? O), P = b(this._hass, this.config.status_entity), n = V(P?.state, r, x), j = this.config.display_mode ?? "both", v = j !== "details", o = j !== "tank", d = this.config.show_low_marker !== !1, s = u(this.config.name || "SaltWatch"), i = r === void 0 ? "—" : `${Math.round(r)}%`, l = r === void 0 ? "No current reading" : i, w = 132, H = 474, X = H - w, a = r === void 0 ? H : H - r / 100 * X, W = H - x / 100 * X, G = [
       `M96 ${(a + 2).toFixed(1)}`,
       `Q108 ${(a - 2).toFixed(1)} 120 ${(a - 3).toFixed(1)}`,
       `Q132 ${(a - 6).toFixed(1)} 145 ${(a - 4).toFixed(1)}`,
@@ -143,21 +143,21 @@ class R extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${w}: ${u(l)}, ${u(n.label)}">
+      <ha-card class="tone-${n.tone}" tabindex="0" role="button" aria-label="${s}: ${u(l)}, ${u(n.label)}">
         <div class="card-shell mode-${j}">
           ${v ? `<section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(r, g, G, a, W, x, n.tone)}
           </section>` : ""}
-          ${d ? `<section class="content-panel${o ? "" : " without-threshold-summary"}">
+          ${o ? `<section class="content-panel${d ? "" : " without-threshold-summary"}">
             ${this.config.show_header || this.config.show_status ? `<header>
-              ${this.config.show_header ? `<div class="title">${w}</div>` : ""}
+              ${this.config.show_header ? `<div class="title">${s}</div>` : ""}
               ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${u(n.label)}</div>` : ""}
             </header>` : ""}
             <div class="reading${r === void 0 ? " state-reading" : ""}">
               ${r === void 0 ? this.stateSymbol(n.tone) : `<div class="level">${i}</div>`}
               <div class="level-label">${r === void 0 ? u(n.label) : "Estimated salt level"}</div>
             </div>
-            ${o ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
+            ${d ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(x)} percent">
               <span class="marker-line"></span>
               <span>Low marker</span>
               <strong>${Math.round(x)}%</strong>
@@ -166,8 +166,8 @@ class R extends HTMLElement {
         </div>
       </ha-card>`;
     const h = this.shadowRoot.querySelector("ha-card");
-    h?.addEventListener("click", () => this.openMoreInfo()), h?.addEventListener("keydown", (A) => {
-      A instanceof KeyboardEvent && (A.key === "Enter" || A.key === " ") && (A.preventDefault(), this.openMoreInfo());
+    h?.addEventListener("click", () => this.openMoreInfo()), h?.addEventListener("keydown", (p) => {
+      p instanceof KeyboardEvent && (p.key === "Enter" || p.key === " ") && (p.preventDefault(), this.openMoreInfo());
     });
   }
   stateSymbol(t) {
@@ -182,21 +182,24 @@ class R extends HTMLElement {
     </svg>`;
   }
   tankSvg(t, f, r, c, x, P, n) {
-    const j = Array.from({ length: 21 }, (o, w) => {
-      const i = 100 - w * 5, l = 474 - i / 100 * 342, s = i % 25 === 0, H = !s && i % 10 === 0, X = s ? 60 : H ? 67 : 71;
-      return `${s ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${s ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
-    }).join(""), v = t === void 0, d = Math.max(134, Math.min(470, x));
+    const j = Array.from({ length: 21 }, (d, s) => {
+      const i = 100 - s * 5, l = 474 - i / 100 * 342, w = i % 25 === 0, H = !w && i % 10 === 0, X = w ? 60 : H ? 67 : 71;
+      return `${w ? `<text x="52" y="${l + 5}" text-anchor="end">${i}%</text>` : ""}<path class="${w ? "major" : H ? "medium" : "minor"}" d="M${X} ${l}H78"/>`;
+    }).join(""), v = t === void 0, o = Math.max(134, Math.min(470, x));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${v ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#7a8287"/><stop offset=".09" stop-color="#41494e"/><stop offset=".32" stop-color="#242b2f"/><stop offset=".7" stop-color="#161c1f"/><stop offset=".91" stop-color="#485055"/><stop offset="1" stop-color="#22292d"/>
+            <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
           </linearGradient>
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#697176"/><stop offset=".13" stop-color="#41484d"/><stop offset=".52" stop-color="#181d20"/><stop offset=".8" stop-color="#101518"/><stop offset="1" stop-color="#343b40"/>
+            <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
+          </linearGradient>
+          <linearGradient id="handle-face" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#626b70"/><stop offset=".18" stop-color="#3d454a"/><stop offset=".62" stop-color="#171d20"/><stop offset="1" stop-color="#30383c"/>
           </linearGradient>
           <linearGradient id="tank-glass" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#3b4449"/><stop offset=".48" stop-color="#333d41"/><stop offset="1" stop-color="#262e32"/>
@@ -215,7 +218,7 @@ class R extends HTMLElement {
           </pattern>
           <clipPath id="tank-window"><path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
           <clipPath id="salt-shape"><path d="${f}"/></clipPath>
-          <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="13" flood-color="#000" flood-opacity=".62"/></filter>
+          <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#000" flood-opacity=".48"/></filter>
           <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
             <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="noise"/>
             <feColorMatrix in="noise" values=".28 0 0 0 0  0 .28 0 0 0  0 0 .28 0 0  0 0 0 .12 0" result="grain"/>
@@ -235,14 +238,14 @@ class R extends HTMLElement {
         <ellipse cx="211" cy="510" rx="132" ry="19" fill="#000" opacity=".4"/>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
-            <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#0a0e10" stroke-width="3"/>
-            <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#090d0f" stroke-width="3"/>
+            <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
+            <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5"/>
             <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
-            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#lid-face)" stroke="#101518" stroke-width="3"/>
+            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#handle-face)" stroke="#101518" stroke-width="3"/>
             <path d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="3"/>
           </g>
-          <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#8b9296" stroke-opacity=".34" stroke-width="2"/>
-          <path d="M65 105H355" stroke="#7d858a" stroke-opacity=".42" stroke-width="1.4"/>
+          <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2"/>
+          <path d="M65 105H355" stroke="#fff" stroke-opacity=".72" stroke-width="1.4"/>
           <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
           <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
         </g>
@@ -253,7 +256,7 @@ class R extends HTMLElement {
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${n}" data-threshold="${P}" data-threshold-y="${x.toFixed(1)}" d="M12 ${x.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${n}" transform="translate(-42 ${d - 15})">
+        <g class="threshold-label tone-${n}" transform="translate(-42 ${o - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
         </g>
       </svg>`;
@@ -341,11 +344,11 @@ class R extends HTMLElement {
     `;
   }
 }
-const p = "saltwatch-card", z = "0.1.0";
-customElements.get(p) || customElements.define(p, R);
+const A = "saltwatch-card", z = "0.1.0";
+customElements.get(A) || customElements.define(A, R);
 window.customCards = window.customCards || [];
-window.customCards.some((e) => e.type === p) || window.customCards.push({
-  type: p,
+window.customCards.some((e) => e.type === A) || window.customCards.push({
+  type: A,
   name: "SaltWatch Card",
   description: "Visualize estimated water-softener salt level in a detailed granular tank.",
   preview: !0,
