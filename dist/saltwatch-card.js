@@ -205,7 +205,7 @@ class R extends HTMLElement {
             <stop offset="0" stop-color="#e8eae8"/><stop offset=".18" stop-color="#cfd5d5"/><stop offset=".62" stop-color="#aeb8bb"/><stop offset="1" stop-color="#d9dddb"/>
           </linearGradient>
           <linearGradient id="tank-glass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#66737a"/><stop offset=".48" stop-color="#59676e"/><stop offset="1" stop-color="#46555c"/>
+            <stop offset="0" stop-color="#d8dcda"/><stop offset=".48" stop-color="#cbd1cf"/><stop offset="1" stop-color="#bbc4c2"/>
           </linearGradient>
           <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
