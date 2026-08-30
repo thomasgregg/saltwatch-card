@@ -76,6 +76,43 @@ describe("SaltWatchCard", () => {
     expect(card.getGridOptions()).not.toHaveProperty("rows");
   });
 
+  it("uses a numeric slider for the fallback low threshold", () => {
+    const form = SaltWatchCard.getConfigForm() as {
+      schema: Array<{ name?: string; selector?: { number?: Record<string, unknown> } }>;
+    };
+    const threshold = form.schema.find((item) => item.name === "low_threshold");
+
+    expect(threshold?.selector?.number).toEqual({
+      min: 0,
+      max: 100,
+      step: 1,
+      mode: "slider",
+    });
+  });
+
+  it("does not rebuild for unrelated Home Assistant state updates", async () => {
+    const hass = makeHass();
+    card.hass = hass;
+    await Promise.resolve();
+    const initialShell = card.shadowRoot?.querySelector(".card-shell");
+
+    card.hass = {
+      states: {
+        ...hass.states,
+        "sensor.unrelated": makeEntity("sensor.unrelated", "changed"),
+      },
+    };
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector(".card-shell")).toBe(initialShell);
+
+    card.hass = makeHass("63");
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector(".card-shell")).not.toBe(initialShell);
+    expect(card.shadowRoot?.textContent).toContain("63%");
+  });
+
   it("does not render an internal title and preserves the status", async () => {
     card.setConfig({ ...config, name: "Water Softener", show_header: true });
     card.hass = makeHass();

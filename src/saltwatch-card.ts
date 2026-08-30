@@ -20,6 +20,7 @@ function entity(hass: HomeAssistant | undefined, entityId: string | undefined): 
 export class SaltWatchCard extends HTMLElement {
   private config?: SaltWatchCardConfig;
   private _hass?: HomeAssistant;
+  private lastRenderKey?: string;
 
   public constructor() {
     super();
@@ -59,7 +60,7 @@ export class SaltWatchCard extends HTMLElement {
         },
         {
           name: "low_threshold",
-          selector: { number: { min: 0, max: 100, step: 1, mode: "box" } },
+          selector: { number: { min: 0, max: 100, step: 1, mode: "slider" } },
         },
       ],
       computeLabel: (schema: { name: string }) => {
@@ -116,12 +117,13 @@ export class SaltWatchCard extends HTMLElement {
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
     };
+    this.lastRenderKey = undefined;
     this.render();
   }
 
   public set hass(hass: HomeAssistant) {
     this._hass = hass;
-    this.render();
+    if (this.currentRenderKey() !== this.lastRenderKey) this.render();
   }
 
   public getCardSize(): number {
@@ -137,6 +139,15 @@ export class SaltWatchCard extends HTMLElement {
     const event = new Event("hass-more-info", { bubbles: true, composed: true });
     Object.assign(event, { detail: { entityId: this.config.entity } });
     this.dispatchEvent(event);
+  }
+
+  private currentRenderKey(): string | undefined {
+    if (!this.config || !this._hass) return undefined;
+    return [
+      this.config.entity,
+      this.config.status_entity,
+      this.config.threshold_entity,
+    ].map((entityId) => `${entityId ?? ""}:${entity(this._hass, entityId)?.state ?? "missing"}`).join("|");
   }
 
   private render(): void {
@@ -216,6 +227,7 @@ export class SaltWatchCard extends HTMLElement {
         this.openMoreInfo();
       }
     });
+    this.lastRenderKey = this.currentRenderKey();
   }
 
   private stateSymbol(tone: string): string {
