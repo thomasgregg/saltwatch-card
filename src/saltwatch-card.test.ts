@@ -180,10 +180,11 @@ describe("SaltWatchCard", () => {
   it("removes the salt and shows an explicit unavailable state", () => {
     pushStates(makeHass("unavailable", "Sensor Fault"));
     expect(card.shadowRoot?.querySelector(".salt-highlight")).toBeNull();
-    expect(card.shadowRoot?.textContent).toContain("Sensor fault");
+    expect(card.shadowRoot?.textContent?.match(/Sensor fault/g)).toHaveLength(1);
     expect(card.shadowRoot?.querySelector(".salt-fill")).toBeNull();
     expect(card.shadowRoot?.querySelector(".fault-symbol")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".level")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".level-label")).toBeNull();
     expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("No current reading");
   });
 
@@ -191,6 +192,15 @@ describe("SaltWatchCard", () => {
     pushStates(makeHass("unavailable", "Calibration Required"));
     expect(card.shadowRoot?.querySelector(".calibration-symbol")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".fault-symbol")).toBeNull();
+    expect(card.shadowRoot?.textContent?.match(/Calibration required/g)).toHaveLength(1);
+    expect(card.shadowRoot?.querySelector(".level-label")).toBeNull();
+  });
+
+  it("keeps the exceptional-state label when the top status is hidden", () => {
+    card.setConfig({ ...config, show_status: false });
+    pushStates(makeHass("unavailable", "Sensor Fault"));
+    expect(card.shadowRoot?.querySelector("header")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".level-label")?.textContent).toContain("Sensor fault");
   });
 
   it("uses the live threshold entity for the low marker and state", () => {

@@ -310,7 +310,7 @@ class X extends HTMLElement {
             </header>` : ""}
             <div class="reading${i === void 0 ? " state-reading" : ""}">
               ${i === void 0 ? this.stateSymbol(s.tone) : `<div class="level">${G}</div>`}
-              <div class="level-label">${d(i === void 0 ? f : a("estimatedLevel", t))}</div>
+              ${i === void 0 && this.config.show_status ? "" : `<div class="level-label">${d(i === void 0 ? f : a("estimatedLevel", t))}</div>`}
             </div>
             ${g ? `<div class="threshold-summary" aria-label="${d(a("lowMarkerAt", t, { value: k(l, t) }))}">
               <span class="marker-line"></span>
@@ -408,7 +408,7 @@ class X extends HTMLElement {
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
           </pattern>
-          <clipPath id="tank-window"><path d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
+          <clipPath id="tank-window"><path d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
           <clipPath id="salt-shape"><path d="${o}"/></clipPath>
           <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#000" flood-opacity=".48"/></filter>
           <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
@@ -436,11 +436,11 @@ class X extends HTMLElement {
           <path d="M84 86Q91 82 101 81Q210 78 319 81Q329 82 336 86" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
           <path d="M76 101H344" stroke="#697378" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
         </g>
-        <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
-        <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
+        <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
+        <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${u ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${o}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${Y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${o}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${n}"/>`}
-          <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
+          ${u ? '<rect x="96" y="115" width="228" height="359" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${o}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${Y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${o}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${n}"/>`}
+          <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${h}" data-threshold="${l}" data-threshold-y="${c.toFixed(1)}" d="M12 ${c.toFixed(1)}H326"/>
         <g class="threshold-label tone-${h}" transform="translate(${S} ${y - 15})">
@@ -530,7 +530,7 @@ class X extends HTMLElement {
     `;
   }
 }
-const B = "0.2.0", I = {
+const B = "0.2.1", I = {
   version: B
 }, C = "saltwatch-card", J = I.version;
 customElements.get(C) || customElements.define(C, X);
