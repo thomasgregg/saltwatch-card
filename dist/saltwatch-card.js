@@ -106,7 +106,7 @@ class D extends HTMLElement {
       `Q253 ${(e - 4).toFixed(1)} 270 ${(e - 2).toFixed(1)}`,
       `Q288 ${(e + 1).toFixed(1)} 305 ${(e - 1).toFixed(1)}`,
       `Q315 ${(e - 3).toFixed(1)} 324 ${(e + 1).toFixed(1)}`
-    ].join(" "), l = [
+    ].join(" "), A = [
       i,
       `L324 ${H}`,
       `L96 ${H}`,
@@ -117,7 +117,7 @@ class D extends HTMLElement {
       <ha-card class="tone-${x.tone}" tabindex="0" role="button" aria-label="${v}: ${s(j)}, ${s(x.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(a, l, i, e, X, n, x.tone)}
+            ${this.tankSvg(a, A, i, e, X, n, x.tone)}
           </section>
           <section class="content-panel">
             <header>
@@ -136,15 +136,15 @@ class D extends HTMLElement {
           </section>
         </div>
       </ha-card>`;
-    const A = this.shadowRoot.querySelector("ha-card");
-    A?.addEventListener("click", () => this.openMoreInfo()), A?.addEventListener("keydown", (d) => {
+    const l = this.shadowRoot.querySelector("ha-card");
+    l?.addEventListener("click", () => this.openMoreInfo()), l?.addEventListener("keydown", (d) => {
       d instanceof KeyboardEvent && (d.key === "Enter" || d.key === " ") && (d.preventDefault(), this.openMoreInfo());
     });
   }
   tankSvg(t, f, a, c, n, P, x) {
     const v = Array.from({ length: 21 }, (H, w) => {
-      const e = 100 - w * 5, X = 474 - e / 100 * 342, i = e % 25 === 0, l = !i && e % 10 === 0, A = i ? 60 : l ? 67 : 71;
-      return `${i ? `<text x="52" y="${X + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : l ? "medium" : "minor"}" d="M${A} ${X}H78"/>`;
+      const e = 100 - w * 5, X = 474 - e / 100 * 342, i = e % 25 === 0, A = !i && e % 10 === 0, l = i ? 60 : A ? 67 : 71;
+      return `${i ? `<text x="52" y="${X + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : A ? "medium" : "minor"}" d="M${l} ${X}H78"/>`;
     }).join(""), j = t === void 0, u = Math.max(134, Math.min(470, n));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${j ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
@@ -193,8 +193,6 @@ class D extends HTMLElement {
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#0a0e10" stroke-width="3"/>
-            <path d="M80 147V450Q80 483 111 491L94 499Q69 487 69 452V151Z" fill="url(#tank-edge)"/>
-            <path d="M340 147V450Q340 483 309 491L326 499Q351 487 351 452V151Z" fill="url(#tank-edge)"/>
             <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#090d0f" stroke-width="3"/>
             <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
             <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#lid-face)" stroke="#101518" stroke-width="3"/>
@@ -204,15 +202,12 @@ class D extends HTMLElement {
           <path d="M65 105H355" stroke="#7d858a" stroke-opacity=".42" stroke-width="1.4"/>
           <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
           <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
-          <path d="M77 148V446Q77 473 96 486" fill="none" stroke="#30383d" stroke-opacity=".32" stroke-width="1.5"/>
-          <path d="M343 148V446Q343 473 324 486" fill="none" stroke="#06090b" stroke-opacity=".72" stroke-width="3"/>
         </g>
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
           ${j ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${k}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${a}"/>`}
         </g>
-        <path d="M322 145V443Q322 466 300 472" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="5"/>
         <path class="threshold tone-${x}" data-threshold="${P}" data-threshold-y="${n.toFixed(1)}" d="M12 ${n.toFixed(1)}H326"/>
         <g class="threshold-label tone-${x}" transform="translate(-42 ${u - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>

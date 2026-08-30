@@ -259,8 +259,6 @@ export class SaltWatchCard extends HTMLElement {
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#0a0e10" stroke-width="3"/>
-            <path d="M80 147V450Q80 483 111 491L94 499Q69 487 69 452V151Z" fill="url(#tank-edge)"/>
-            <path d="M340 147V450Q340 483 309 491L326 499Q351 487 351 452V151Z" fill="url(#tank-edge)"/>
             <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#090d0f" stroke-width="3"/>
             <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="2.5"/>
             <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#lid-face)" stroke="#101518" stroke-width="3"/>
@@ -270,8 +268,6 @@ export class SaltWatchCard extends HTMLElement {
           <path d="M65 105H355" stroke="#7d858a" stroke-opacity=".42" stroke-width="1.4"/>
           <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
           <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
-          <path d="M77 148V446Q77 473 96 486" fill="none" stroke="#30383d" stroke-opacity=".32" stroke-width="1.5"/>
-          <path d="M343 148V446Q343 473 324 486" fill="none" stroke="#06090b" stroke-opacity=".72" stroke-width="3"/>
         </g>
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
@@ -280,7 +276,6 @@ export class SaltWatchCard extends HTMLElement {
             ? `<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
         </g>
-        <path d="M322 145V443Q322 466 300 472" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="5"/>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
