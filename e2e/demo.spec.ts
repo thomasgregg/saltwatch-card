@@ -35,6 +35,32 @@ test("updates state and theme through the demo host context", async ({ page }) =
     .not.toBe(darkSurface);
 });
 
+test("keeps every low-state accent on the same HA semantic color", async ({ page }) => {
+  const readAccents = () => page.locator("saltwatch-card").evaluate((card) => {
+    const root = card.shadowRoot;
+    const property = (selector: string, name: string) => {
+      const element = root?.querySelector(selector);
+      return element ? getComputedStyle(element).getPropertyValue(name).trim() : "";
+    };
+    return [
+      property(".threshold", "stroke"),
+      property(".threshold-label rect", "fill"),
+      property(".status", "color"),
+      property(".status-dot", "background-color"),
+      property(".marker-line", "background-color"),
+    ];
+  });
+
+  await page.getByRole("button", { name: "Low salt" }).click();
+  const darkAccents = await readAccents();
+  expect(new Set(darkAccents).size).toBe(1);
+
+  await page.locator("#light-theme").check();
+  const lightAccents = await readAccents();
+  expect(new Set(lightAccents).size).toBe(1);
+  expect(lightAccents[0]).not.toBe(darkAccents[0]);
+});
+
 test("keeps the user's mobile scroll position stable", async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.startsWith("mobile"), "Mobile regression");
   await page.evaluate(() => window.scrollTo(0, Math.min(900, document.documentElement.scrollHeight - innerHeight)));

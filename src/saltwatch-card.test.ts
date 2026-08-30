@@ -81,11 +81,11 @@ describe("SaltWatchCard", () => {
   it("inherits Home Assistant surface and accessible semantic theme colors", () => {
     const styles = card.shadowRoot?.querySelector("style")?.textContent ?? "";
     expect(styles).toContain("var(--card-background-color");
-    expect(styles).toContain("var(--success-color");
-    expect(styles).toContain("var(--warning-color");
-    expect(styles).toContain("var(--error-color");
     expect(styles).toContain("--sw-panel-divider:");
-    expect(styles).toContain("--sw-good-text:color-mix");
+    expect(styles).toContain("--sw-good:var(--ha-color-on-success-normal);");
+    expect(styles).toContain("--sw-warning:var(--ha-color-on-warning-normal);");
+    expect(styles).toContain("--sw-low:var(--ha-color-on-danger-normal);");
+    expect(styles).not.toMatch(/--sw-(?:good|low|warning|fault):var\([^;]+,/);
   });
 
   it("uses full-width, intrinsic-height sizing in sections dashboards", () => {
@@ -158,6 +158,24 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("SaltWatch");
   });
 
+  it("uses a centered base aligned with the tank body", () => {
+    expect(card.shadowRoot?.querySelector(".tank-base")?.getAttribute("d"))
+      .toBe("M112 492H308L302 518H275L267 511H153L145 518H118Z");
+  });
+
+  it("uses one Home Assistant semantic color for every state accent", () => {
+    const styles = card.shadowRoot?.querySelector("style")?.textContent;
+    expect(styles).toContain(".threshold { color:var(--sw-warning); fill:none; stroke:currentColor;");
+    expect(styles).toContain(".threshold.tone-low { color:var(--sw-low); }");
+    expect(styles).toContain(".threshold-label rect { fill:var(--sw-warning); }");
+    expect(styles).toContain(".threshold-label.tone-low rect { fill:var(--sw-low); }");
+    expect(styles).toContain(".tone-warning .status-dot { background:var(--sw-warning); }");
+    expect(styles).toContain(".tone-warning .state-symbol { color:var(--sw-warning); }");
+    expect(styles).toContain(".tone-fault .status-dot { background:var(--sw-fault); }");
+    expect(styles).toContain(".tone-fault .state-symbol { color:var(--sw-fault); }");
+    expect(styles).toContain(".marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning);");
+  });
+
   it("can hide the status and low-marker summary without changing the tank marker", () => {
     card.setConfig({ ...config, show_status: false, show_low_marker: false });
     expect(card.shadowRoot?.querySelector("header")).toBeNull();
@@ -182,6 +200,8 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".salt-highlight")).toBeNull();
     expect(card.shadowRoot?.textContent?.match(/Sensor fault/g)).toHaveLength(1);
     expect(card.shadowRoot?.querySelector(".salt-fill")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".unavailable-base")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".unavailable-hatch")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".fault-symbol")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".level")).toBeNull();
     expect(card.shadowRoot?.querySelector(".level-label")).toBeNull();

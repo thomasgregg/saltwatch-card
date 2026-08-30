@@ -57,7 +57,7 @@ function Z(e) {
 }
 function a(e, t = Z(), o = {}) {
   return Object.entries(o).reduce(
-    (n, [i, c]) => n.replaceAll(`{${i}}`, c),
+    (r, [i, c]) => r.replaceAll(`{${i}}`, c),
     A[t][e]
   );
 }
@@ -86,8 +86,8 @@ function V(e) {
   return O(e?.state);
 }
 function U(e, t, o) {
-  const n = e?.trim().toLowerCase() ?? "";
-  return n.includes("fault") || n.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : n.includes("calibration") ? {
+  const r = e?.trim().toLowerCase() ?? "";
+  return r.includes("fault") || r.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : r.includes("calibration") ? {
     label: "Calibration required",
     tone: "warning",
     translationKey: "calibrationRequired"
@@ -95,7 +95,7 @@ function U(e, t, o) {
     label: "No current reading",
     tone: "fault",
     translationKey: "noCurrentReading"
-  } : n.includes("low") || t <= o ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : n === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
+  } : r.includes("low") || t <= o ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : r === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
     label: K(e) ? "Good" : e?.trim() || "Good",
     tone: "good",
     translationKey: K(e) ? "good" : void 0
@@ -115,7 +115,7 @@ function q(e) {
     throw new Error("Fallback low threshold must be between 0 and 100.");
   return e;
 }
-function b(e, t) {
+function x(e, t) {
   if (e === void 0) return t;
   if (typeof e != "object" || e === null || typeof e.action != "string" || !N.includes(e.action))
     throw new Error("Card actions must use a supported Home Assistant action.");
@@ -146,8 +146,8 @@ class X extends HTMLElement {
         composed: !0,
         cancelable: !0
       });
-      t.context = "states", t.subscribe = !0, t.callback = (o, n) => {
-        this.unsubscribeStates = n, this.updateStates(o);
+      t.context = "states", t.subscribe = !0, t.callback = (o, r) => {
+        this.unsubscribeStates = r, this.updateStates(o);
       }, this.dispatchEvent(t);
     }
   }
@@ -226,12 +226,12 @@ class X extends HTMLElement {
         double_tap_action: a("doubleTapAction")
       })[t.name] ?? t.name,
       assertConfig: (t) => {
-        t.low_threshold !== void 0 && q(t.low_threshold), b(t.tap_action, T), b(t.hold_action, w), b(t.double_tap_action, w);
+        t.low_threshold !== void 0 && q(t.low_threshold), x(t.tap_action, T), x(t.hold_action, w), x(t.double_tap_action, w);
       }
     };
   }
-  static getStubConfig(t, o = [], n = []) {
-    const i = [...o, ...n, ...Object.keys(t.states)], c = [...new Set(i)], l = (...u) => c.find((y) => u.every((v) => y.includes(v))), h = {
+  static getStubConfig(t, o = [], r = []) {
+    const i = [...o, ...r, ...Object.keys(t.states)], c = [...new Set(i)], l = (...u) => c.find((y) => u.every((v) => y.includes(v))), h = {
       entity: l("saltwatch", "salt_level") ?? l("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: P,
       show_status: !0,
@@ -245,16 +245,16 @@ class X extends HTMLElement {
     if (!t.entity || typeof t.entity != "string")
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     this.clearInteractionTimers();
-    const o = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", n = q(t.low_threshold ?? P);
+    const o = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", r = q(t.low_threshold ?? P);
     this.config = {
       ...t,
-      low_threshold: n,
+      low_threshold: r,
       show_status: t.show_status ?? !0,
       show_low_marker: t.show_low_marker ?? !0,
       display_mode: o,
-      tap_action: b(t.tap_action, T),
-      hold_action: b(t.hold_action, w),
-      double_tap_action: b(t.double_tap_action, w)
+      tap_action: x(t.tap_action, T),
+      hold_action: x(t.hold_action, w),
+      double_tap_action: x(t.double_tap_action, w)
     }, this.lastRenderKey = void 0, this.render();
   }
   getCardSize() {
@@ -281,16 +281,16 @@ class X extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${d(a("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = Z(), o = L(this.states, this.config.entity), n = V(o), i = n === void 0 ? void 0 : R(n), c = V(L(this.states, this.config.threshold_entity)), l = R(c ?? this.config.low_threshold ?? P), h = L(this.states, this.config.status_entity), s = U(h?.state, i, l), f = s.translationKey ? a(s.translationKey, t) : s.label, u = this.config.display_mode ?? "both", y = u !== "details", v = u !== "tank", g = this.config.show_low_marker !== !1, S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), E = "SaltWatch", G = i === void 0 ? "—" : k(i, t), z = i === void 0 ? a("noCurrentReading", t) : G, x = 132, p = 474, m = p - x, r = i === void 0 ? p : p - i / 100 * m, F = p - l / 100 * m, Q = [
-      `M96 ${(r + 2).toFixed(1)}`,
-      `Q108 ${(r - 2).toFixed(1)} 120 ${(r - 3).toFixed(1)}`,
-      `Q132 ${(r - 6).toFixed(1)} 145 ${(r - 4).toFixed(1)}`,
-      `Q159 ${(r - 1).toFixed(1)} 174 ${(r - 2).toFixed(1)}`,
-      `Q189 ${(r - 4).toFixed(1)} 204 ${(r - 3).toFixed(1)}`,
-      `Q220 ${(r + 1).toFixed(1)} 236 ${(r - 1).toFixed(1)}`,
-      `Q253 ${(r - 4).toFixed(1)} 270 ${(r - 2).toFixed(1)}`,
-      `Q288 ${(r + 1).toFixed(1)} 305 ${(r - 1).toFixed(1)}`,
-      `Q315 ${(r - 3).toFixed(1)} 324 ${(r + 1).toFixed(1)}`
+    const t = Z(), o = L(this.states, this.config.entity), r = V(o), i = r === void 0 ? void 0 : R(r), c = V(L(this.states, this.config.threshold_entity)), l = R(c ?? this.config.low_threshold ?? P), h = L(this.states, this.config.status_entity), s = U(h?.state, i, l), f = s.translationKey ? a(s.translationKey, t) : s.label, u = this.config.display_mode ?? "both", y = u !== "details", v = u !== "tank", g = this.config.show_low_marker !== !1, S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), E = "SaltWatch", G = i === void 0 ? "—" : k(i, t), z = i === void 0 ? a("noCurrentReading", t) : G, b = 132, p = 474, m = p - b, n = i === void 0 ? p : p - i / 100 * m, F = p - l / 100 * m, Q = [
+      `M96 ${(n + 2).toFixed(1)}`,
+      `Q108 ${(n - 2).toFixed(1)} 120 ${(n - 3).toFixed(1)}`,
+      `Q132 ${(n - 6).toFixed(1)} 145 ${(n - 4).toFixed(1)}`,
+      `Q159 ${(n - 1).toFixed(1)} 174 ${(n - 2).toFixed(1)}`,
+      `Q189 ${(n - 4).toFixed(1)} 204 ${(n - 3).toFixed(1)}`,
+      `Q220 ${(n + 1).toFixed(1)} 236 ${(n - 1).toFixed(1)}`,
+      `Q253 ${(n - 4).toFixed(1)} 270 ${(n - 2).toFixed(1)}`,
+      `Q288 ${(n + 1).toFixed(1)} 305 ${(n - 1).toFixed(1)}`,
+      `Q315 ${(n - 3).toFixed(1)} 324 ${(n + 1).toFixed(1)}`
     ].join(" "), M = [
       Q,
       `L324 ${p}`,
@@ -302,7 +302,7 @@ class X extends HTMLElement {
       <ha-card class="tone-${s.tone}"${S ? ' tabindex="0" role="button"' : ""} aria-label="${E}: ${d(z)}, ${d(f)}">
         <div class="card-shell mode-${u}">
           ${y ? `<section class="tank-panel" aria-label="${d(a("tankLevelVisualization", t))}">
-            ${this.tankSvg(i, M, Q, r, F, l, s.tone, t)}
+            ${this.tankSvg(i, M, Q, n, F, l, s.tone, t)}
           </section>` : ""}
           ${v ? `<section class="content-panel${g ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
@@ -376,10 +376,10 @@ class X extends HTMLElement {
       <circle class="symbol-dot" cx="48" cy="68" r="3.8"/>
     </svg>`;
   }
-  tankSvg(t, o, n, i, c, l, h, s) {
+  tankSvg(t, o, r, i, c, l, h, s) {
     const f = Array.from({ length: 21 }, (G, z) => {
-      const x = 100 - z * 5, p = 474 - x / 100 * 342, m = x % 25 === 0, r = !m && x % 10 === 0, F = m ? 60 : r ? 67 : 71;
-      return `${m ? `<text x="52" y="${p + 5}" text-anchor="end">${x}%</text>` : ""}<path class="${m ? "major" : r ? "medium" : "minor"}" d="M${F} ${p}H78"/>`;
+      const b = 100 - z * 5, p = 474 - b / 100 * 342, m = b % 25 === 0, n = !m && b % 10 === 0, F = m ? 60 : n ? 67 : 71;
+      return `${m ? `<text x="52" y="${p + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${m ? "major" : n ? "medium" : "minor"}" d="M${F} ${p}H78"/>`;
     }).join(""), u = t === void 0, y = Math.max(134, Math.min(470, c)), v = a("lowBadge", s), g = s === "de" ? 72 : 54, S = 12 - g, E = u ? a("noCurrentReading", s) : a("estimatedLevel", s) + `: ${k(t, s)}`;
     return `
       <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${d(E)}">
@@ -406,7 +406,7 @@ class X extends HTMLElement {
             <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".09"/><stop offset="100%" stop-color="#000" stop-opacity=".3"/>
           </radialGradient>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
+            <rect width="13" height="13" fill="transparent"/><rect width="3" height="13" fill="#d6dde0" fill-opacity=".14"/>
           </pattern>
           <clipPath id="tank-window"><path d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
           <clipPath id="salt-shape"><path d="${o}"/></clipPath>
@@ -431,7 +431,7 @@ class X extends HTMLElement {
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
             <path d="M74 91L80 82Q83 79 96 77Q210 74 324 77Q337 79 340 82L346 91V104Q346 108 342 108H78Q74 108 74 104Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5" stroke-linejoin="round"/>
-            <path class="tank-base" d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke-width="3"/>
+            <path class="tank-base" d="M112 492H308L302 518H275L267 511H153L145 518H118Z" fill="url(#tank-edge)" stroke-width="3"/>
           </g>
           <path d="M84 86Q91 82 101 81Q210 78 319 81Q329 82 336 86" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
           <path d="M76 101H344" stroke="#697378" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
@@ -439,7 +439,7 @@ class X extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${u ? '<rect x="96" y="115" width="228" height="359" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${o}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${Y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${o}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${n}"/>`}
+          ${u ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${o}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${Y}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${o}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${r}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${h}" data-threshold="${l}" data-threshold-y="${c.toFixed(1)}" d="M12 ${c.toFixed(1)}H326"/>
@@ -450,7 +450,7 @@ class X extends HTMLElement {
   }
   styles() {
     return `
-      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); --sw-good-text:color-mix(in srgb,var(--sw-good) 70%,var(--primary-text-color,#f4f6f7) 30%); --sw-low-text:color-mix(in srgb,var(--sw-low) 72%,var(--primary-text-color,#f4f6f7) 28%); --sw-warning-text:color-mix(in srgb,var(--sw-warning) 68%,var(--primary-text-color,#f4f6f7) 32%); --sw-fault-text:color-mix(in srgb,var(--sw-fault) 72%,var(--primary-text-color,#f4f6f7) 28%); }
+      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--ha-color-on-success-normal); --sw-low:var(--ha-color-on-danger-normal); --sw-warning:var(--ha-color-on-warning-normal); --sw-fault:var(--ha-color-on-danger-normal); }
       * { box-sizing:border-box; }
       ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
       ha-card[role="button"] { cursor:pointer; }
@@ -472,16 +472,16 @@ class X extends HTMLElement {
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
       .salt-highlight { fill:none; stroke:#fff; stroke-width:.8; opacity:.28; }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
-      .threshold { fill:none; stroke:var(--sw-warning); stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
-      .threshold.tone-low { stroke:var(--sw-low); }
+      .threshold { color:var(--sw-warning); fill:none; stroke:currentColor; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
+      .threshold.tone-low { color:var(--sw-low); }
       .threshold-label rect { fill:var(--sw-warning); }
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
-      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good-text); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
+      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
-      .tone-low .status { color:var(--sw-low-text); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning-text); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault-text); }.tone-fault .status-dot { background:var(--sw-fault); }
+      .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
       .reading { margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
@@ -489,14 +489,14 @@ class X extends HTMLElement {
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
       .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
       .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
-      .tone-warning .level-label { color:var(--sw-warning-text); }.tone-fault .level-label { color:var(--sw-fault-text); }
+      .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; min-height:0; }
-        .tank-panel { padding:10px 30px 8px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
+        .tank-panel { padding:8px 30px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
         .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(74%,370px); }
         .content-panel { padding:28px; }
@@ -507,7 +507,7 @@ class X extends HTMLElement {
         .threshold-summary { padding-top:22px; }
       }
       @container (max-width:520px) {
-        .tank-panel { padding:8px 14px 7px; }
+        .tank-panel { padding:7px 14px; }
         .tank { width:min(76%,320px); }
         .content-panel { padding:20px 24px; }
         header { align-items:center; }
@@ -530,7 +530,7 @@ class X extends HTMLElement {
     `;
   }
 }
-const B = "0.2.1", I = {
+const B = "0.2.2", I = {
   version: B
 }, C = "saltwatch-card", J = I.version;
 customElements.get(C) || customElements.define(C, X);
