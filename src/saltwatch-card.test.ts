@@ -60,12 +60,14 @@ describe("SaltWatchCard", () => {
     );
   });
 
-  it("can hide the complete header row", async () => {
+  it("can hide the title while preserving the status", async () => {
     card.setConfig({ ...config, name: "Water Softener", show_header: false });
     card.hass = makeHass();
     await Promise.resolve();
 
-    expect(card.shadowRoot?.querySelector("header")).toBeNull();
+    expect(card.shadowRoot?.querySelector("header")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".title")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".status")?.textContent).toContain("Good");
     expect(card.shadowRoot?.querySelector(".reading")).not.toBeNull();
     expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain(
       "Water Softener",

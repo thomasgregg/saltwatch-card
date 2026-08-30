@@ -53,7 +53,7 @@ export class SaltWatchCard extends HTMLElement {
         const labels: Record<string, string> = {
           entity: "Estimated salt level entity",
           name: "Card title",
-          show_header: "Show header",
+          show_header: "Show title",
           status_entity: "Salt status entity",
           threshold_entity: "Low threshold entity",
           low_threshold: "Fallback low threshold",
@@ -167,10 +167,10 @@ export class SaltWatchCard extends HTMLElement {
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>
           <section class="content-panel">
-            ${this.config.show_header ? `<header>
-              <div class="title">${title}</div>
+            <header>
+              ${this.config.show_header ? `<div class="title">${title}</div>` : ""}
               <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
-            </header>` : ""}
+            </header>
             <div class="reading${level === undefined ? " state-reading" : ""}">
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
               <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>
@@ -335,7 +335,7 @@ export class SaltWatchCard extends HTMLElement {
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { display:flex; align-items:center; justify-content:space-between; gap:22px; }
       .title { font-size:clamp(30px,3.6cqw,40px); font-weight:710; letter-spacing:-.04em; }
-      .status { display:flex; align-items:center; gap:13px; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
+      .status { display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:0 0 22px color-mix(in srgb,currentColor 55%,transparent),inset 0 1px 1px rgba(255,255,255,.28); }
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
