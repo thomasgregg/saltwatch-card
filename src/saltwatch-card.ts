@@ -35,6 +35,7 @@ export class SaltWatchCard extends HTMLElement {
           selector: { entity: { domain: "sensor" } },
         },
         { name: "name", selector: { text: {} } },
+        { name: "show_header", selector: { boolean: {} } },
         {
           type: "grid",
           name: "",
@@ -52,6 +53,7 @@ export class SaltWatchCard extends HTMLElement {
         const labels: Record<string, string> = {
           entity: "Estimated salt level entity",
           name: "Card title",
+          show_header: "Show header",
           status_entity: "Salt status entity",
           threshold_entity: "Low threshold entity",
           low_threshold: "Fallback low threshold",
@@ -74,6 +76,7 @@ export class SaltWatchCard extends HTMLElement {
     const config: Omit<SaltWatchCardConfig, "type"> = {
       entity: find("saltwatch", "salt_level") ?? find("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: DEFAULT_THRESHOLD,
+      show_header: true,
     };
     const status = find("saltwatch", "salt_status");
     const threshold = find("saltwatch", "low_salt_threshold");
@@ -90,6 +93,7 @@ export class SaltWatchCard extends HTMLElement {
     this.config = {
       ...config,
       low_threshold: config.low_threshold ?? DEFAULT_THRESHOLD,
+      show_header: config.show_header ?? true,
     };
     this.render();
   }
@@ -163,10 +167,10 @@ export class SaltWatchCard extends HTMLElement {
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
           </section>
           <section class="content-panel">
-            <header>
+            ${this.config.show_header ? `<header>
               <div class="title">${title}</div>
               <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
-            </header>
+            </header>` : ""}
             <div class="reading${level === undefined ? " state-reading" : ""}">
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
               <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>

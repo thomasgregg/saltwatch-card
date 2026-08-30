@@ -45,6 +45,7 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.textContent).toContain("62%");
     expect(card.shadowRoot?.textContent).toContain("Estimated salt level");
     expect(card.shadowRoot?.textContent).toContain("Low marker");
+    expect(card.shadowRoot?.querySelector("header")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".salt-highlight")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
     expect(card.shadowRoot?.querySelector(".threshold-value")).toBeNull();
@@ -56,6 +57,18 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".threshold")?.getAttribute("data-threshold-y")).toBe("405.6");
     expect(card.shadowRoot?.querySelector(".tank")?.getAttribute("aria-label")).toBe(
       "62 percent estimated salt level",
+    );
+  });
+
+  it("can hide the complete header row", async () => {
+    card.setConfig({ ...config, name: "Water Softener", show_header: false });
+    card.hass = makeHass();
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector("header")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".reading")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain(
+      "Water Softener",
     );
   });
 

@@ -90,9 +90,16 @@ Only `entity` is required.
 | --- | --- | --- |
 | `entity` | Percentage sensor controlling the salt surface | Required |
 | `name` | Card heading | `SaltWatch` |
+| `show_header` | Show the title and status row | `true` |
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |
 | `low_threshold` | Marker used when no threshold entity is supplied | `20` |
+
+Hide the complete title and status row with:
+
+```yaml
+show_header: false
+```
 
 ## Recommended native dashboard composition
 

@@ -22,6 +22,7 @@ const hass: HomeAssistant = {
 const config: SaltWatchCardConfig = {
   type: "custom:saltwatch-card",
   entity: "sensor.saltwatch_salt_level",
+  show_header: true,
   status_entity: "sensor.saltwatch_salt_status",
   threshold_entity: "number.saltwatch_low_salt_threshold",
 };
@@ -33,6 +34,12 @@ card.hass = hass;
 
 const levelInput = document.querySelector<HTMLInputElement>("#level");
 const levelValue = document.querySelector<HTMLElement>("#level-value");
+const showHeaderInput = document.querySelector<HTMLInputElement>("#show-header");
+showHeaderInput?.addEventListener("change", () => {
+  config.show_header = showHeaderInput.checked;
+  card.setConfig(config);
+  card.hass = hass;
+});
 levelInput?.addEventListener("input", () => {
   const value = levelInput.value;
   hass.states[config.entity] = entity(config.entity, value, "%");
