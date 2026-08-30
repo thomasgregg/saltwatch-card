@@ -24,10 +24,9 @@ but works with any numeric percentage sensor.
 
 ## Current status
 
-SaltWatch Card is under active initial development. The focused tank card,
-graphical editor, responsive layout, and explicit unavailable states are
-implemented. The first tagged HACS release will follow device testing in Home
-Assistant.
+SaltWatch Card is under active development. The focused tank card, graphical
+editor, responsive layout, configurable Home Assistant actions, localization,
+and explicit unavailable states are implemented.
 
 ## Features
 
@@ -41,7 +40,9 @@ Assistant.
 - Responsive desktop, tablet, and narrow dashboard layouts
 - Automatic Home Assistant light, dark, and custom-theme colors
 - Home Assistant card-picker registration and graphical configuration form
-- Keyboard-accessible more-info action
+- Configurable tap, hold, and double-tap Home Assistant actions
+- English and German built-in labels, including accessible SVG descriptions
+- Keyboard-accessible tap action
 - No recorder calls or duplicate chart/control implementations
 
 ## Development preview
@@ -59,16 +60,27 @@ themes.
 
 ```bash
 npm run check
+npm run test:e2e
 ```
 
-The production file is written to `dist/saltwatch-card.js`, matching the
-filename required for this HACS dashboard repository.
+To exercise an installed card against a real Home Assistant dashboard, save an
+authenticated Playwright storage state and run:
 
-## Installation during development
+```bash
+HA_URL="https://home-assistant.example/dashboard/view" \
+HA_STORAGE_STATE=".auth/home-assistant.json" npm run test:ha
+```
 
-Until the first release, build the card and copy `dist/saltwatch-card.js` to
-Home Assistant's `/config/www/saltwatch-card/` directory. Add it under
-**Settings → Dashboards → Resources**:
+The production file is written to the stable `dist/saltwatch-card.js` filename
+used by HACS releases.
+
+## HACS installation
+
+Add this repository as a custom **Dashboard** repository in HACS, install
+**SaltWatch Card**, and reload Home Assistant. For local development, build the
+card and copy `dist/saltwatch-card.js` to Home Assistant's
+`/config/www/saltwatch-card/` directory, then add it under **Settings →
+Dashboards → Resources**:
 
 ```text
 /local/saltwatch-card/saltwatch-card.js
@@ -101,6 +113,9 @@ being clipped by fixed grid rows.
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |
 | `low_threshold` | Marker used when no threshold entity is supplied | `20` |
+| `tap_action` | Home Assistant action performed on tap or keyboard activation | `more-info` |
+| `hold_action` | Home Assistant action performed after holding | `none` |
+| `double_tap_action` | Home Assistant action performed on double tap | `none` |
 
 The visibility options can be combined independently:
 
@@ -111,10 +126,11 @@ display_mode: tank
 ```
 
 The surrounding card follows Home Assistant's `--card-background-color`,
-`--success-color`, `--warning-color`, and `--error-color` theme variables. The
-physical tank illustration intentionally remains dark, while the card surface,
-text, dividers, and status states update automatically when the active theme or
-day/night mode changes.
+`--success-color`, `--warning-color`, and `--error-color` theme variables.
+Semantic text colors are mixed with Home Assistant's primary text color for
+readability. The physical tank remains a stable light neutral illustration,
+while the card surface, text, dividers, and status states update automatically
+when the active theme or day/night mode changes.
 
 ## Recommended native dashboard composition
 

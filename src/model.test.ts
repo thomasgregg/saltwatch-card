@@ -22,16 +22,31 @@ describe("SaltWatch card model", () => {
     expect(deriveStatus("Sensor Fault", 60, 20)).toEqual({
       label: "Sensor fault",
       tone: "fault",
+      translationKey: "sensorFault",
     });
     expect(deriveStatus("Calibration Required", undefined, 20)).toEqual({
       label: "Calibration required",
       tone: "warning",
+      translationKey: "calibrationRequired",
     });
   });
 
   it("derives a low status inclusively at the threshold", () => {
-    expect(deriveStatus("Good", 20, 20)).toEqual({ label: "Low salt", tone: "low" });
-    expect(deriveStatus("Good", 20.1, 20)).toEqual({ label: "Good", tone: "good" });
+    expect(deriveStatus("Good", 20, 20)).toEqual({ label: "Low salt", tone: "low", translationKey: "lowSalt" });
+    expect(deriveStatus("Good", 20.1, 20)).toEqual({ label: "Good", tone: "good", translationKey: "good" });
+  });
+
+  it("ignores an unavailable optional status when the level is valid", () => {
+    expect(deriveStatus("unavailable", 62, 20)).toEqual({
+      label: "Good",
+      tone: "good",
+      translationKey: "good",
+    });
+    expect(deriveStatus("unavailable", undefined, 20)).toEqual({
+      label: "No current reading",
+      tone: "fault",
+      translationKey: "noCurrentReading",
+    });
   });
 
 });

@@ -12,19 +12,23 @@ export interface HomeAssistant {
 
 export type SaltWatchDisplayMode = "both" | "tank" | "details";
 
+export interface LovelaceActionConfig {
+  action: string;
+  [key: string]: unknown;
+}
+
 export interface SaltWatchCardConfig {
   type: string;
   entity: string;
-  /** @deprecated Retained for configuration compatibility; no title is rendered. */
-  name?: string;
-  /** @deprecated Retained for configuration compatibility; no title is rendered. */
-  show_header?: boolean;
   show_status?: boolean;
   show_low_marker?: boolean;
   display_mode?: SaltWatchDisplayMode;
   status_entity?: string;
   threshold_entity?: string;
   low_threshold?: number;
+  tap_action?: LovelaceActionConfig;
+  hold_action?: LovelaceActionConfig;
+  double_tap_action?: LovelaceActionConfig;
 }
 
 export interface CustomCardRegistration {

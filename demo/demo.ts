@@ -31,8 +31,25 @@ const config: SaltWatchCardConfig = {
 
 const card = document.querySelector<SaltWatchCard>("#card");
 if (!card) throw new Error("Demo card not found");
+const frame = card.parentElement;
+if (!frame) throw new Error("Demo frame not found");
+let statesSubscriber: ((states: HomeAssistant["states"], unsubscribe: () => void) => void) | undefined;
+const unsubscribeStates = () => {
+  statesSubscriber = undefined;
+};
+frame.addEventListener("context-request", (event) => {
+  const request = event as CustomEvent & {
+    context?: string;
+    callback?: typeof statesSubscriber;
+  };
+  if (request.context !== "states" || !request.callback) return;
+  statesSubscriber = request.callback;
+  statesSubscriber(hass.states, unsubscribeStates);
+});
+const notifyStates = () => statesSubscriber?.(hass.states, unsubscribeStates);
 card.setConfig(config);
-card.hass = hass;
+card.remove();
+frame.append(card);
 
 const levelInput = document.querySelector<HTMLInputElement>("#level");
 const levelValue = document.querySelector<HTMLElement>("#level-value");
@@ -43,7 +60,6 @@ const lightThemeInput = document.querySelector<HTMLInputElement>("#light-theme")
 const themeName = document.querySelector<HTMLElement>("#theme-name");
 const applyConfig = () => {
   card.setConfig(config);
-  card.hass = hass;
 };
 showStatusInput?.addEventListener("change", () => {
   config.show_status = showStatusInput.checked;
@@ -70,7 +86,7 @@ levelInput?.addEventListener("input", () => {
     Number(value) <= 20 ? "Low Salt" : "Good",
   );
   if (levelValue) levelValue.textContent = `${value}%`;
-  card.hass = hass;
+  notifyStates();
 });
 
 document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((button) => {
@@ -91,6 +107,6 @@ document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((butt
       hass.states[config.entity] = entity(config.entity, levelInput?.value || "62", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Good");
     }
-    card.hass = hass;
+    notifyStates();
   });
 });

@@ -1,4 +1,9 @@
-import saltTextureUrl from "../assets/salt-tablets.jpg?inline";
+import saltTextureUrl from "../assets/salt-tablets.webp?inline";
+import {
+  formatPercentage,
+  localize,
+  resolveLocale,
+} from "./localize";
 import {
   clamp,
   deriveStatus,
@@ -8,23 +13,103 @@ import {
 import type {
   HassEntity,
   HomeAssistant,
+  LovelaceActionConfig,
   SaltWatchCardConfig,
 } from "./types";
 
 const DEFAULT_THRESHOLD = 20;
+const DEFAULT_TAP_ACTION: LovelaceActionConfig = { action: "more-info" };
+const DEFAULT_NO_ACTION: LovelaceActionConfig = { action: "none" };
+const HOLD_DELAY = 500;
+const DOUBLE_TAP_DELAY = 250;
+const ACTIONS = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
 
-function entity(hass: HomeAssistant | undefined, entityId: string | undefined): HassEntity | undefined {
-  return entityId ? hass?.states[entityId] : undefined;
+type HassStates = HomeAssistant["states"];
+type ActionType = "tap" | "hold" | "double_tap";
+type Unsubscribe = () => void;
+
+interface StatesContextRequestEvent extends CustomEvent {
+  context: "states";
+  subscribe: true;
+  callback: (states: HassStates, unsubscribe: Unsubscribe) => void;
+}
+
+function entity(states: HassStates | undefined, entityId: string | undefined): HassEntity | undefined {
+  return entityId ? states?.[entityId] : undefined;
+}
+
+function validatedThreshold(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error("Fallback low threshold must be a number between 0 and 100.");
+  }
+  if (value < 0 || value > 100) {
+    throw new Error("Fallback low threshold must be between 0 and 100.");
+  }
+  return value;
+}
+
+function validatedAction(value: unknown, fallback: LovelaceActionConfig): LovelaceActionConfig {
+  if (value === undefined) return fallback;
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    typeof (value as { action?: unknown }).action !== "string" ||
+    !ACTIONS.includes((value as { action: string }).action)
+  ) {
+    throw new Error("Card actions must use a supported Home Assistant action.");
+  }
+  return value as LovelaceActionConfig;
 }
 
 export class SaltWatchCard extends HTMLElement {
   private config?: SaltWatchCardConfig;
-  private _hass?: HomeAssistant;
+  private states?: HassStates;
+  private unsubscribeStates?: Unsubscribe;
   private lastRenderKey?: string;
+  private holdTimer?: ReturnType<typeof setTimeout>;
+  private tapTimer?: ReturnType<typeof setTimeout>;
+  private holdTriggered = false;
+  private pointerOrigin?: { x: number; y: number };
+  private languageObserver?: MutationObserver;
 
   public constructor() {
     super();
     this.attachShadow({ mode: "open" });
+  }
+
+  public connectedCallback(): void {
+    if (!this.languageObserver) {
+      this.languageObserver = new MutationObserver(() => {
+        this.lastRenderKey = undefined;
+        this.render();
+      });
+      this.languageObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["lang"],
+      });
+    }
+    if (!this.unsubscribeStates) {
+      const event = new CustomEvent("context-request", {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }) as StatesContextRequestEvent;
+      event.context = "states";
+      event.subscribe = true;
+      event.callback = (states, unsubscribe) => {
+        this.unsubscribeStates = unsubscribe;
+        this.updateStates(states);
+      };
+      this.dispatchEvent(event);
+    }
+  }
+
+  public disconnectedCallback(): void {
+    this.unsubscribeStates?.();
+    this.unsubscribeStates = undefined;
+    this.languageObserver?.disconnect();
+    this.languageObserver = undefined;
+    this.clearInteractionTimers();
   }
 
   public static getConfigForm(): Record<string, unknown> {
@@ -43,9 +128,9 @@ export class SaltWatchCard extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "both", label: "Tank and percentage" },
-                { value: "tank", label: "Tank only" },
-                { value: "details", label: "Percentage only" },
+                { value: "both", label: localize("tankAndPercentage") },
+                { value: "tank", label: localize("tankOnly") },
+                { value: "details", label: localize("percentageOnly") },
               ],
             },
           },
@@ -62,18 +147,50 @@ export class SaltWatchCard extends HTMLElement {
           name: "low_threshold",
           selector: { number: { min: 0, max: 100, step: 1, mode: "slider" } },
         },
+        {
+          type: "expandable",
+          name: "actions",
+          title: localize("actions"),
+          flatten: true,
+          schema: [
+            {
+              name: "tap_action",
+              selector: { ui_action: { actions: ACTIONS, default_action: "more-info" } },
+              context: { entity_id: "entity" },
+            },
+            {
+              name: "hold_action",
+              selector: { ui_action: { actions: ACTIONS, default_action: "none" } },
+              context: { entity_id: "entity" },
+            },
+            {
+              name: "double_tap_action",
+              selector: { ui_action: { actions: ACTIONS, default_action: "none" } },
+              context: { entity_id: "entity" },
+            },
+          ],
+        },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
-          entity: "Estimated salt level entity",
-          show_status: "Show status",
-          show_low_marker: "Show low marker below percentage",
-          display_mode: "Card content",
-          status_entity: "Salt status entity",
-          threshold_entity: "Low threshold entity",
-          low_threshold: "Fallback low threshold",
+          entity: localize("estimatedLevelEntity"),
+          show_status: localize("showStatus"),
+          show_low_marker: localize("showLowMarker"),
+          display_mode: localize("cardContent"),
+          status_entity: localize("statusEntity"),
+          threshold_entity: localize("thresholdEntity"),
+          low_threshold: localize("fallbackThreshold"),
+          tap_action: localize("tapAction"),
+          hold_action: localize("holdAction"),
+          double_tap_action: localize("doubleTapAction"),
         };
         return labels[schema.name] ?? schema.name;
+      },
+      assertConfig: (config: Record<string, unknown>) => {
+        if (config.low_threshold !== undefined) validatedThreshold(config.low_threshold);
+        validatedAction(config.tap_action, DEFAULT_TAP_ACTION);
+        validatedAction(config.hold_action, DEFAULT_NO_ACTION);
+        validatedAction(config.double_tap_action, DEFAULT_NO_ACTION);
       },
     };
   }
@@ -94,6 +211,7 @@ export class SaltWatchCard extends HTMLElement {
       show_status: true,
       show_low_marker: true,
       display_mode: "both",
+      tap_action: DEFAULT_TAP_ACTION,
     };
     const status = find("saltwatch", "salt_status");
     const threshold = find("saltwatch", "low_salt_threshold");
@@ -107,70 +225,79 @@ export class SaltWatchCard extends HTMLElement {
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     }
 
+    this.clearInteractionTimers();
     const displayMode = config.display_mode === "tank" || config.display_mode === "details"
       ? config.display_mode
       : "both";
+    const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
     this.config = {
       ...config,
-      low_threshold: config.low_threshold ?? DEFAULT_THRESHOLD,
+      low_threshold: lowThreshold,
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
+      tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION),
+      hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION),
+      double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION),
     };
     this.lastRenderKey = undefined;
     this.render();
   }
 
-  public set hass(hass: HomeAssistant) {
-    this._hass = hass;
-    if (this.currentRenderKey() !== this.lastRenderKey) this.render();
-  }
-
   public getCardSize(): number {
-    return 6;
+    const measuredHeight = this.getBoundingClientRect().height;
+    if (measuredHeight > 0) return Math.max(1, Math.ceil(measuredHeight / 50));
+    if (this.config?.display_mode === "tank") return 12;
+    if (this.config?.display_mode === "details") return 7;
+    return 13;
   }
 
   public getGridOptions(): Record<string, string> {
     return { columns: "full" };
   }
 
-  private openMoreInfo(): void {
-    if (!this.config) return;
-    const event = new Event("hass-more-info", { bubbles: true, composed: true });
-    Object.assign(event, { detail: { entityId: this.config.entity } });
-    this.dispatchEvent(event);
+  private updateStates(states: HassStates): void {
+    this.states = states;
+    if (this.currentRenderKey() !== this.lastRenderKey) this.render();
   }
 
   private currentRenderKey(): string | undefined {
-    if (!this.config || !this._hass) return undefined;
+    if (!this.config || !this.states) return undefined;
     return [
       this.config.entity,
       this.config.status_entity,
       this.config.threshold_entity,
-    ].map((entityId) => `${entityId ?? ""}:${entity(this._hass, entityId)?.state ?? "missing"}`).join("|");
+    ].map((entityId) => `${entityId ?? ""}:${entity(this.states, entityId)?.state ?? "missing"}`).join("|");
   }
 
   private render(): void {
     if (!this.shadowRoot || !this.config) return;
-    if (!this._hass) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>`;
+    if (!this.states) {
+      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading"))}</div></ha-card>`;
       return;
     }
 
-    const levelEntity = entity(this._hass, this.config.entity);
+    const locale = resolveLocale();
+    const levelEntity = entity(this.states, this.config.entity);
     const rawLevel = entityNumber(levelEntity);
     const level = rawLevel === undefined ? undefined : clamp(rawLevel);
-    const thresholdEntityValue = entityNumber(entity(this._hass, this.config.threshold_entity));
+    const thresholdEntityValue = entityNumber(entity(this.states, this.config.threshold_entity));
     const threshold = clamp(thresholdEntityValue ?? this.config.low_threshold ?? DEFAULT_THRESHOLD);
-    const statusEntity = entity(this._hass, this.config.status_entity);
+    const statusEntity = entity(this.states, this.config.status_entity);
     const status = deriveStatus(statusEntity?.state, level, threshold);
+    const statusLabel = status.translationKey
+      ? localize(status.translationKey, locale)
+      : status.label;
     const displayMode = this.config.display_mode ?? "both";
     const showTank = displayMode !== "details";
     const showDetails = displayMode !== "tank";
     const showLowMarkerSummary = this.config.show_low_marker !== false;
-    const title = escapeHtml(this.config.name || "SaltWatch");
-    const displayLevel = level === undefined ? "—" : `${Math.round(level)}%`;
-    const accessibleLevel = level === undefined ? "No current reading" : displayLevel;
+    const interactive = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap");
+    const title = "SaltWatch";
+    const displayLevel = level === undefined ? "—" : formatPercentage(level, locale);
+    const accessibleLevel = level === undefined
+      ? localize("noCurrentReading", locale)
+      : displayLevel;
 
     const tankTop = 132;
     const tankBottom = 474;
@@ -197,37 +324,115 @@ export class SaltWatchCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(status.label)}">
+      <ha-card class="tone-${status.tone}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(statusLabel)}">
         <div class="card-shell mode-${displayMode}">
-          ${showTank ? `<section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
+          ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale)}
           </section>` : ""}
           ${showDetails ? `<section class="content-panel${showLowMarkerSummary ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
-              <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
+              <div class="status"><span class="status-dot"></span>${escapeHtml(statusLabel)}</div>
             </header>` : ""}
             <div class="reading${level === undefined ? " state-reading" : ""}">
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
-              <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>
+              <div class="level-label">${level === undefined ? escapeHtml(statusLabel) : escapeHtml(localize("estimatedLevel", locale))}</div>
             </div>
-            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
+            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, locale) }))}">
               <span class="marker-line"></span>
-              <span>Low marker</span>
-              <strong>${Math.round(threshold)}%</strong>
+              <span>${escapeHtml(localize("lowMarker", locale))}</span>
+              <strong>${formatPercentage(threshold, locale)}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
       </ha-card>`;
 
-    const card = this.shadowRoot.querySelector("ha-card");
-    card?.addEventListener("click", () => this.openMoreInfo());
-    card?.addEventListener("keydown", (event) => {
-      if (event instanceof KeyboardEvent && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        this.openMoreInfo();
+    const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
+    if (card) this.configureInteractions(card);
+    this.lastRenderKey = this.currentRenderKey();
+  }
+
+  private actionConfig(action: ActionType): LovelaceActionConfig {
+    if (!this.config) return DEFAULT_NO_ACTION;
+    if (action === "tap") return this.config.tap_action ?? DEFAULT_TAP_ACTION;
+    if (action === "hold") return this.config.hold_action ?? DEFAULT_NO_ACTION;
+    return this.config.double_tap_action ?? DEFAULT_NO_ACTION;
+  }
+
+  private hasAction(action: ActionType): boolean {
+    return this.actionConfig(action).action !== "none";
+  }
+
+  private fireAction(action: ActionType): void {
+    if (!this.config || !this.hasAction(action)) return;
+    this.dispatchEvent(new CustomEvent("hass-action", {
+      bubbles: true,
+      composed: true,
+      detail: { config: this.config, action },
+    }));
+  }
+
+  private clearHoldTimer(): void {
+    if (this.holdTimer !== undefined) clearTimeout(this.holdTimer);
+    this.holdTimer = undefined;
+    this.pointerOrigin = undefined;
+  }
+
+  private clearInteractionTimers(): void {
+    this.clearHoldTimer();
+    if (this.tapTimer !== undefined) clearTimeout(this.tapTimer);
+    this.tapTimer = undefined;
+    this.holdTriggered = false;
+  }
+
+  private configureInteractions(card: HTMLElement): void {
+    card.addEventListener("click", () => {
+      if (this.holdTriggered) {
+        this.holdTriggered = false;
+        return;
+      }
+      if (this.hasAction("double_tap")) {
+        if (this.tapTimer !== undefined) clearTimeout(this.tapTimer);
+        this.tapTimer = setTimeout(() => {
+          this.tapTimer = undefined;
+          this.fireAction("tap");
+        }, DOUBLE_TAP_DELAY);
+      } else {
+        this.fireAction("tap");
       }
     });
-    this.lastRenderKey = this.currentRenderKey();
+    card.addEventListener("dblclick", (event) => {
+      if (!this.hasAction("double_tap")) return;
+      event.preventDefault();
+      if (this.tapTimer !== undefined) clearTimeout(this.tapTimer);
+      this.tapTimer = undefined;
+      this.fireAction("double_tap");
+    });
+    card.addEventListener("pointerdown", (event) => {
+      if (!(event instanceof PointerEvent) || event.button !== 0 || !this.hasAction("hold")) return;
+      this.clearHoldTimer();
+      this.holdTriggered = false;
+      this.pointerOrigin = { x: event.clientX, y: event.clientY };
+      this.holdTimer = setTimeout(() => {
+        this.holdTimer = undefined;
+        this.holdTriggered = true;
+        this.fireAction("hold");
+      }, HOLD_DELAY);
+    });
+    card.addEventListener("pointermove", (event) => {
+      if (!(event instanceof PointerEvent) || !this.pointerOrigin) return;
+      if (Math.hypot(event.clientX - this.pointerOrigin.x, event.clientY - this.pointerOrigin.y) > 10) {
+        this.clearHoldTimer();
+      }
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
+      card.addEventListener(eventName, () => this.clearHoldTimer());
+    });
+    card.addEventListener("keydown", (event) => {
+      if (event instanceof KeyboardEvent && (event.key === "Enter" || event.key === " ")) {
+        event.preventDefault();
+        this.fireAction("tap");
+      }
+    });
   }
 
   private stateSymbol(tone: string): string {
@@ -253,6 +458,7 @@ export class SaltWatchCard extends HTMLElement {
     thresholdY: number,
     threshold: number,
     tone: string,
+    locale: ReturnType<typeof resolveLocale>,
   ): string {
     const rulerMarks = Array.from({ length: 21 }, (_, index) => {
       const value = 100 - index * 5;
@@ -267,28 +473,28 @@ export class SaltWatchCard extends HTMLElement {
     }).join("");
     const unavailable = level === undefined;
     const labelY = Math.max(134, Math.min(470, thresholdY));
+    const lowBadge = localize("lowBadge", locale);
+    const lowBadgeWidth = locale === "de" ? 72 : 54;
+    const lowBadgeX = 12 - lowBadgeWidth;
+    const tankLabel = unavailable
+      ? localize("noCurrentReading", locale)
+      : localize("estimatedLevel", locale) + `: ${formatPercentage(level, locale)}`;
 
     return `
-      <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${unavailable ? "No current salt level" : `${Math.round(level)} percent estimated salt level`}">
+      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${escapeHtml(tankLabel)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
-          </linearGradient>
-          <linearGradient id="lid-edge" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#dce0df"/><stop offset=".24" stop-color="#c1c9ca"/><stop offset=".72" stop-color="#9ba7ab"/><stop offset="1" stop-color="#c9cfcf"/>
+            <stop offset="0" stop-color="#1b2226"/><stop offset=".15" stop-color="#424a4f"/><stop offset=".27" stop-color="#242b2f"/><stop offset=".76" stop-color="#171d21"/><stop offset="1" stop-color="#353d42"/>
           </linearGradient>
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
           </linearGradient>
-          <linearGradient id="handle-face" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#e8eae8"/><stop offset=".18" stop-color="#cfd5d5"/><stop offset=".62" stop-color="#aeb8bb"/><stop offset="1" stop-color="#d9dddb"/>
-          </linearGradient>
-          <linearGradient id="tank-glass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#d8dcda"/><stop offset=".48" stop-color="#cbd1cf"/><stop offset="1" stop-color="#bbc4c2"/>
-          </linearGradient>
+          <radialGradient id="tank-glass" cx="50%" cy="40%" r="74%">
+            <stop offset="0" stop-color="#565a5c"/><stop offset=".5" stop-color="#404548"/><stop offset=".82" stop-color="#303538"/><stop offset="1" stop-color="#1e2326"/>
+          </radialGradient>
           <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
           </linearGradient>
@@ -323,15 +529,11 @@ export class SaltWatchCard extends HTMLElement {
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
-            <path d="M68 91Q68 70 91 63Q137 54 210 56Q283 54 329 63Q352 70 352 91L361 102V119H59V102Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5"/>
-            <path d="M60 105H360V122Q358 135 347 140H73Q62 135 60 122Z" fill="url(#lid-edge)" stroke="#748086" stroke-width="2"/>
-            <path d="M151 63V43Q151 34 161 32H259Q269 34 269 43V63Z" fill="url(#handle-face)" stroke="#748086" stroke-width="2.5"/>
-            <path d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke="#090d0f" stroke-width="3"/>
+            <path d="M74 91L80 82Q83 79 96 77Q210 74 324 77Q337 79 340 82L346 91V104Q346 108 342 108H78Q74 108 74 104Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5" stroke-linejoin="round"/>
+            <path class="tank-base" d="M99 492H321L314 518H282L274 511H147L139 518H106Z" fill="url(#tank-edge)" stroke-width="3"/>
           </g>
-          <path d="M76 91Q113 72 210 74Q307 72 344 91" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2"/>
-          <path d="M65 105H355" stroke="#fff" stroke-opacity=".72" stroke-width="1.4"/>
-          <path d="M64 113H356" stroke="#5f696e" stroke-opacity=".72" stroke-width="2"/>
-          <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
+          <path d="M84 86Q91 82 101 81Q210 78 319 81Q329 82 336 86" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
+          <path d="M76 101H344" stroke="#697378" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
         </g>
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
@@ -342,23 +544,24 @@ export class SaltWatchCard extends HTMLElement {
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
-          <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
+        <g class="threshold-label tone-${tone}" transform="translate(${lowBadgeX} ${labelY - 15})">
+          <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
         </g>
       </svg>`;
   }
 
   private styles(): string {
     return `
-      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 62%,transparent); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); }
+      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); --sw-good-text:color-mix(in srgb,var(--sw-good) 70%,var(--primary-text-color,#f4f6f7) 30%); --sw-low-text:color-mix(in srgb,var(--sw-low) 72%,var(--primary-text-color,#f4f6f7) 28%); --sw-warning-text:color-mix(in srgb,var(--sw-warning) 68%,var(--primary-text-color,#f4f6f7) 32%); --sw-fault-text:color-mix(in srgb,var(--sw-fault) 72%,var(--primary-text-color,#f4f6f7) 28%); }
       * { box-sizing:border-box; }
-      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); cursor:pointer; }
+      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
+      ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .mode-tank .tank-panel { padding-block:8px; border-right:0; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
+      .tank-panel { display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -367,6 +570,7 @@ export class SaltWatchCard extends HTMLElement {
       .ruler .medium { stroke-width:1.35; opacity:.74; }
       .ruler .minor { stroke-width:1; opacity:.72; }
       .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
+      .tank-base { stroke:color-mix(in srgb,var(--primary-text-color,#f4f6f7) 24%,#111619); }
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
       .salt-highlight { fill:none; stroke:#fff; stroke-width:.8; opacity:.28; }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
@@ -377,9 +581,9 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label text { fill:#17130b; font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
       .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
-      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
-      .status-dot { width:17px; height:17px; border-radius:50%; background:currentColor; box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
-      .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
+      .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good-text); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
+      .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
+      .tone-low .status { color:var(--sw-low-text); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning-text); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault-text); }.tone-fault .status-dot { background:var(--sw-fault); }
       .reading { margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
@@ -387,14 +591,14 @@ export class SaltWatchCard extends HTMLElement {
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
       .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
       .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
-      .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
+      .tone-warning .level-label { color:var(--sw-warning-text); }.tone-fault .level-label { color:var(--sw-fault-text); }
       .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; min-height:0; }
-        .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
+        .tank-panel { padding:10px 30px 8px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
         .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(74%,370px); }
         .content-panel { padding:28px; }
@@ -405,7 +609,7 @@ export class SaltWatchCard extends HTMLElement {
         .threshold-summary { padding-top:22px; }
       }
       @container (max-width:520px) {
-        .tank-panel { padding:14px 14px 0; }
+        .tank-panel { padding:8px 14px 7px; }
         .tank { width:min(76%,320px); }
         .content-panel { padding:20px 24px; }
         header { align-items:center; }
