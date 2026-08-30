@@ -216,7 +216,7 @@ export class SaltWatchCard extends HTMLElement {
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${unavailable ? "No current salt level" : `${Math.round(level)} percent estimated salt level`}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#747b80"/><stop offset=".09" stop-color="#343b40"/><stop offset=".32" stop-color="#171c1f"/><stop offset=".7" stop-color="#0e1316"/><stop offset=".91" stop-color="#3b4247"/><stop offset="1" stop-color="#171c20"/>
+            <stop offset="0" stop-color="#7a8287"/><stop offset=".09" stop-color="#41494e"/><stop offset=".32" stop-color="#242b2f"/><stop offset=".7" stop-color="#161c1f"/><stop offset=".91" stop-color="#485055"/><stop offset="1" stop-color="#22292d"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
@@ -233,6 +233,9 @@ export class SaltWatchCard extends HTMLElement {
           <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".04"/><stop offset="1" stop-color="#625744" stop-opacity=".24"/>
           </linearGradient>
+          <radialGradient id="window-vignette" cx="50%" cy="46%" r="72%">
+            <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".09"/><stop offset="100%" stop-color="#000" stop-opacity=".3"/>
+          </radialGradient>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
           </pattern>
@@ -246,12 +249,13 @@ export class SaltWatchCard extends HTMLElement {
             <feBlend in="SourceGraphic" in2="masked-grain" mode="soft-light"/>
           </filter>
           <filter id="inner-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#000" flood-opacity=".88"/></filter>
+          <filter id="surface-blur" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>
           <filter id="salt-shadow" x="-10%" y="-12%" width="120%" height="130%">
             <feTurbulence type="fractalNoise" baseFrequency=".08 .18" numOctaves="2" seed="13" result="noise"/>
             <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
             <feComposite in="mono" in2="SourceAlpha" operator="in" result="texture"/>
             <feBlend in="SourceGraphic" in2="texture" mode="soft-light" result="grain"/>
-            <feDropShadow in="grain" dx="0" dy="-3" stdDeviation="4" flood-color="#fff" flood-opacity=".22"/>
+            <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
@@ -274,7 +278,8 @@ export class SaltWatchCard extends HTMLElement {
         <g clip-path="url(#tank-window)">
           ${unavailable
             ? `<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
-            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
+            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="surface-shadow" d="${surfacePath}"/><path class="salt-highlight" d="${surfacePath}"/>`}
+          <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
@@ -291,7 +296,7 @@ export class SaltWatchCard extends HTMLElement {
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.052),transparent 54%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.11),transparent 62%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -301,7 +306,8 @@ export class SaltWatchCard extends HTMLElement {
       .ruler .minor { stroke-width:1; opacity:.72; }
       .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
-      .salt-highlight { fill:none; stroke:#fff; stroke-width:1.4; opacity:.58; filter:drop-shadow(0 -1px 3px rgba(255,255,255,.2)); }
+      .surface-shadow { fill:none; stroke:#000; stroke-width:10; opacity:.34; filter:url(#surface-blur); }
+      .salt-highlight { fill:none; stroke:#fff; stroke-width:.8; opacity:.28; }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
       .threshold { fill:none; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
       .threshold.tone-good,.threshold.tone-warning { stroke:var(--sw-warning); }

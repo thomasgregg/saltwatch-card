@@ -17,7 +17,7 @@ function W(r, t, f) {
   const a = r?.trim().toLowerCase() ?? "";
   return a.includes("fault") || a.includes("error") ? { label: "Sensor fault", tone: "fault" } : a.includes("calibration") ? { label: "Calibration required", tone: "warning" } : t === void 0 ? { label: "No current reading", tone: "fault" } : a.includes("low") || t <= f ? { label: "Low salt", tone: "low" } : { label: r?.trim() || "Good", tone: "good" };
 }
-function s(r) {
+function d(r) {
   return String(r).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 const p = 20;
@@ -96,7 +96,7 @@ class D extends HTMLElement {
       this.shadowRoot.innerHTML = '<ha-card><div class="loading">Waiting for Home Assistant…</div></ha-card>';
       return;
     }
-    const t = O(this._hass, this.config.entity), f = G(t), a = f === void 0 ? void 0 : b(f), c = G(O(this._hass, this.config.threshold_entity)), n = b(c ?? this.config.low_threshold ?? p), P = O(this._hass, this.config.status_entity), x = W(P?.state, a, n), v = s(this.config.name || "SaltWatch"), j = a === void 0 ? "—" : `${Math.round(a)}%`, u = 132, H = 474, w = H - u, e = a === void 0 ? H : H - a / 100 * w, X = H - n / 100 * w, i = [
+    const t = O(this._hass, this.config.entity), f = G(t), a = f === void 0 ? void 0 : b(f), c = G(O(this._hass, this.config.threshold_entity)), n = b(c ?? this.config.low_threshold ?? p), P = O(this._hass, this.config.status_entity), x = W(P?.state, a, n), v = d(this.config.name || "SaltWatch"), j = a === void 0 ? "—" : `${Math.round(a)}%`, u = 132, H = 474, w = H - u, e = a === void 0 ? H : H - a / 100 * w, X = H - n / 100 * w, i = [
       `M96 ${(e + 2).toFixed(1)}`,
       `Q108 ${(e - 2).toFixed(1)} 120 ${(e - 3).toFixed(1)}`,
       `Q132 ${(e - 6).toFixed(1)} 145 ${(e - 4).toFixed(1)}`,
@@ -106,7 +106,7 @@ class D extends HTMLElement {
       `Q253 ${(e - 4).toFixed(1)} 270 ${(e - 2).toFixed(1)}`,
       `Q288 ${(e + 1).toFixed(1)} 305 ${(e - 1).toFixed(1)}`,
       `Q315 ${(e - 3).toFixed(1)} 324 ${(e + 1).toFixed(1)}`
-    ].join(" "), A = [
+    ].join(" "), l = [
       i,
       `L324 ${H}`,
       `L96 ${H}`,
@@ -114,19 +114,19 @@ class D extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${x.tone}" tabindex="0" role="button" aria-label="${v}: ${s(j)}, ${s(x.label)}">
+      <ha-card class="tone-${x.tone}" tabindex="0" role="button" aria-label="${v}: ${d(j)}, ${d(x.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(a, A, i, e, X, n, x.tone)}
+            ${this.tankSvg(a, l, i, e, X, n, x.tone)}
           </section>
           <section class="content-panel">
             <header>
               <div class="title">${v}</div>
-              <div class="status"><span class="status-dot"></span>${s(x.label)}</div>
+              <div class="status"><span class="status-dot"></span>${d(x.label)}</div>
             </header>
             <div class="reading">
               <div class="level">${j}</div>
-              <div class="level-label">${a === void 0 ? s(x.label) : "Estimated salt level"}</div>
+              <div class="level-label">${a === void 0 ? d(x.label) : "Estimated salt level"}</div>
             </div>
             <div class="threshold-summary" aria-label="Low salt marker at ${Math.round(n)} percent">
               <span class="marker-line"></span>
@@ -136,21 +136,21 @@ class D extends HTMLElement {
           </section>
         </div>
       </ha-card>`;
-    const l = this.shadowRoot.querySelector("ha-card");
-    l?.addEventListener("click", () => this.openMoreInfo()), l?.addEventListener("keydown", (d) => {
-      d instanceof KeyboardEvent && (d.key === "Enter" || d.key === " ") && (d.preventDefault(), this.openMoreInfo());
+    const o = this.shadowRoot.querySelector("ha-card");
+    o?.addEventListener("click", () => this.openMoreInfo()), o?.addEventListener("keydown", (s) => {
+      s instanceof KeyboardEvent && (s.key === "Enter" || s.key === " ") && (s.preventDefault(), this.openMoreInfo());
     });
   }
   tankSvg(t, f, a, c, n, P, x) {
     const v = Array.from({ length: 21 }, (H, w) => {
-      const e = 100 - w * 5, X = 474 - e / 100 * 342, i = e % 25 === 0, A = !i && e % 10 === 0, l = i ? 60 : A ? 67 : 71;
-      return `${i ? `<text x="52" y="${X + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : A ? "medium" : "minor"}" d="M${l} ${X}H78"/>`;
+      const e = 100 - w * 5, X = 474 - e / 100 * 342, i = e % 25 === 0, l = !i && e % 10 === 0, o = i ? 60 : l ? 67 : 71;
+      return `${i ? `<text x="52" y="${X + 5}" text-anchor="end">${e}%</text>` : ""}<path class="${i ? "major" : l ? "medium" : "minor"}" d="M${o} ${X}H78"/>`;
     }).join(""), j = t === void 0, u = Math.max(134, Math.min(470, n));
     return `
       <svg class="tank" viewBox="0 0 400 560" role="img" aria-label="${j ? "No current salt level" : `${Math.round(t)} percent estimated salt level`}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#747b80"/><stop offset=".09" stop-color="#343b40"/><stop offset=".32" stop-color="#171c1f"/><stop offset=".7" stop-color="#0e1316"/><stop offset=".91" stop-color="#3b4247"/><stop offset="1" stop-color="#171c20"/>
+            <stop offset="0" stop-color="#7a8287"/><stop offset=".09" stop-color="#41494e"/><stop offset=".32" stop-color="#242b2f"/><stop offset=".7" stop-color="#161c1f"/><stop offset=".91" stop-color="#485055"/><stop offset="1" stop-color="#22292d"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
@@ -167,6 +167,9 @@ class D extends HTMLElement {
           <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".04"/><stop offset="1" stop-color="#625744" stop-opacity=".24"/>
           </linearGradient>
+          <radialGradient id="window-vignette" cx="50%" cy="46%" r="72%">
+            <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".09"/><stop offset="100%" stop-color="#000" stop-opacity=".3"/>
+          </radialGradient>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="#151b1e"/><rect width="4" height="13" fill="#30383d"/>
           </pattern>
@@ -180,12 +183,13 @@ class D extends HTMLElement {
             <feBlend in="SourceGraphic" in2="masked-grain" mode="soft-light"/>
           </filter>
           <filter id="inner-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#000" flood-opacity=".88"/></filter>
+          <filter id="surface-blur" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>
           <filter id="salt-shadow" x="-10%" y="-12%" width="120%" height="130%">
             <feTurbulence type="fractalNoise" baseFrequency=".08 .18" numOctaves="2" seed="13" result="noise"/>
             <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
             <feComposite in="mono" in2="SourceAlpha" operator="in" result="texture"/>
             <feBlend in="SourceGraphic" in2="texture" mode="soft-light" result="grain"/>
-            <feDropShadow in="grain" dx="0" dy="-3" stdDeviation="4" flood-color="#fff" flood-opacity=".22"/>
+            <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${v}</g>
@@ -206,7 +210,8 @@ class D extends HTMLElement {
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 132Q96 110 118 110H302Q324 110 324 132V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${j ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${k}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${a}"/>`}
+          ${j ? '<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${c.toFixed(1)}" d="${f}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${k}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${f}" fill="url(#salt-shade)"/><path class="surface-shadow" d="${a}"/><path class="salt-highlight" d="${a}"/>`}
+          <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${x}" data-threshold="${P}" data-threshold-y="${n.toFixed(1)}" d="M12 ${n.toFixed(1)}H326"/>
         <g class="threshold-label tone-${x}" transform="translate(-42 ${u - 15})">
@@ -222,7 +227,7 @@ class D extends HTMLElement {
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.052),transparent 54%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.11),transparent 62%),linear-gradient(90deg,rgba(0,0,0,.11),rgba(255,255,255,.012)); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -232,7 +237,8 @@ class D extends HTMLElement {
       .ruler .minor { stroke-width:1; opacity:.72; }
       .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
       .salt-depth { opacity:.9; mix-blend-mode:multiply; }
-      .salt-highlight { fill:none; stroke:#fff; stroke-width:1.4; opacity:.58; filter:drop-shadow(0 -1px 3px rgba(255,255,255,.2)); }
+      .surface-shadow { fill:none; stroke:#000; stroke-width:10; opacity:.34; filter:url(#surface-blur); }
+      .salt-highlight { fill:none; stroke:#fff; stroke-width:.8; opacity:.28; }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
       .threshold { fill:none; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
       .threshold.tone-good,.threshold.tone-warning { stroke:var(--sw-warning); }
@@ -283,11 +289,11 @@ class D extends HTMLElement {
     `;
   }
 }
-const o = "saltwatch-card", g = "0.1.0";
-customElements.get(o) || customElements.define(o, D);
+const A = "saltwatch-card", g = "0.1.0";
+customElements.get(A) || customElements.define(A, D);
 window.customCards = window.customCards || [];
-window.customCards.some((r) => r.type === o) || window.customCards.push({
-  type: o,
+window.customCards.some((r) => r.type === A) || window.customCards.push({
+  type: A,
   name: "SaltWatch Card",
   description: "Visualize estimated water-softener salt level in a detailed granular tank.",
   preview: !0,
