@@ -219,16 +219,13 @@ export class SaltWatchCard extends HTMLElement {
             <stop offset="0" stop-color="#747b80"/><stop offset=".09" stop-color="#343b40"/><stop offset=".32" stop-color="#171c1f"/><stop offset=".7" stop-color="#0e1316"/><stop offset=".91" stop-color="#3b4247"/><stop offset="1" stop-color="#171c20"/>
           </linearGradient>
           <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#111619"/><stop offset=".15" stop-color="#626a6f"/><stop offset=".27" stop-color="#282f33"/><stop offset=".76" stop-color="#111619"/><stop offset="1" stop-color="#555d62"/>
+            <stop offset="0" stop-color="#0d1114"/><stop offset=".15" stop-color="#30373b"/><stop offset=".27" stop-color="#171d21"/><stop offset=".76" stop-color="#0b0f12"/><stop offset="1" stop-color="#242a2e"/>
           </linearGradient>
           <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#697176"/><stop offset=".13" stop-color="#41484d"/><stop offset=".52" stop-color="#181d20"/><stop offset=".8" stop-color="#101518"/><stop offset="1" stop-color="#343b40"/>
           </linearGradient>
           <linearGradient id="tank-glass" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#090d0f"/><stop offset=".13" stop-color="#1d2327"/><stop offset=".52" stop-color="#242a2e"/><stop offset=".88" stop-color="#121719"/><stop offset="1" stop-color="#080b0d"/>
-          </linearGradient>
-          <linearGradient id="glass-sheen" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/><stop offset=".1" stop-color="#ffffff" stop-opacity=".03"/><stop offset=".48" stop-color="#ffffff" stop-opacity="0"/><stop offset=".86" stop-color="#ffffff" stop-opacity=".045"/><stop offset="1" stop-color="#ffffff" stop-opacity=".14"/>
           </linearGradient>
           <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
@@ -273,7 +270,7 @@ export class SaltWatchCard extends HTMLElement {
           <path d="M65 105H355" stroke="#7d858a" stroke-opacity=".42" stroke-width="1.4"/>
           <path d="M64 113H356" stroke="#070a0c" stroke-opacity=".9" stroke-width="3"/>
           <path d="M159 42H261M160 48H260" stroke="#888f93" stroke-opacity=".34" stroke-width="1.3"/>
-          <path d="M77 148V446Q77 473 96 486" fill="none" stroke="#8f979c" stroke-opacity=".22" stroke-width="2"/>
+          <path d="M77 148V446Q77 473 96 486" fill="none" stroke="#30383d" stroke-opacity=".32" stroke-width="1.5"/>
           <path d="M343 148V446Q343 473 324 486" fill="none" stroke="#06090b" stroke-opacity=".72" stroke-width="3"/>
         </g>
         <path d="M91 130Q91 105 116 105H304Q329 105 329 130V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
@@ -282,11 +279,8 @@ export class SaltWatchCard extends HTMLElement {
           ${unavailable
             ? `<rect x="96" y="110" width="228" height="364" fill="url(#hatch)" opacity=".82"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
-          <rect x="96" y="110" width="228" height="364" fill="url(#glass-sheen)" opacity=".38"/>
         </g>
-        <path d="M97 146V443Q97 468 121 473" fill="none" stroke="#ffffff" stroke-opacity=".15" stroke-width="4"/>
         <path d="M322 145V443Q322 466 300 472" fill="none" stroke="#000" stroke-opacity=".38" stroke-width="5"/>
-        <path d="M108 119Q100 126 100 144" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="2"/>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
