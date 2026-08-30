@@ -66,6 +66,19 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".salt-highlight")).toBeNull();
     expect(card.shadowRoot?.textContent).toContain("Sensor fault");
     expect(card.shadowRoot?.querySelector(".salt-fill")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".fault-symbol")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".level")).toBeNull();
+    expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain(
+      "No current reading",
+    );
+  });
+
+  it("uses a dedicated symbol when calibration is required", async () => {
+    card.hass = makeHass("unavailable", "Calibration Required");
+    await Promise.resolve();
+
+    expect(card.shadowRoot?.querySelector(".calibration-symbol")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".fault-symbol")).toBeNull();
   });
 
   it("uses the live threshold entity for the low marker and state", async () => {

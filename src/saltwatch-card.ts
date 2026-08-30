@@ -130,6 +130,7 @@ export class SaltWatchCard extends HTMLElement {
     const status = deriveStatus(statusEntity?.state, level, threshold);
     const title = escapeHtml(this.config.name || "SaltWatch");
     const displayLevel = level === undefined ? "—" : `${Math.round(level)}%`;
+    const accessibleLevel = level === undefined ? "No current reading" : displayLevel;
 
     const tankTop = 132;
     const tankBottom = 474;
@@ -156,7 +157,7 @@ export class SaltWatchCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(displayLevel)}, ${escapeHtml(status.label)}">
+      <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(status.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
@@ -166,8 +167,8 @@ export class SaltWatchCard extends HTMLElement {
               <div class="title">${title}</div>
               <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
             </header>
-            <div class="reading">
-              <div class="level">${displayLevel}</div>
+            <div class="reading${level === undefined ? " state-reading" : ""}">
+              ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
               <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>
             </div>
             <div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
@@ -187,6 +188,21 @@ export class SaltWatchCard extends HTMLElement {
         this.openMoreInfo();
       }
     });
+  }
+
+  private stateSymbol(tone: string): string {
+    if (tone === "warning") {
+      return `<svg class="state-symbol calibration-symbol" viewBox="0 0 96 96" aria-hidden="true">
+        <circle cx="48" cy="48" r="31"/>
+        <circle cx="48" cy="48" r="12"/>
+        <path d="M48 5V18M48 78V91M5 48H18M78 48H91"/>
+      </svg>`;
+    }
+    return `<svg class="state-symbol fault-symbol" viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="34"/>
+      <path d="M48 27V55"/>
+      <circle class="symbol-dot" cx="48" cy="68" r="3.8"/>
+    </svg>`;
   }
 
   private tankSvg(
@@ -320,6 +336,9 @@ export class SaltWatchCard extends HTMLElement {
       .tone-low .status { color:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }
       .reading { margin:auto 0; padding:54px 0 48px; }
       .level { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; text-shadow:0 7px 24px rgba(0,0,0,.28); }
+      .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
+      .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
+      .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
       .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
       .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,1.9cqw,20px); }
@@ -332,6 +351,7 @@ export class SaltWatchCard extends HTMLElement {
         .tank { width:min(78%,390px); }
         .content-panel { padding:34px; }
         .reading { margin:0; padding:45px 0 38px; text-align:center; }
+        .state-reading { display:flex; flex-direction:column; align-items:center; }
         .level { font-size:clamp(110px,24cqw,154px); }
         .level-label { font-size:26px; }
       }
@@ -343,6 +363,7 @@ export class SaltWatchCard extends HTMLElement {
         .title { font-size:28px; }
         .status { font-size:18px; }
         .reading { margin:0; padding:38px 0 32px; }
+        .state-symbol { width:90px; }
         .level { font-size:clamp(94px,29cqw,126px); }
         .level-label { margin-top:22px; font-size:21px; }
         .threshold-summary { font-size:16px; }
