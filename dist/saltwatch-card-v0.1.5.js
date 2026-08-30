@@ -240,7 +240,6 @@ class V extends HTMLElement {
           </filter>
         </defs>
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${j}</g>
-        <ellipse cx="211" cy="510" rx="132" ry="19" fill="#000" opacity=".4"/>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
@@ -268,7 +267,7 @@ class V extends HTMLElement {
   }
   styles() {
     return `
-      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); }
+      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 62%,transparent); --sw-good:var(--success-color,#58c97a); --sw-low:var(--error-color,#f05d5e); --sw-warning:var(--warning-color,#f2ae32); --sw-fault:var(--error-color,#ff5c64); }
       * { box-sizing:border-box; }
       ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
@@ -276,7 +275,7 @@ class V extends HTMLElement {
       .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .mode-tank .tank-panel { padding-block:8px; border-right:0; }
-      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+      .tank-panel { display:grid; place-items:center; padding:10px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -312,7 +311,7 @@ class V extends HTMLElement {
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; min-height:0; }
-        .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid color-mix(in srgb,var(--divider-color,#536069) 28%,transparent); }
+        .tank-panel { padding:20px 30px 4px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
         .mode-tank .tank-panel { border-bottom:0; }
         .tank { width:min(74%,370px); }
         .content-panel { padding:28px; }
@@ -346,7 +345,7 @@ class V extends HTMLElement {
     `;
   }
 }
-const O = "saltwatch-card", z = "0.1.4";
+const O = "saltwatch-card", z = "0.1.5";
 customElements.get(O) || customElements.define(O, V);
 window.customCards = window.customCards || [];
 window.customCards.some((e) => e.type === O) || window.customCards.push({

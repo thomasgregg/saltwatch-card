@@ -52,6 +52,7 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".tank-glass")?.hasAttribute("stroke")).toBe(false);
     expect(card.shadowRoot?.querySelector("#glass-sheen")).toBeNull();
     expect(card.shadowRoot?.querySelector(".window-vignette")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".tank ellipse")).toBeNull();
     expect(card.shadowRoot?.querySelectorAll(".ruler path")).toHaveLength(22);
     expect(card.shadowRoot?.querySelector(".salt-fill")?.getAttribute("data-surface-y")).toBe("262.0");
     expect(card.shadowRoot?.querySelector(".threshold")?.getAttribute("data-threshold-y")).toBe("405.6");
@@ -69,6 +70,8 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain("var(--success-color");
     expect(styles).toContain("var(--warning-color");
     expect(styles).toContain("var(--error-color");
+    expect(styles).toContain("--sw-panel-divider:");
+    expect(styles).toContain("62%,transparent");
   });
 
   it("uses full-width, intrinsic-height sizing in sections dashboards", () => {
