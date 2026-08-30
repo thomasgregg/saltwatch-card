@@ -36,6 +36,8 @@ export class SaltWatchCard extends HTMLElement {
         },
         { name: "name", selector: { text: {} } },
         { name: "show_header", selector: { boolean: {} } },
+        { name: "show_status", selector: { boolean: {} } },
+        { name: "show_low_marker", selector: { boolean: {} } },
         {
           type: "grid",
           name: "",
@@ -54,6 +56,8 @@ export class SaltWatchCard extends HTMLElement {
           entity: "Estimated salt level entity",
           name: "Card title",
           show_header: "Show title",
+          show_status: "Show status",
+          show_low_marker: "Show low marker",
           status_entity: "Salt status entity",
           threshold_entity: "Low threshold entity",
           low_threshold: "Fallback low threshold",
@@ -77,6 +81,8 @@ export class SaltWatchCard extends HTMLElement {
       entity: find("saltwatch", "salt_level") ?? find("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: DEFAULT_THRESHOLD,
       show_header: true,
+      show_status: true,
+      show_low_marker: true,
     };
     const status = find("saltwatch", "salt_status");
     const threshold = find("saltwatch", "low_salt_threshold");
@@ -94,6 +100,8 @@ export class SaltWatchCard extends HTMLElement {
       ...config,
       low_threshold: config.low_threshold ?? DEFAULT_THRESHOLD,
       show_header: config.show_header ?? true,
+      show_status: config.show_status ?? true,
+      show_low_marker: config.show_low_marker ?? true,
     };
     this.render();
   }
@@ -164,22 +172,22 @@ export class SaltWatchCard extends HTMLElement {
       <ha-card class="tone-${status.tone}" tabindex="0" role="button" aria-label="${title}: ${escapeHtml(accessibleLevel)}, ${escapeHtml(status.label)}">
         <div class="card-shell">
           <section class="tank-panel" aria-label="Tank level visualization">
-            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone)}
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, this.config.show_low_marker !== false)}
           </section>
           <section class="content-panel">
-            <header>
+            ${this.config.show_header || this.config.show_status ? `<header>
               ${this.config.show_header ? `<div class="title">${title}</div>` : ""}
-              <div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>
-            </header>
+              ${this.config.show_status ? `<div class="status"><span class="status-dot"></span>${escapeHtml(status.label)}</div>` : ""}
+            </header>` : ""}
             <div class="reading${level === undefined ? " state-reading" : ""}">
               ${level === undefined ? this.stateSymbol(status.tone) : `<div class="level">${displayLevel}</div>`}
               <div class="level-label">${level === undefined ? escapeHtml(status.label) : "Estimated salt level"}</div>
             </div>
-            <div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
+            ${this.config.show_low_marker ? `<div class="threshold-summary" aria-label="Low salt marker at ${Math.round(threshold)} percent">
               <span class="marker-line"></span>
               <span>Low marker</span>
               <strong>${Math.round(threshold)}%</strong>
-            </div>
+            </div>` : ""}
           </section>
         </div>
       </ha-card>`;
@@ -217,6 +225,7 @@ export class SaltWatchCard extends HTMLElement {
     thresholdY: number,
     threshold: number,
     tone: string,
+    showLowMarker: boolean,
   ): string {
     const rulerMarks = Array.from({ length: 21 }, (_, index) => {
       const value = 100 - index * 5;
@@ -300,10 +309,10 @@ export class SaltWatchCard extends HTMLElement {
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
           <rect class="window-vignette" x="96" y="110" width="228" height="364" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
+        ${showLowMarker ? `<path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
         <g class="threshold-label tone-${tone}" transform="translate(-42 ${labelY - 15})">
           <rect width="54" height="30" rx="9"/><text x="27" y="20" text-anchor="middle">LOW</text>
-        </g>
+        </g>` : ""}
       </svg>`;
   }
 

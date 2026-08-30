@@ -15,6 +15,8 @@ export interface SaltWatchCardConfig {
   entity: string;
   name?: string;
   show_header?: boolean;
+  show_status?: boolean;
+  show_low_marker?: boolean;
   status_entity?: string;
   threshold_entity?: string;
   low_threshold?: number;

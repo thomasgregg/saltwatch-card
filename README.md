@@ -91,14 +91,18 @@ Only `entity` is required.
 | `entity` | Percentage sensor controlling the salt surface | Required |
 | `name` | Card heading | `SaltWatch` |
 | `show_header` | Show the card title; status remains visible | `true` |
+| `show_status` | Show the upper-right status indicator | `true` |
+| `show_low_marker` | Show the LOW line, badge, and footer summary | `true` |
 | `status_entity` | Text status such as `Good` or `Sensor Fault` | Derived from level |
 | `threshold_entity` | Number entity controlling the low marker | None |
 | `low_threshold` | Marker used when no threshold entity is supplied | `20` |
 
-Hide the card title while keeping the status indicator with:
+The visibility options can be combined independently:
 
 ```yaml
 show_header: false
+show_status: false
+show_low_marker: false
 ```
 
 ## Recommended native dashboard composition

@@ -23,6 +23,8 @@ const config: SaltWatchCardConfig = {
   type: "custom:saltwatch-card",
   entity: "sensor.saltwatch_salt_level",
   show_header: true,
+  show_status: true,
+  show_low_marker: true,
   status_entity: "sensor.saltwatch_salt_status",
   threshold_entity: "number.saltwatch_low_salt_threshold",
 };
@@ -35,10 +37,23 @@ card.hass = hass;
 const levelInput = document.querySelector<HTMLInputElement>("#level");
 const levelValue = document.querySelector<HTMLElement>("#level-value");
 const showHeaderInput = document.querySelector<HTMLInputElement>("#show-header");
-showHeaderInput?.addEventListener("change", () => {
-  config.show_header = showHeaderInput.checked;
+const showStatusInput = document.querySelector<HTMLInputElement>("#show-status");
+const showLowMarkerInput = document.querySelector<HTMLInputElement>("#show-low-marker");
+const applyConfig = () => {
   card.setConfig(config);
   card.hass = hass;
+};
+showHeaderInput?.addEventListener("change", () => {
+  config.show_header = showHeaderInput.checked;
+  applyConfig();
+});
+showStatusInput?.addEventListener("change", () => {
+  config.show_status = showStatusInput.checked;
+  applyConfig();
+});
+showLowMarkerInput?.addEventListener("change", () => {
+  config.show_low_marker = showLowMarkerInput.checked;
+  applyConfig();
 });
 levelInput?.addEventListener("input", () => {
   const value = levelInput.value;
