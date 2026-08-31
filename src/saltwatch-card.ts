@@ -716,7 +716,7 @@ export class SaltWatchCard extends HTMLElement {
     const tankVisualOffsetX = -60;
     const tankVisualCenterX = 210;
     const tankVisualCenterY = 296;
-    const thresholdStartX = 24;
+    const thresholdStartX = 12;
     const thresholdEndX = 324;
     const thresholdVisualStartX =
       tankVisualOffsetX +

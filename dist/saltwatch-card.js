@@ -532,7 +532,7 @@ class pt extends HTMLElement {
     const h = Array.from({ length: 21 }, (V, A) => {
       const y = 100 - A * 5, j = 474 - y / 100 * 342, L = y % 25 === 0, w = !L && y % 10 === 0, H = L ? 60 : w ? 67 : 71;
       return `${L ? `<text x="52" y="${j + 5}" text-anchor="end">${y}%</text>` : ""}<path class="${L ? "major" : w ? "medium" : "minor"}" d="M${H} ${j}H78"/>`;
-    }).join(""), f = t === void 0, c = Math.max(134, Math.min(470, d)), m = r("lowBadge", s), x = s === "de" ? 72 : 54, b = 1.18, N = -60, R = 210, k = 296, C = 24, G = 324, T = N + R + (C - R) * b, g = T - x, q = T, S = (k + (c - k) * b - 15).toFixed(1), P = f ? r("noCurrentReading", s) : r("estimatedLevel", s) + `: ${M(t, s)}`;
+    }).join(""), f = t === void 0, c = Math.max(134, Math.min(470, d)), m = r("lowBadge", s), x = s === "de" ? 72 : 54, b = 1.18, N = -60, R = 210, k = 296, C = 12, G = 324, T = N + R + (C - R) * b, g = T - x, q = T, S = (k + (c - k) * b - 15).toFixed(1), P = f ? r("noCurrentReading", s) : r("estimatedLevel", s) + `: ${M(t, s)}`;
     return `
       <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${u(P)}">
         <defs>
@@ -1097,7 +1097,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.16", yt = {
+const bt = "0.4.17", yt = {
   version: bt
 }, K = "saltwatch-card", vt = yt.version;
 customElements.get(K) || customElements.define(K, pt);
