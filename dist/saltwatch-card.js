@@ -158,11 +158,11 @@ function L(a, t) {
 function ct(a, t) {
   return new Intl.NumberFormat(t, { maximumFractionDigits: 0 }).format(a);
 }
-function pt(a, t) {
+function ht(a, t) {
   const e = a?.trim().toLowerCase() ?? "";
   return e.includes("confirming") && e.includes("refill") ? o("forecastConfirmingRefill", t) : e.includes("insufficient") ? o("forecastInsufficientChange", t) : e.includes("waiting") && e.includes("measurement") ? o("forecastWaitingForMeasurement", t) : e.includes("waiting") && e.includes("time") ? o("forecastWaitingForTime", t) : e.includes("learning") ? o("forecastLearning", t) : e.includes("initializing") ? o("forecastInitializing", t) : e.includes("calibration") ? o("calibrationRequired", t) : e.includes("fault") || e.includes("error") ? o("sensorFault", t) : e.includes("low") ? o("lowThresholdReached", t) : !e || e === "available" || e === "unknown" || e === "unavailable" ? o("forecastUnavailable", t) : a?.trim() || o("forecastUnavailable", t);
 }
-class ht extends HTMLElement {
+class pt extends HTMLElement {
   config;
   states;
   unsubscribeStates;
@@ -325,8 +325,8 @@ class ht extends HTMLElement {
       metric_mode: "level",
       section_order: "tank-first",
       tap_action: q
-    }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), p = n("saltwatch", "forecast_status");
-    return r && (l.status_entity = r), c && (l.threshold_entity = c), u && (l.forecast_entity = u), p && (l.forecast_status_entity = p), l;
+    }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), h = n("saltwatch", "forecast_status");
+    return r && (l.status_entity = r), c && (l.threshold_entity = c), u && (l.forecast_entity = u), h && (l.forecast_status_entity = h), l;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
@@ -387,22 +387,22 @@ class ht extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${f(o("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = Z(), e = T(this.states, this.config.entity), s = H(e), i = s === void 0 ? void 0 : X(s), d = H(T(this.states, this.config.threshold_entity)), n = X(d ?? this.config.low_threshold ?? O), l = T(this.states, this.config.status_entity), r = nt(l?.state, i, n), c = r.translationKey ? o(r.translationKey, t) : r.label, u = this.config.display_mode ?? "both", p = this.config.metric_mode ?? "level", g = u !== "details", w = u !== "tank", v = this.config.show_low_marker !== !1, G = typeof this.config.grid_options?.rows == "number", K = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), P = "SaltWatch", b = i === void 0 ? "—" : C(i, t), S = i === void 0 ? o("noCurrentReading", t) : b, x = H(T(this.states, this.config.forecast_entity)), m = x === void 0 || x < 0 ? void 0 : Math.round(x), z = m === void 0 ? "—" : ct(m, t), V = T(this.states, this.config.forecast_status_entity)?.state, j = m === void 0 ? pt(V, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), A = `<div class="metric level-metric">
+    const t = Z(), e = T(this.states, this.config.entity), s = H(e), i = s === void 0 ? void 0 : X(s), d = H(T(this.states, this.config.threshold_entity)), n = X(d ?? this.config.low_threshold ?? O), l = T(this.states, this.config.status_entity), r = nt(l?.state, i, n), c = r.translationKey ? o(r.translationKey, t) : r.label, u = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", g = u !== "details", w = u !== "tank", v = this.config.show_low_marker !== !1, G = typeof this.config.grid_options?.rows == "number", K = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), P = "SaltWatch", b = i === void 0 ? "—" : C(i, t), S = i === void 0 ? o("noCurrentReading", t) : b, x = H(T(this.states, this.config.forecast_entity)), m = x === void 0 || x < 0 ? void 0 : Math.round(x), z = m === void 0 ? "—" : ct(m, t), V = T(this.states, this.config.forecast_status_entity)?.state, j = m === void 0 ? ht(V, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), A = `<div class="metric level-metric">
       <div class="metric-value level">${b}</div>
-      <div class="metric-label level-label">${f(o(p === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
+      <div class="metric-label level-label">${f(o(h === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, D = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${m === void 0 ? this.forecastSymbol() : z}</div>
       <div class="metric-label forecast-label">${f(j)}</div>
-    </div>`, $ = p === "both" ? `${A}<span class="metric-divider" aria-hidden="true"></span>${D}` : p === "forecast" ? D : A, U = m === void 0 ? j : `${z} ${j}`, tt = p === "both" ? `${S}, ${U}` : p === "forecast" ? U : S, et = 132, k = 474, Y = k - et, h = i === void 0 ? k : k - i / 100 * Y, at = k - n / 100 * Y, W = [
-      `M96 ${(h + 2).toFixed(1)}`,
-      `Q108 ${(h - 2).toFixed(1)} 120 ${(h - 3).toFixed(1)}`,
-      `Q132 ${(h - 6).toFixed(1)} 145 ${(h - 4).toFixed(1)}`,
-      `Q159 ${(h - 1).toFixed(1)} 174 ${(h - 2).toFixed(1)}`,
-      `Q189 ${(h - 4).toFixed(1)} 204 ${(h - 3).toFixed(1)}`,
-      `Q220 ${(h + 1).toFixed(1)} 236 ${(h - 1).toFixed(1)}`,
-      `Q253 ${(h - 4).toFixed(1)} 270 ${(h - 2).toFixed(1)}`,
-      `Q288 ${(h + 1).toFixed(1)} 305 ${(h - 1).toFixed(1)}`,
-      `Q315 ${(h - 3).toFixed(1)} 324 ${(h + 1).toFixed(1)}`
+    </div>`, $ = h === "both" ? `${A}<span class="metric-divider" aria-hidden="true"></span>${D}` : h === "forecast" ? D : A, U = m === void 0 ? j : `${z} ${j}`, tt = h === "both" ? `${S}, ${U}` : h === "forecast" ? U : S, et = 132, k = 474, Y = k - et, p = i === void 0 ? k : k - i / 100 * Y, at = k - n / 100 * Y, W = [
+      `M96 ${(p + 2).toFixed(1)}`,
+      `Q108 ${(p - 2).toFixed(1)} 120 ${(p - 3).toFixed(1)}`,
+      `Q132 ${(p - 6).toFixed(1)} 145 ${(p - 4).toFixed(1)}`,
+      `Q159 ${(p - 1).toFixed(1)} 174 ${(p - 2).toFixed(1)}`,
+      `Q189 ${(p - 4).toFixed(1)} 204 ${(p - 3).toFixed(1)}`,
+      `Q220 ${(p + 1).toFixed(1)} 236 ${(p - 1).toFixed(1)}`,
+      `Q253 ${(p - 4).toFixed(1)} 270 ${(p - 2).toFixed(1)}`,
+      `Q288 ${(p + 1).toFixed(1)} 305 ${(p - 1).toFixed(1)}`,
+      `Q315 ${(p - 3).toFixed(1)} 324 ${(p + 1).toFixed(1)}`
     ].join(" "), it = [
       W,
       `L324 ${k}`,
@@ -414,14 +414,14 @@ class ht extends HTMLElement {
       <ha-card class="tone-${r.tone}${G ? " fixed-height" : ""}"${K ? ' tabindex="0" role="button"' : ""} aria-label="${P}: ${f(tt)}, ${f(c)}">
         <div class="card-shell mode-${u} order-${this.config.section_order ?? "tank-first"}">
           ${g ? `<section class="tank-panel" aria-label="${f(o("tankLevelVisualization", t))}">
-            ${this.tankSvg(i, it, W, h, at, n, r.tone, t)}
+            ${this.tankSvg(i, it, W, p, at, n, r.tone, t)}
           </section>` : ""}
           ${w ? `<section class="content-panel${v ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
               <div class="status"><span class="status-dot"></span>${f(c)}</div>
             </header>` : ""}
-            <div class="reading metric-mode-${p}${i === void 0 ? " state-reading" : ""}">
-              ${i === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${p}">${$}</div>`}
+            <div class="reading metric-mode-${h}${i === void 0 ? " state-reading" : ""}">
+              ${i === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${h}">${$}</div>`}
               ${i === void 0 && this.config.show_status ? "" : i === void 0 ? `<div class="level-label">${f(c)}</div>` : ""}
             </div>
             ${v ? `<div class="threshold-summary" aria-label="${f(o("lowMarkerAt", t, { value: C(n, t) }))}">
@@ -526,7 +526,7 @@ class ht extends HTMLElement {
     const c = Array.from({ length: 21 }, (K, P) => {
       const b = 100 - P * 5, S = 474 - b / 100 * 342, x = b % 25 === 0, m = !x && b % 10 === 0, z = x ? 60 : m ? 67 : 71;
       return `${x ? `<text x="52" y="${S + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${x ? "major" : m ? "medium" : "minor"}" d="M${z} ${S}H78"/>`;
-    }).join(""), u = t === void 0, p = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, v = 12 - w, G = u ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${C(t, r)}`;
+    }).join(""), u = t === void 0, h = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, v = 12 - w, G = u ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${C(t, r)}`;
     return `
       <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${f(G)}">
         <defs>
@@ -589,7 +589,7 @@ class ht extends HTMLElement {
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${d.toFixed(1)}" d="M12 ${d.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${l}" transform="translate(${v} ${p - 15})">
+        <g class="threshold-label tone-${l}" transform="translate(${v} ${h - 15})">
           <rect width="${w}" height="30" rx="9"/><text x="${w / 2}" y="20" text-anchor="middle">${f(g)}</text>
         </g>
       </svg>`;
@@ -670,7 +670,7 @@ class ht extends HTMLElement {
         .fixed-height .status-dot { width:clamp(10px,4cqh,16px); height:clamp(10px,4cqh,16px); }
         .fixed-height .reading { padding:clamp(5px,3cqh,16px) 0; }
         .fixed-height .metric-value { font-size:clamp(34px,30cqh,112px); }
-        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,27cqh,88px); }
+        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,min(27cqh,16cqw),88px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label { margin-top:clamp(4px,3cqh,14px); font-size:clamp(10px,6cqh,18px); }
         .fixed-height .metrics-both .metric-label { margin-top:clamp(3px,2.5cqh,10px); font-size:clamp(9px,5cqh,16px); }
         .fixed-height .metric-divider { height:clamp(34px,28cqh,82px); }
@@ -733,7 +733,7 @@ class ht extends HTMLElement {
         .metrics-both { grid-template-columns:1fr; gap:clamp(12px,5cqw,18px); }
         .metrics-both .metric-value { font-size:clamp(40px,25cqw,100px); }
         .metrics-both .metric-label { font-size:clamp(12px,5cqw,17px); }
-        .metric-divider { width:100%; height:1px; }
+        .fixed-height .metric-divider { width:100%; height:1px; }
         .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
         .marker-line { width:clamp(18px,9cqw,34px); }
       }
@@ -766,7 +766,7 @@ function ft(a, t) {
     const r = s ? `${n}.${s}${l}` : void 0;
     if (r && a.states[r]) return [[d, r]];
     if (s) return [];
-    const u = i.filter((p) => p.startsWith(`${n}.`) && Q(p).endsWith(l)).map((p) => ({ id: p, score: ut(e, Q(p)) })).sort((p, g) => g.score - p.score || p.id.localeCompare(g.id))[0];
+    const u = i.filter((h) => h.startsWith(`${n}.`) && Q(h).endsWith(l)).map((h) => ({ id: h, score: ut(e, Q(h)) })).sort((h, g) => g.score - h.score || h.id.localeCompare(g.id))[0];
     return u && u.score > 0 ? [[d, u.id]] : [];
   }));
 }
@@ -1076,10 +1076,10 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.7", yt = {
+const bt = "0.4.8", yt = {
   version: bt
 }, R = "saltwatch-card", vt = yt.version;
-customElements.get(R) || customElements.define(R, ht);
+customElements.get(R) || customElements.define(R, pt);
 customElements.get("saltwatch-card-editor") || customElements.define("saltwatch-card-editor", wt);
 window.customCards = window.customCards || [];
 window.customCards.some((a) => a.type === R) || window.customCards.push({
@@ -1099,6 +1099,6 @@ console.info(
   "color:#f4f6f7;background:#263139;font-weight:700;padding:2px 5px;border-radius:0 3px 3px 0"
 );
 export {
-  ht as SaltWatchCard,
+  pt as SaltWatchCard,
   wt as SaltWatchCardEditor
 };

@@ -844,7 +844,7 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .status-dot { width:clamp(10px,4cqh,16px); height:clamp(10px,4cqh,16px); }
         .fixed-height .reading { padding:clamp(5px,3cqh,16px) 0; }
         .fixed-height .metric-value { font-size:clamp(34px,30cqh,112px); }
-        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,27cqh,88px); }
+        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,min(27cqh,16cqw),88px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label { margin-top:clamp(4px,3cqh,14px); font-size:clamp(10px,6cqh,18px); }
         .fixed-height .metrics-both .metric-label { margin-top:clamp(3px,2.5cqh,10px); font-size:clamp(9px,5cqh,16px); }
         .fixed-height .metric-divider { height:clamp(34px,28cqh,82px); }
@@ -907,7 +907,7 @@ export class SaltWatchCard extends HTMLElement {
         .metrics-both { grid-template-columns:1fr; gap:clamp(12px,5cqw,18px); }
         .metrics-both .metric-value { font-size:clamp(40px,25cqw,100px); }
         .metrics-both .metric-label { font-size:clamp(12px,5cqw,17px); }
-        .metric-divider { width:100%; height:1px; }
+        .fixed-height .metric-divider { width:100%; height:1px; }
         .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
         .marker-line { width:clamp(18px,9cqw,34px); }
       }

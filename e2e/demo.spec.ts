@@ -89,6 +89,47 @@ test("keeps paired values aligned when one label wraps", async ({ page }) => {
   expect(result.forecastTop).toBeCloseTo(result.levelTop, 0);
 });
 
+test("keeps the percentage visible in a 6 by 4 horizontal details card", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "420px";
+    element.style.height = "450px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: false,
+      grid_options: { columns: 6, rows: 4 },
+    });
+  });
+
+  await expect(card.locator("ha-card")).toHaveClass(/fixed-height/);
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const levelMetric = root.querySelector<HTMLElement>(".level-metric")!;
+    const forecastMetric = root.querySelector<HTMLElement>(".forecast-metric")!;
+    const levelValue = root.querySelector<HTMLElement>(".level-metric .metric-value")!;
+    const levelBounds = levelMetric.getBoundingClientRect();
+    const forecastBounds = forecastMetric.getBoundingClientRect();
+    return {
+      metricsAreHorizontal: forecastBounds.left > levelBounds.right,
+      valueClientWidth: levelValue.clientWidth,
+      valueScrollWidth: levelValue.scrollWidth,
+    };
+  });
+
+  expect(result.metricsAreHorizontal).toBe(true);
+  expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
+});
+
 test("keeps every fixed-row card mode inside its assigned height", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
@@ -142,6 +183,50 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
     expect(result.height).toBeCloseTo(current.height, 0);
     expect(result.contentInside).toBe(true);
   }
+});
+
+test("keeps the stacked metric divider thin without clipping the forecast label", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "360px";
+    element.style.height = "420px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: false,
+      grid_options: { columns: 9, rows: 7 },
+    });
+  });
+
+  await expect(card.locator("ha-card")).toHaveClass(/fixed-height/);
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+    const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
+    const level = root.querySelector<HTMLElement>(".level-metric .metric-value")!.getBoundingClientRect();
+    const forecast = root.querySelector<HTMLElement>(".forecast-metric .metric-value")!.getBoundingClientRect();
+    const forecastLabel = root.querySelector<HTMLElement>(".forecast-metric .metric-label")!.getBoundingClientRect();
+    return {
+      dividerHeight: divider.height,
+      dividerWidth: divider.width,
+      metricsAreStacked: forecast.top > level.bottom,
+      forecastLabelInside: forecastLabel.bottom <= surface.bottom + 1,
+    };
+  });
+
+  expect(result.dividerHeight).toBeCloseTo(1, 0);
+  expect(result.dividerWidth).toBeGreaterThan(100);
+  expect(result.metricsAreStacked).toBe(true);
+  expect(result.forecastLabelInside).toBe(true);
 });
 
 test("detects a constrained Home Assistant preview without grid options", async ({ page }) => {
