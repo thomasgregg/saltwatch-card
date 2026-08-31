@@ -528,7 +528,7 @@ class ht extends HTMLElement {
       return `${x ? `<text x="52" y="${S + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${x ? "major" : m ? "medium" : "minor"}" d="M${z} ${S}H78"/>`;
     }).join(""), f = t === void 0, p = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, v = 12 - w, G = f ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${C(t, r)}`;
     return `
-      <svg class="tank" viewBox="-64 30 464 534" role="img" aria-label="${u(G)}">
+      <svg class="tank" viewBox="-64 30 548 534" role="img" aria-label="${u(G)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -610,7 +610,7 @@ class ht extends HTMLElement {
       .mode-tank .tank-panel { padding-block:8px; border:0; }
       .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
-      .tank { width:min(100%,493px); height:auto; overflow:visible; }
+      .tank { width:min(100%,582px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
       .ruler .scale-spine { opacity:.28; stroke-width:.8; }
@@ -659,7 +659,7 @@ class ht extends HTMLElement {
       .fixed-height .card-shell,.fixed-height .tank-panel,.fixed-height .content-panel { min-height:0; }
       .fixed-height .tank-panel,.fixed-height .content-panel { overflow:hidden; }
       .fixed-height .tank-panel { container-type:size; }
-      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,493px); max-height:none; }
+      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,582px); max-height:none; }
       @container (max-height:460px) {
         .fixed-height .card-shell.mode-both { grid-template-columns:1fr 1fr; grid-template-areas:"tank details"; }
         .fixed-height .card-shell.mode-both.order-details-first { grid-template-areas:"details tank"; }
@@ -697,7 +697,7 @@ class ht extends HTMLElement {
         .tank-panel,.order-details-first .tank-panel { padding:8px 30px; border-right:0; border-left:0; border-bottom:1px solid var(--sw-panel-divider); }
         .order-details-first .tank-panel { border-top:1px solid var(--sw-panel-divider); border-bottom:0; }
         .mode-tank .tank-panel { border:0; }
-        .tank { width:min(86%,429px); }
+        .tank { width:min(100%,507px); }
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
@@ -710,7 +710,7 @@ class ht extends HTMLElement {
       }
       @container (max-width:520px) {
         .tank-panel { padding:7px 14px; }
-        .tank { width:min(88%,371px); }
+        .tank { width:min(100%,438px); }
         .content-panel { padding:clamp(14px,4cqw,20px) clamp(14px,5cqw,24px); }
         header { align-items:center; }
         .status { font-size:clamp(14px,4cqw,18px); }
@@ -1081,7 +1081,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.10", yt = {
+const bt = "0.4.11", yt = {
   version: bt
 }, R = "saltwatch-card", vt = yt.version;
 customElements.get(R) || customElements.define(R, ht);
