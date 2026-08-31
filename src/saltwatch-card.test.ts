@@ -307,6 +307,14 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".card-shell")?.classList).toContain("order-tank-first");
   });
 
+  it("marks numeric grid-row layouts for height-aware scaling", () => {
+    card.setConfig({ ...config, display_mode: "details", grid_options: { columns: 12, rows: 2 } });
+    expect(card.shadowRoot?.querySelector("ha-card")?.classList).toContain("fixed-height");
+
+    card.setConfig({ ...config, display_mode: "details", grid_options: { columns: 12, rows: "auto" } });
+    expect(card.shadowRoot?.querySelector("ha-card")?.classList).not.toContain("fixed-height");
+  });
+
   it("detects related SaltWatch entities belonging to the selected level sensor", () => {
     const hass = makeHass();
     hass.states["sensor.guest_saltwatch_salt_level"] = makeEntity("sensor.guest_saltwatch_salt_level", "45");

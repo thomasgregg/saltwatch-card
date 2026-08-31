@@ -386,6 +386,7 @@ export class SaltWatchCard extends HTMLElement {
     const showTank = displayMode !== "details";
     const showDetails = displayMode !== "tank";
     const showLowMarkerSummary = this.config.show_low_marker !== false;
+    const fixedHeight = typeof this.config.grid_options?.rows === "number";
     const interactive = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap");
     const title = "SaltWatch";
     const displayLevel = level === undefined ? "—" : formatPercentage(level, locale);
@@ -452,7 +453,7 @@ export class SaltWatchCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${status.tone}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
+      <ha-card class="tone-${status.tone}${fixedHeight ? " fixed-height" : ""}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
         <div class="card-shell mode-${displayMode} order-${this.config.section_order ?? "tank-first"}">
           ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale)}
@@ -696,6 +697,7 @@ export class SaltWatchCard extends HTMLElement {
       :host { display:block; width:100%; max-width:100%; min-width:0; height:100%; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
       * { box-sizing:border-box; }
       ha-card { display:block; width:100%; max-width:100%; min-width:0; height:100%; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
+      ha-card.fixed-height { container-type:size; }
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
@@ -704,7 +706,7 @@ export class SaltWatchCard extends HTMLElement {
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
       .mode-tank .tank-panel { padding-block:8px; border:0; }
-      .tank-panel { grid-area:tank; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
+      .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
@@ -723,12 +725,12 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label rect { fill:var(--sw-warning); }
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:var(--text-light-primary-color); font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
-      .content-panel { grid-area:details; min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
+      .content-panel { grid-area:details; min-width:0; min-height:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
       .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
-      .reading { flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; margin:0; padding:36px 0 34px; }
+      .reading { min-height:0; flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .metrics { display:grid; align-items:center; min-width:0; }
       .metrics-level,.metrics-forecast { grid-template-columns:minmax(0,1fr); }
@@ -752,6 +754,40 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
+      .fixed-height .card-shell,.fixed-height .tank-panel,.fixed-height .content-panel { min-height:0; }
+      .fixed-height .tank-panel,.fixed-height .content-panel { overflow:hidden; }
+      .fixed-height .tank-panel { container-type:size; }
+      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,425px); max-height:none; }
+      @container (max-height:460px) {
+        .fixed-height .card-shell.mode-both { grid-template-columns:1fr 1fr; grid-template-areas:"tank details"; }
+        .fixed-height .card-shell.mode-both.order-details-first { grid-template-areas:"details tank"; }
+        .fixed-height .card-shell.mode-both .tank-panel { border:0; border-right:1px solid var(--sw-panel-divider); }
+        .fixed-height .card-shell.mode-both.order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
+        .fixed-height .content-panel { padding:clamp(10px,4cqh,28px) clamp(12px,5cqh,32px); }
+        .fixed-height .status { gap:clamp(6px,2cqh,11px); font-size:clamp(12px,5cqh,20px); }
+        .fixed-height .status-dot { width:clamp(10px,4cqh,16px); height:clamp(10px,4cqh,16px); }
+        .fixed-height .reading { padding:clamp(5px,3cqh,16px) 0; }
+        .fixed-height .metric-value { font-size:clamp(34px,30cqh,112px); }
+        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,27cqh,88px); }
+        .fixed-height .metric-label,.fixed-height .state-reading .level-label { margin-top:clamp(4px,3cqh,14px); font-size:clamp(10px,6cqh,18px); }
+        .fixed-height .metrics-both .metric-label { margin-top:clamp(3px,2.5cqh,10px); font-size:clamp(9px,5cqh,16px); }
+        .fixed-height .metric-divider { height:clamp(34px,28cqh,82px); }
+        .fixed-height .state-symbol { width:clamp(38px,28cqh,92px); }
+        .fixed-height .threshold-summary { padding-top:clamp(4px,3cqh,13px); font-size:clamp(9px,5cqh,15px); }
+        .fixed-height .marker-line { width:clamp(16px,8cqh,28px); }
+      }
+      @container (max-height:260px) {
+        .fixed-height .content-panel { padding:clamp(5px,4cqh,10px) clamp(8px,6cqh,16px); }
+        .fixed-height .status { gap:5px; font-size:clamp(9px,8cqh,13px); }
+        .fixed-height .status-dot { width:clamp(8px,7cqh,11px); height:clamp(8px,7cqh,11px); }
+        .fixed-height .reading { padding:clamp(2px,2cqh,5px) 0; }
+        .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
+        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,25cqh,56px); }
+        .fixed-height .metric-label,.fixed-height .state-reading .level-label,.fixed-height .metrics-both .metric-label { margin-top:clamp(1px,2cqh,4px); font-size:clamp(8px,6cqh,12px); line-height:1.05; }
+        .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
+        .fixed-height .threshold-summary { gap:5px; padding-top:clamp(2px,2cqh,5px); font-size:clamp(8px,6cqh,11px); }
+        .fixed-height .marker-line { width:clamp(12px,10cqh,20px); height:2px; }
+      }
       @container (max-width:880px) {
         .card-shell { grid-template-columns:1fr; grid-template-areas:"tank" "details"; min-height:0; }
         .card-shell.order-details-first { grid-template-columns:1fr; grid-template-areas:"details" "tank"; }

@@ -22,6 +22,10 @@ export interface LovelaceActionConfig {
 export interface SaltWatchCardConfig {
   type: string;
   entity: string;
+  grid_options?: {
+    columns?: number | "full";
+    rows?: number | "auto";
+  };
   show_status?: boolean;
   show_low_marker?: boolean;
   display_mode?: SaltWatchDisplayMode;

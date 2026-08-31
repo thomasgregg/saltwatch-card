@@ -60,6 +60,61 @@ test("scales details typography with the card width", async ({ page }) => {
   expect(wide.fontSize).toBeGreaterThan(narrow.fontSize);
 });
 
+test("keeps every fixed-row card mode inside its assigned height", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  const cases = [
+    { displayMode: "details", width: 220, height: 150 },
+    { displayMode: "tank", width: 360, height: 180 },
+    { displayMode: "both", width: 720, height: 250 },
+  ];
+
+  for (const current of cases) {
+    await frame.evaluate((element, size) => {
+      element.style.width = `${size.width}px`;
+      element.style.height = `${size.height}px`;
+    }, current);
+    await card.evaluate((element, options) => {
+      (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+        type: "custom:saltwatch-card",
+        entity: "sensor.saltwatch_salt_level",
+        status_entity: "sensor.saltwatch_salt_status",
+        threshold_entity: "number.saltwatch_low_salt_threshold",
+        forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+        forecast_status_entity: "sensor.saltwatch_forecast_status",
+        display_mode: options.displayMode,
+        metric_mode: "both",
+        show_status: true,
+        show_low_marker: true,
+        grid_options: { columns: 12, rows: 2 },
+      });
+    }, current);
+
+    const result = await card.evaluate((element) => {
+      const root = element.shadowRoot!;
+      const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+      const content = [
+        root.querySelector<HTMLElement>(".tank"),
+        root.querySelector<HTMLElement>(".status"),
+        ...root.querySelectorAll<HTMLElement>(".metric-value,.metric-label"),
+        root.querySelector<HTMLElement>(".threshold-summary"),
+      ].filter((item): item is HTMLElement => Boolean(item));
+      return {
+        fixedHeight: root.querySelector("ha-card")!.classList.contains("fixed-height"),
+        height: surface.height,
+        contentInside: content.every((item) => {
+          const box = item.getBoundingClientRect();
+          return box.top >= surface.top - 1 && box.bottom <= surface.bottom + 1;
+        }),
+      };
+    });
+
+    expect(result.fixedHeight).toBe(true);
+    expect(result.height).toBeCloseTo(current.height, 0);
+    expect(result.contentInside).toBe(true);
+  }
+});
+
 test("switches between salt level, forecast, and both values", async ({ page }) => {
   const card = page.locator("saltwatch-card");
 
