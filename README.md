@@ -3,7 +3,7 @@
 [![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
 [![Validate](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml/badge.svg)](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml)
 [![HACS custom repository](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/thomasgregg/saltwatch-card/blob/main/LICENSE)
 
 ### See your water-softener salt level at a glance
 
@@ -14,22 +14,12 @@ from across the room—no interpreting raw percentages. It can also show
 SaltWatch's refill forecast, so you know how much salt remains and when the low
 threshold is likely to be reached.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-complete.png" alt="SaltWatch Card complete view showing salt level, refill forecast, status, and low marker" width="100%">
-</p>
+![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](images/saltwatch-card-complete.png)
 
-<table>
-  <tr>
-    <td width="31%" align="center">
-      <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-tank.png" alt="SaltWatch Card tank-only display" width="100%"><br>
-      <sub><strong>Tank only</strong> · a focused visual gauge</sub>
-    </td>
-    <td width="69%" align="center">
-      <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-details.png" alt="SaltWatch Card details-only display with salt level and refill forecast" width="100%"><br>
-      <sub><strong>Details only</strong> · level, forecast, and status at a glance</sub>
-    </td>
-  </tr>
-</table>
+| Tank only | Details only |
+| :---: | :---: |
+| ![SaltWatch Card tank-only display](images/saltwatch-card-tank.png) | ![SaltWatch Card details-only display with salt level and refill forecast](images/saltwatch-card-details.png) |
+| A focused visual gauge | Level, forecast, and status at a glance |
 
 SaltWatch Card is built primarily for the entities provided by the SaltWatch
 project, but it can also visualize any Home Assistant sensor that reports a
@@ -149,9 +139,7 @@ change immediately in the live preview. It detects related SaltWatch entities
 automatically; if one cannot be found, **Configure** opens the relevant manual
 entity settings under **Advanced**.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor showing automatic entity detection and organized settings" width="58%">
-</p>
+![SaltWatch Card graphical editor showing automatic entity detection and organized settings](images/saltwatch-card-editor.png)
 
 Choose the complete, tank-only, or details-only layout visually. In the
 complete layout, you can place the tank or the details first. The editor also
