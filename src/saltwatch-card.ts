@@ -694,6 +694,9 @@ export class SaltWatchCard extends HTMLElement {
     const lowBadge = localize("lowBadge", locale);
     const lowBadgeWidth = locale === "de" ? 72 : 54;
     const lowBadgeX = 12 - lowBadgeWidth;
+    const tankVisualScale = 1.18;
+    const tankVisualCenterY = 296;
+    const scaledLabelY = tankVisualCenterY + (labelY - tankVisualCenterY) * tankVisualScale;
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, locale)}`;
@@ -743,6 +746,7 @@ export class SaltWatchCard extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
+        <g class="tank-visual" transform="translate(210 ${tankVisualCenterY}) scale(${tankVisualScale}) translate(-210 -${tankVisualCenterY})">
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
@@ -762,7 +766,8 @@ export class SaltWatchCard extends HTMLElement {
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M12 ${thresholdY.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${tone}" transform="translate(${lowBadgeX} ${labelY - 15})">
+        </g>
+        <g class="threshold-label tone-${tone}" transform="translate(${lowBadgeX} ${(scaledLabelY - 15).toFixed(1)})">
           <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
         </g>
       </svg>`;
@@ -871,7 +876,6 @@ export class SaltWatchCard extends HTMLElement {
         .tank-panel,.order-details-first .tank-panel { padding:8px 30px; border-right:0; border-left:0; border-bottom:1px solid var(--sw-panel-divider); }
         .order-details-first .tank-panel { border-top:1px solid var(--sw-panel-divider); border-bottom:0; }
         .mode-tank .tank-panel { border:0; }
-        .tank { width:min(100%,507px); }
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
@@ -884,7 +888,6 @@ export class SaltWatchCard extends HTMLElement {
       }
       @container (max-width:520px) {
         .tank-panel { padding:7px 14px; }
-        .tank { width:min(100%,438px); }
         .content-panel { padding:clamp(14px,4cqw,20px) clamp(14px,5cqw,24px); }
         header { align-items:center; }
         .status { font-size:clamp(14px,4cqw,18px); }
