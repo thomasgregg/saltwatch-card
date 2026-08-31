@@ -699,7 +699,7 @@ export class SaltWatchCard extends HTMLElement {
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, locale)}`;
 
     return `
-      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${escapeHtml(tankLabel)}">
+      <svg class="tank" viewBox="-64 30 464 534" role="img" aria-label="${escapeHtml(tankLabel)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -784,7 +784,7 @@ export class SaltWatchCard extends HTMLElement {
       .mode-tank .tank-panel { padding-block:8px; border:0; }
       .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
-      .tank { width:min(100%,425px); height:auto; overflow:visible; }
+      .tank { width:min(100%,493px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
       .ruler .scale-spine { opacity:.28; stroke-width:.8; }
@@ -833,7 +833,7 @@ export class SaltWatchCard extends HTMLElement {
       .fixed-height .card-shell,.fixed-height .tank-panel,.fixed-height .content-panel { min-height:0; }
       .fixed-height .tank-panel,.fixed-height .content-panel { overflow:hidden; }
       .fixed-height .tank-panel { container-type:size; }
-      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,425px); max-height:none; }
+      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,493px); max-height:none; }
       @container (max-height:460px) {
         .fixed-height .card-shell.mode-both { grid-template-columns:1fr 1fr; grid-template-areas:"tank details"; }
         .fixed-height .card-shell.mode-both.order-details-first { grid-template-areas:"details tank"; }
@@ -844,7 +844,7 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .status-dot { width:clamp(10px,4cqh,16px); height:clamp(10px,4cqh,16px); }
         .fixed-height .reading { padding:clamp(5px,3cqh,16px) 0; }
         .fixed-height .metric-value { font-size:clamp(34px,30cqh,112px); }
-        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,min(27cqh,16cqw),88px); }
+        .fixed-height .metrics-both .metric-value { font-size:clamp(30px,min(27cqh,18cqw),88px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label { margin-top:clamp(4px,3cqh,14px); font-size:clamp(10px,6cqh,18px); }
         .fixed-height .metrics-both .metric-label { margin-top:clamp(3px,2.5cqh,10px); font-size:clamp(9px,5cqh,16px); }
         .fixed-height .metric-divider { height:clamp(34px,28cqh,82px); }
@@ -858,7 +858,7 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .status-dot { width:clamp(8px,7cqh,11px); height:clamp(8px,7cqh,11px); }
         .fixed-height .reading { padding:clamp(2px,2cqh,5px) 0; }
         .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
-        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,min(25cqh,15cqw),56px); }
+        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,min(25cqh,18cqw),56px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label,.fixed-height .metrics-both .metric-label { margin-top:clamp(1px,2cqh,4px); font-size:clamp(8px,6cqh,12px); line-height:1.05; }
         .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
         .fixed-height .threshold-summary { gap:5px; padding-top:clamp(2px,2cqh,5px); font-size:clamp(8px,6cqh,11px); }
@@ -871,7 +871,7 @@ export class SaltWatchCard extends HTMLElement {
         .tank-panel,.order-details-first .tank-panel { padding:8px 30px; border-right:0; border-left:0; border-bottom:1px solid var(--sw-panel-divider); }
         .order-details-first .tank-panel { border-top:1px solid var(--sw-panel-divider); border-bottom:0; }
         .mode-tank .tank-panel { border:0; }
-        .tank { width:min(74%,370px); }
+        .tank { width:min(86%,429px); }
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
@@ -884,7 +884,7 @@ export class SaltWatchCard extends HTMLElement {
       }
       @container (max-width:520px) {
         .tank-panel { padding:7px 14px; }
-        .tank { width:min(76%,320px); }
+        .tank { width:min(88%,371px); }
         .content-panel { padding:clamp(14px,4cqw,20px) clamp(14px,5cqw,24px); }
         header { align-items:center; }
         .status { font-size:clamp(14px,4cqw,18px); }
@@ -912,7 +912,8 @@ export class SaltWatchCard extends HTMLElement {
         .marker-line { width:clamp(18px,9cqw,34px); }
       }
       @container (max-width:400px) and (max-height:260px) {
-        .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
+        .fixed-height .content-panel { padding-inline:clamp(6px,3cqw,10px); }
+        .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(4px,2cqw,8px); }
         .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
       }
       @media (prefers-reduced-motion:no-preference) {
