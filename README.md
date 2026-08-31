@@ -189,21 +189,6 @@ low_threshold: 20
 Without a status entity, the card automatically shows **Low salt** when the
 reading reaches the configured threshold.
 
-## Development
-
-```bash
-npm install
-npm run dev
-```
-
-Open `http://127.0.0.1:5173/demo/` to explore every state, display mode, and
-theme. Run the complete test and production build with:
-
-```bash
-npm run check
-npm run test:e2e
-```
-
 ## License
 
 [MIT](LICENSE)
