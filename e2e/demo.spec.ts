@@ -115,6 +115,49 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
   }
 });
 
+test("detects a constrained Home Assistant preview without grid options", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "720px";
+    element.style.height = "220px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: true,
+    });
+  });
+
+  await expect(card.locator("ha-card")).toHaveClass(/fixed-height/);
+  const contentInside = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+    return [
+      root.querySelector<HTMLElement>(".status"),
+      ...root.querySelectorAll<HTMLElement>(".metric-value,.metric-label"),
+      root.querySelector<HTMLElement>(".threshold-summary"),
+    ].filter((item): item is HTMLElement => Boolean(item)).every((item) => {
+      const box = item.getBoundingClientRect();
+      return box.top >= surface.top - 1 && box.bottom <= surface.bottom + 1;
+    });
+  });
+  expect(contentInside).toBe(true);
+});
+
+test("keeps natural-height cards out of compact mode", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+  await expect(card.locator("ha-card")).not.toHaveClass(/fixed-height/);
+});
+
 test("switches between salt level, forecast, and both values", async ({ page }) => {
   const card = page.locator("saltwatch-card");
 

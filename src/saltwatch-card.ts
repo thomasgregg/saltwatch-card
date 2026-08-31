@@ -103,6 +103,9 @@ export class SaltWatchCard extends HTMLElement {
   private holdTriggered = false;
   private pointerOrigin?: { x: number; y: number };
   private languageObserver?: MutationObserver;
+  private heightObserver?: ResizeObserver;
+  private heightFrame?: number;
+  private inferredFixedHeight = false;
 
   public constructor() {
     super();
@@ -134,6 +137,11 @@ export class SaltWatchCard extends HTMLElement {
       };
       this.dispatchEvent(event);
     }
+    if (!this.heightObserver && typeof ResizeObserver !== "undefined") {
+      this.heightObserver = new ResizeObserver(() => this.scheduleHeightModeUpdate());
+      this.heightObserver.observe(this);
+    }
+    this.scheduleHeightModeUpdate();
   }
 
   public disconnectedCallback(): void {
@@ -141,6 +149,10 @@ export class SaltWatchCard extends HTMLElement {
     this.unsubscribeStates = undefined;
     this.languageObserver?.disconnect();
     this.languageObserver = undefined;
+    this.heightObserver?.disconnect();
+    this.heightObserver = undefined;
+    if (this.heightFrame !== undefined) cancelAnimationFrame(this.heightFrame);
+    this.heightFrame = undefined;
     this.clearInteractionTimers();
   }
 
@@ -313,6 +325,7 @@ export class SaltWatchCard extends HTMLElement {
       : "level";
     const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
     const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
+    if (config.grid_options?.rows === "auto") this.inferredFixedHeight = false;
     this.config = {
       ...config,
       low_threshold: lowThreshold,
@@ -480,8 +493,51 @@ export class SaltWatchCard extends HTMLElement {
       </ha-card>`;
 
     const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
-    if (card) this.configureInteractions(card);
+    if (card) {
+      this.configureInteractions(card);
+      this.scheduleHeightModeUpdate();
+    }
     this.lastRenderKey = this.currentRenderKey();
+  }
+
+  private scheduleHeightModeUpdate(): void {
+    if (!this.isConnected || typeof requestAnimationFrame === "undefined") return;
+    if (this.heightFrame !== undefined) cancelAnimationFrame(this.heightFrame);
+    this.heightFrame = requestAnimationFrame(() => {
+      this.heightFrame = undefined;
+      this.updateHeightMode();
+    });
+  }
+
+  private updateHeightMode(): void {
+    if (!this.shadowRoot || !this.config) return;
+    const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
+    if (!card || card.clientHeight === 0) return;
+
+    const configuredRows = this.config.grid_options?.rows;
+    if (configuredRows === "auto") {
+      this.inferredFixedHeight = false;
+      card.classList.remove("fixed-height");
+      return;
+    }
+
+    const explicitlyFixed = typeof configuredRows === "number";
+    const cardBounds = card.getBoundingClientRect();
+    const verticallyClipped = [
+      ...this.shadowRoot.querySelectorAll<HTMLElement>(
+        ".status,.metric-value,.metric-label,.threshold-summary,.tank",
+      ),
+    ].some((element) => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.height > 0 &&
+        (bounds.top < cardBounds.top - 1 || bounds.bottom > cardBounds.bottom + 1);
+    });
+    const panelsOverflow = [
+      ...this.shadowRoot.querySelectorAll<HTMLElement>(".card-shell,.tank-panel,.content-panel,.reading"),
+    ].some((element) => element.scrollHeight > element.clientHeight + 1);
+
+    if (verticallyClipped || panelsOverflow) this.inferredFixedHeight = true;
+    card.classList.toggle("fixed-height", explicitlyFixed || this.inferredFixedHeight);
   }
 
   private actionConfig(action: ActionType): LovelaceActionConfig {
