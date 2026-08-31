@@ -152,9 +152,17 @@ export class SaltWatchCardEditor extends HTMLElement {
   }
 
   public set hass(hass: HomeAssistant) {
+    const previousRenderKey = this.hassRenderKey();
     this._hass = hass;
-    this.autoConfigureDetected();
-    this.render();
+    const configChanged = this.autoConfigureDetected();
+    const shouldRender = !this.shadowRoot?.querySelector(".editor") ||
+      configChanged ||
+      previousRenderKey !== this.hassRenderKey();
+    if (shouldRender) {
+      this.render();
+    } else {
+      this.updateFormHass();
+    }
   }
 
   public get hass(): HomeAssistant | undefined {
@@ -167,13 +175,31 @@ export class SaltWatchCardEditor extends HTMLElement {
     this.render();
   }
 
-  private autoConfigureDetected(): void {
-    if (!this._hass || !this._config?.entity) return;
+  private autoConfigureDetected(): boolean {
+    if (!this._hass || !this._config?.entity) return false;
     const detected = detectRelatedEntities(this._hass, this._config.entity);
     const additions = Object.fromEntries(
       Object.entries(detected).filter(([key]) => !this._config?.[key as RelatedKey]),
     );
-    if (Object.keys(additions).length > 0) this.updateConfig(additions, false);
+    if (Object.keys(additions).length === 0) return false;
+    this.updateConfig(additions, false);
+    return true;
+  }
+
+  private hassRenderKey(): string {
+    if (!this._config) return "";
+    return [
+      this._config.entity,
+      ...RELATED_ENTITIES.flatMap(({ key }) => {
+        const entityId = this._config?.[key];
+        return [entityId ?? "", entityId && this._hass?.states[entityId] ? "present" : "missing"];
+      }),
+    ].join("|");
+  }
+
+  private updateFormHass(): void {
+    this.shadowRoot?.querySelectorAll<HTMLElement & Record<string, unknown>>("ha-form")
+      .forEach((form) => { form.hass = this._hass; });
   }
 
   private updateConfig(changes: Partial<EditorConfig>, rerender = true): void {

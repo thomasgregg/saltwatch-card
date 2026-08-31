@@ -330,6 +330,28 @@ describe("SaltWatchCard", () => {
     expect(editor.shadowRoot?.querySelector<HTMLDetailsElement>("#advanced")?.open).toBe(true);
   });
 
+  it("keeps editor controls mounted across routine Home Assistant state updates", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    const hass = makeHass();
+    editor.hass = hass;
+    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
+    const layoutButton = editor.shadowRoot?.querySelector(".layout-option");
+    const levelForm = editor.shadowRoot?.querySelector("#level-form ha-form");
+
+    editor.hass = {
+      states: {
+        ...hass.states,
+        "sensor.unrelated": makeEntity("sensor.unrelated", "updated"),
+      },
+    };
+
+    expect(editor.shadowRoot?.querySelector(".layout-option")).toBe(layoutButton);
+    expect(editor.shadowRoot?.querySelector("#level-form ha-form")).toBe(levelForm);
+  });
+
   it("removes the salt and shows an explicit unavailable state", () => {
     pushStates(makeHass("unavailable", "Sensor Fault"));
     expect(card.shadowRoot?.querySelector(".salt-highlight")).toBeNull();

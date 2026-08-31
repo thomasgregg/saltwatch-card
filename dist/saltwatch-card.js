@@ -86,16 +86,16 @@ const ot = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
     valueDisplay: "Angezeigte Werte"
   }
 };
-function K(a) {
+function M(a) {
   return (document.documentElement.lang ?? navigator.language).toLowerCase().startsWith("de") ? "de" : "en";
 }
-function o(a, t = K(), e = {}) {
+function o(a, t = M(), e = {}) {
   return Object.entries(e).reduce(
-    (s, [i, d]) => s.replaceAll(`{${i}}`, d),
+    (i, [s, d]) => i.replaceAll(`{${s}}`, d),
     it[t][a]
   );
 }
-function z(a, t = K()) {
+function N(a, t = M()) {
   return new Intl.NumberFormat(t, {
     style: "percent",
     maximumFractionDigits: 0
@@ -116,12 +116,12 @@ function st(a) {
 function I(a, t = 0, e = 100) {
   return Math.min(e, Math.max(t, a));
 }
-function Z(a) {
+function q(a) {
   return st(a?.state);
 }
 function rt(a, t, e) {
-  const s = a?.trim().toLowerCase() ?? "";
-  return s.includes("fault") || s.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : s.includes("calibration") ? {
+  const i = a?.trim().toLowerCase() ?? "";
+  return i.includes("fault") || i.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : i.includes("calibration") ? {
     label: "Calibration required",
     tone: "warning",
     translationKey: "calibrationRequired"
@@ -129,7 +129,7 @@ function rt(a, t, e) {
     label: "No current reading",
     tone: "fault",
     translationKey: "noCurrentReading"
-  } : s.includes("low") || t <= e ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : s === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
+  } : i.includes("low") || t <= e ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : i === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
     label: B(a) ? "Good" : a?.trim() || "Good",
     tone: "good",
     translationKey: B(a) ? "good" : void 0
@@ -138,7 +138,7 @@ function rt(a, t, e) {
 function m(a) {
   return String(a).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
-const q = 20, N = { action: "more-info" }, y = { action: "none" }, nt = 500, lt = 250, G = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+const Z = 20, F = { action: "more-info" }, y = { action: "none" }, nt = 500, lt = 250, P = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
 function T(a, t) {
   return t ? a?.[t] : void 0;
 }
@@ -151,7 +151,7 @@ function X(a) {
 }
 function L(a, t) {
   if (a === void 0) return t;
-  if (typeof a != "object" || a === null || typeof a.action != "string" || !G.includes(a.action))
+  if (typeof a != "object" || a === null || typeof a.action != "string" || !P.includes(a.action))
     throw new Error("Card actions must use a supported Home Assistant action.");
   return a;
 }
@@ -187,8 +187,8 @@ class pt extends HTMLElement {
         composed: !0,
         cancelable: !0
       });
-      t.context = "states", t.subscribe = !0, t.callback = (e, s) => {
-        this.unsubscribeStates = s, this.updateStates(e);
+      t.context = "states", t.subscribe = !0, t.callback = (e, i) => {
+        this.unsubscribeStates = i, this.updateStates(e);
       }, this.dispatchEvent(t);
     }
   }
@@ -271,17 +271,17 @@ class pt extends HTMLElement {
           schema: [
             {
               name: "tap_action",
-              selector: { ui_action: { actions: G, default_action: "more-info" } },
+              selector: { ui_action: { actions: P, default_action: "more-info" } },
               context: { entity_id: "entity" }
             },
             {
               name: "hold_action",
-              selector: { ui_action: { actions: G, default_action: "none" } },
+              selector: { ui_action: { actions: P, default_action: "none" } },
               context: { entity_id: "entity" }
             },
             {
               name: "double_tap_action",
-              selector: { ui_action: { actions: G, default_action: "none" } },
+              selector: { ui_action: { actions: P, default_action: "none" } },
               context: { entity_id: "entity" }
             }
           ]
@@ -304,23 +304,23 @@ class pt extends HTMLElement {
         double_tap_action: o("doubleTapAction")
       })[t.name] ?? t.name,
       assertConfig: (t) => {
-        t.low_threshold !== void 0 && X(t.low_threshold), L(t.tap_action, N), L(t.hold_action, y), L(t.double_tap_action, y);
+        t.low_threshold !== void 0 && X(t.low_threshold), L(t.tap_action, F), L(t.hold_action, y), L(t.double_tap_action, y);
       }
     };
   }
   static getConfigElement() {
     return document.createElement("saltwatch-card-editor");
   }
-  static getStubConfig(t, e = [], s = []) {
-    const i = [...e, ...s, ...Object.keys(t.states)], d = [...new Set(i)], n = (...g) => d.find((b) => g.every((x) => b.includes(x))), l = {
+  static getStubConfig(t, e = [], i = []) {
+    const s = [...e, ...i, ...Object.keys(t.states)], d = [...new Set(s)], n = (...g) => d.find((b) => g.every((x) => b.includes(x))), l = {
       entity: n("saltwatch", "salt_level") ?? n("salt", "level") ?? "sensor.saltwatch_salt_level",
-      low_threshold: q,
+      low_threshold: Z,
       show_status: !0,
       show_low_marker: !0,
       display_mode: "both",
       metric_mode: "level",
       section_order: "tank-first",
-      tap_action: N
+      tap_action: F
     }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), h = n("saltwatch", "estimated_days_until_low_salt"), p = n("saltwatch", "forecast_status");
     return r && (l.status_entity = r), c && (l.threshold_entity = c), h && (l.forecast_entity = h), p && (l.forecast_status_entity = p), l;
   }
@@ -328,16 +328,16 @@ class pt extends HTMLElement {
     if (!t.entity || typeof t.entity != "string")
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     this.clearInteractionTimers();
-    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", s = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", i = t.section_order === "details-first" ? "details-first" : "tank-first", d = X(t.low_threshold ?? q);
+    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", i = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", s = t.section_order === "details-first" ? "details-first" : "tank-first", d = X(t.low_threshold ?? Z);
     this.config = {
       ...t,
       low_threshold: d,
       show_status: t.show_status ?? !0,
       show_low_marker: t.show_low_marker ?? !0,
       display_mode: e,
-      metric_mode: s,
-      section_order: i,
-      tap_action: L(t.tap_action, N),
+      metric_mode: i,
+      section_order: s,
+      tap_action: L(t.tap_action, F),
       hold_action: L(t.hold_action, y),
       double_tap_action: L(t.double_tap_action, y)
     }, this.lastRenderKey = void 0, this.render();
@@ -367,13 +367,13 @@ class pt extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${m(o("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = K(), e = T(this.states, this.config.entity), s = Z(e), i = s === void 0 ? void 0 : I(s), d = Z(T(this.states, this.config.threshold_entity)), n = I(d ?? this.config.low_threshold ?? q), l = T(this.states, this.config.status_entity), r = rt(l?.state, i, n), c = r.translationKey ? o(r.translationKey, t) : r.label, h = this.config.display_mode ?? "both", p = this.config.metric_mode ?? "level", g = h !== "details", b = h !== "tank", x = this.config.show_low_marker !== !1, R = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), H = "SaltWatch", E = i === void 0 ? "—" : z(i, t), w = i === void 0 ? o("noCurrentReading", t) : E, v = Z(T(this.states, this.config.forecast_entity)), f = v === void 0 || v < 0 ? void 0 : Math.round(v), S = f === void 0 ? "—" : dt(f, t), Q = T(this.states, this.config.forecast_status_entity)?.state, C = f === void 0 ? ct(Q, t) : o(f === 0 ? "lowThresholdReached" : f === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), V = `<div class="metric level-metric">
-      <div class="metric-value level">${E}</div>
+    const t = M(), e = T(this.states, this.config.entity), i = q(e), s = i === void 0 ? void 0 : I(i), d = q(T(this.states, this.config.threshold_entity)), n = I(d ?? this.config.low_threshold ?? Z), l = T(this.states, this.config.status_entity), r = rt(l?.state, s, n), c = r.translationKey ? o(r.translationKey, t) : r.label, h = this.config.display_mode ?? "both", p = this.config.metric_mode ?? "level", g = h !== "details", b = h !== "tank", x = this.config.show_low_marker !== !1, R = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), H = "SaltWatch", C = s === void 0 ? "—" : N(s, t), w = s === void 0 ? o("noCurrentReading", t) : C, v = q(T(this.states, this.config.forecast_entity)), f = v === void 0 || v < 0 ? void 0 : Math.round(v), S = f === void 0 ? "—" : dt(f, t), Q = T(this.states, this.config.forecast_status_entity)?.state, z = f === void 0 ? ct(Q, t) : o(f === 0 ? "lowThresholdReached" : f === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), V = `<div class="metric level-metric">
+      <div class="metric-value level">${C}</div>
       <div class="metric-label level-label">${m(o(p === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, D = `<div class="metric forecast-metric${f === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${f === void 0 ? this.forecastSymbol() : S}</div>
-      <div class="metric-label forecast-label">${m(C)}</div>
-    </div>`, _ = p === "both" ? `${V}<span class="metric-divider" aria-hidden="true"></span>${D}` : p === "forecast" ? D : V, A = f === void 0 ? C : `${S} ${C}`, $ = p === "both" ? `${w}, ${A}` : p === "forecast" ? A : w, tt = 132, k = 474, Y = k - tt, u = i === void 0 ? k : k - i / 100 * Y, et = k - n / 100 * Y, W = [
+      <div class="metric-label forecast-label">${m(z)}</div>
+    </div>`, _ = p === "both" ? `${V}<span class="metric-divider" aria-hidden="true"></span>${D}` : p === "forecast" ? D : V, A = f === void 0 ? z : `${S} ${z}`, $ = p === "both" ? `${w}, ${A}` : p === "forecast" ? A : w, tt = 132, k = 474, Y = k - tt, u = s === void 0 ? k : k - s / 100 * Y, et = k - n / 100 * Y, W = [
       `M96 ${(u + 2).toFixed(1)}`,
       `Q108 ${(u - 2).toFixed(1)} 120 ${(u - 3).toFixed(1)}`,
       `Q132 ${(u - 6).toFixed(1)} 145 ${(u - 4).toFixed(1)}`,
@@ -394,20 +394,20 @@ class pt extends HTMLElement {
       <ha-card class="tone-${r.tone}"${R ? ' tabindex="0" role="button"' : ""} aria-label="${H}: ${m($)}, ${m(c)}">
         <div class="card-shell mode-${h} order-${this.config.section_order ?? "tank-first"}">
           ${g ? `<section class="tank-panel" aria-label="${m(o("tankLevelVisualization", t))}">
-            ${this.tankSvg(i, at, W, u, et, n, r.tone, t)}
+            ${this.tankSvg(s, at, W, u, et, n, r.tone, t)}
           </section>` : ""}
           ${b ? `<section class="content-panel${x ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
               <div class="status"><span class="status-dot"></span>${m(c)}</div>
             </header>` : ""}
-            <div class="reading metric-mode-${p}${i === void 0 ? " state-reading" : ""}">
-              ${i === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${p}">${_}</div>`}
-              ${i === void 0 && this.config.show_status ? "" : i === void 0 ? `<div class="level-label">${m(c)}</div>` : ""}
+            <div class="reading metric-mode-${p}${s === void 0 ? " state-reading" : ""}">
+              ${s === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${p}">${_}</div>`}
+              ${s === void 0 && this.config.show_status ? "" : s === void 0 ? `<div class="level-label">${m(c)}</div>` : ""}
             </div>
-            ${x ? `<div class="threshold-summary" aria-label="${m(o("lowMarkerAt", t, { value: z(n, t) }))}">
+            ${x ? `<div class="threshold-summary" aria-label="${m(o("lowMarkerAt", t, { value: N(n, t) }))}">
               <span class="marker-line"></span>
               <span>${m(o("lowMarker", t))}</span>
-              <strong>${z(n, t)}</strong>
+              <strong>${N(n, t)}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
@@ -416,7 +416,7 @@ class pt extends HTMLElement {
     U && this.configureInteractions(U), this.lastRenderKey = this.currentRenderKey();
   }
   actionConfig(t) {
-    return this.config ? t === "tap" ? this.config.tap_action ?? N : t === "hold" ? this.config.hold_action ?? y : this.config.double_tap_action ?? y : y;
+    return this.config ? t === "tap" ? this.config.tap_action ?? F : t === "hold" ? this.config.hold_action ?? y : this.config.double_tap_action ?? y : y;
   }
   hasAction(t) {
     return this.actionConfig(t).action !== "none";
@@ -476,11 +476,11 @@ class pt extends HTMLElement {
       <path d="M62 52V61L68 65"/>
     </svg>`;
   }
-  tankSvg(t, e, s, i, d, n, l, r) {
-    const c = Array.from({ length: 21 }, (H, E) => {
-      const w = 100 - E * 5, v = 474 - w / 100 * 342, f = w % 25 === 0, S = !f && w % 10 === 0, Q = f ? 60 : S ? 67 : 71;
+  tankSvg(t, e, i, s, d, n, l, r) {
+    const c = Array.from({ length: 21 }, (H, C) => {
+      const w = 100 - C * 5, v = 474 - w / 100 * 342, f = w % 25 === 0, S = !f && w % 10 === 0, Q = f ? 60 : S ? 67 : 71;
       return `${f ? `<text x="52" y="${v + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${f ? "major" : S ? "medium" : "minor"}" d="M${Q} ${v}H78"/>`;
-    }).join(""), h = t === void 0, p = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), b = r === "de" ? 72 : 54, x = 12 - b, R = h ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${z(t, r)}`;
+    }).join(""), h = t === void 0, p = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), b = r === "de" ? 72 : 54, x = 12 - b, R = h ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${N(t, r)}`;
     return `
       <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${m(R)}">
         <defs>
@@ -539,7 +539,7 @@ class pt extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${h ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${s}"/>`}
+          ${h ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${s.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${d.toFixed(1)}" d="M12 ${d.toFixed(1)}H326"/>
@@ -658,29 +658,29 @@ class pt extends HTMLElement {
     `;
   }
 }
-const P = [
+const E = [
   { key: "status_entity", domain: "sensor", suffix: "salt_status" },
   { key: "threshold_entity", domain: "number", suffix: "low_salt_threshold" },
   { key: "forecast_entity", domain: "sensor", suffix: "estimated_days_until_low_salt" },
   { key: "forecast_status_entity", domain: "sensor", suffix: "forecast_status" }
-], O = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function M(a) {
+], K = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+function O(a) {
   return a.slice(a.indexOf(".") + 1);
 }
 function ut(a, t) {
-  const e = a.split("_"), s = t.split("_");
-  let i = 0;
-  for (; i < e.length && e[i] === s[i]; ) i += 1;
-  return i;
+  const e = a.split("_"), i = t.split("_");
+  let s = 0;
+  for (; s < e.length && e[s] === i[s]; ) s += 1;
+  return s;
 }
 function ht(a, t) {
   if (!a || !t) return {};
-  const e = M(t), s = e.endsWith("_salt_level") ? e.slice(0, -10) : "", i = Object.keys(a.states);
-  return Object.fromEntries(P.flatMap(({ key: d, domain: n, suffix: l }) => {
-    const r = s ? `${n}.${s}${l}` : void 0;
+  const e = O(t), i = e.endsWith("_salt_level") ? e.slice(0, -10) : "", s = Object.keys(a.states);
+  return Object.fromEntries(E.flatMap(({ key: d, domain: n, suffix: l }) => {
+    const r = i ? `${n}.${i}${l}` : void 0;
     if (r && a.states[r]) return [[d, r]];
-    if (s) return [];
-    const h = i.filter((p) => p.startsWith(`${n}.`) && M(p).endsWith(l)).map((p) => ({ id: p, score: ut(e, M(p)) })).sort((p, g) => g.score - p.score || p.id.localeCompare(g.id))[0];
+    if (i) return [];
+    const h = s.filter((p) => p.startsWith(`${n}.`) && O(p).endsWith(l)).map((p) => ({ id: p, score: ut(e, O(p)) })).sort((p, g) => g.score - p.score || p.id.localeCompare(g.id))[0];
     return h && h.score > 0 ? [[d, h.id]] : [];
   }));
 }
@@ -760,7 +760,7 @@ const ft = {
 function gt() {
   return document.documentElement.lang.toLowerCase().startsWith("de") ? mt : ft;
 }
-function F(a) {
+function G(a) {
   return a.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 class bt extends HTMLElement {
@@ -772,7 +772,10 @@ class bt extends HTMLElement {
     super(), this.attachShadow({ mode: "open" });
   }
   set hass(t) {
-    this._hass = t, this.autoConfigureDetected(), this.render();
+    const e = this.hassRenderKey();
+    this._hass = t;
+    const i = this.autoConfigureDetected();
+    !this.shadowRoot?.querySelector(".editor") || i || e !== this.hassRenderKey() ? this.render() : this.updateFormHass();
   }
   get hass() {
     return this._hass;
@@ -781,11 +784,25 @@ class bt extends HTMLElement {
     this._config = { ...t }, this.autoConfigureDetected(), this.render();
   }
   autoConfigureDetected() {
-    if (!this._hass || !this._config?.entity) return;
+    if (!this._hass || !this._config?.entity) return !1;
     const t = ht(this._hass, this._config.entity), e = Object.fromEntries(
-      Object.entries(t).filter(([s]) => !this._config?.[s])
+      Object.entries(t).filter(([i]) => !this._config?.[i])
     );
-    Object.keys(e).length > 0 && this.updateConfig(e, !1);
+    return Object.keys(e).length === 0 ? !1 : (this.updateConfig(e, !1), !0);
+  }
+  hassRenderKey() {
+    return this._config ? [
+      this._config.entity,
+      ...E.flatMap(({ key: t }) => {
+        const e = this._config?.[t];
+        return [e ?? "", e && this._hass?.states[e] ? "present" : "missing"];
+      })
+    ].join("|") : "";
+  }
+  updateFormHass() {
+    this.shadowRoot?.querySelectorAll("ha-form").forEach((t) => {
+      t.hass = this._hass;
+    });
   }
   updateConfig(t, e = !0) {
     this._config && (this._config = { ...this._config, ...t }, this.dispatchEvent(new CustomEvent("config-changed", {
@@ -795,17 +812,17 @@ class bt extends HTMLElement {
     })), e && this.render());
   }
   relatedState() {
-    return !this._config || !this._hass ? { connected: 0, total: P.length } : {
-      connected: P.filter(({ key: t }) => {
+    return !this._config || !this._hass ? { connected: 0, total: E.length } : {
+      connected: E.filter(({ key: t }) => {
         const e = this._config?.[t];
         return !!(e && this._hass?.states[e]);
       }).length,
-      total: P.length
+      total: E.length
     };
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const t = gt(), e = this._config.display_mode ?? "both", s = this._config.metric_mode ?? "level", i = this._config.section_order ?? "tank-first", d = e !== "tank", n = this.relatedState(), l = n.connected === n.total, r = this._config;
+    const t = gt(), e = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", s = this._config.section_order ?? "tank-first", d = e !== "tank", n = this.relatedState(), l = n.connected === n.total, r = this._config;
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
@@ -830,8 +847,8 @@ class bt extends HTMLElement {
             <div class="sub-control">
               <label>${t.sectionOrder}</label>
               <div class="segments" role="group" aria-label="${t.sectionOrder}">
-                ${this.segmentButton("section_order", "tank-first", t.tankFirst, i)}
-                ${this.segmentButton("section_order", "details-first", t.detailsFirst, i)}
+                ${this.segmentButton("section_order", "tank-first", t.tankFirst, s)}
+                ${this.segmentButton("section_order", "details-first", t.detailsFirst, s)}
               </div>
             </div>` : ""}
         </section>
@@ -839,9 +856,9 @@ class bt extends HTMLElement {
         ${d ? `<section class="section compact-section">
           <h3>${t.values}</h3>
           <div class="segments three" role="group" aria-label="${t.values}">
-            ${this.segmentButton("metric_mode", "level", t.level, s)}
-            ${this.segmentButton("metric_mode", "forecast", t.forecast, s)}
-            ${this.segmentButton("metric_mode", "both", t.both, s)}
+            ${this.segmentButton("metric_mode", "level", t.level, i)}
+            ${this.segmentButton("metric_mode", "forecast", t.forecast, i)}
+            ${this.segmentButton("metric_mode", "both", t.both, i)}
           </div>
         </section>
 
@@ -875,9 +892,9 @@ class bt extends HTMLElement {
       forecast_status_entity: t.forecastStatusEntity,
       low_threshold: t.fallback
     }), this.setupForm("actions-form", [
-      { name: "tap_action", selector: { ui_action: { actions: O, default_action: "more-info" } }, context: { entity_id: "entity" } },
-      { name: "hold_action", selector: { ui_action: { actions: O, default_action: "none" } }, context: { entity_id: "entity" } },
-      { name: "double_tap_action", selector: { ui_action: { actions: O, default_action: "none" } }, context: { entity_id: "entity" } }
+      { name: "tap_action", selector: { ui_action: { actions: K, default_action: "more-info" } }, context: { entity_id: "entity" } },
+      { name: "hold_action", selector: { ui_action: { actions: K, default_action: "none" } }, context: { entity_id: "entity" } },
+      { name: "double_tap_action", selector: { ui_action: { actions: K, default_action: "none" } }, context: { entity_id: "entity" } }
     ], r, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
       c.addEventListener("click", () => {
         const h = c.dataset.field;
@@ -893,29 +910,29 @@ class bt extends HTMLElement {
       this.actionsOpen = c.currentTarget.open;
     });
   }
-  setupForm(t, e, s, i) {
+  setupForm(t, e, i, s) {
     const d = this.shadowRoot?.querySelector(`#${t}`);
     if (!d) return;
     const n = document.createElement("ha-form");
-    n.hass = this._hass, n.data = s, n.schema = e, n.computeLabel = (l) => i[l.name] ?? l.name, n.addEventListener("value-changed", (l) => {
+    n.hass = this._hass, n.data = i, n.schema = e, n.computeLabel = (l) => s[l.name] ?? l.name, n.addEventListener("value-changed", (l) => {
       const r = l.detail?.value;
       r && (this.updateConfig(r), t === "level-form" && (this.autoConfigureDetected(), this.render()));
     }), d.append(n);
   }
-  layoutButton(t, e, s) {
-    const i = t === s;
-    return `<button type="button" class="layout-option${i ? " selected" : ""}" data-field="display_mode" data-value="${t}" aria-pressed="${i}">
+  layoutButton(t, e, i) {
+    const s = t === i;
+    return `<button type="button" class="layout-option${s ? " selected" : ""}" data-field="display_mode" data-value="${t}" aria-pressed="${s}">
       <span class="layout-preview layout-${t}" aria-hidden="true"><i></i><b></b></span>
-      <span>${F(e)}</span>
-      ${i ? '<span class="selected-mark">✓</span>' : ""}
+      <span>${G(e)}</span>
+      ${s ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
-  segmentButton(t, e, s, i) {
-    const d = e === i;
-    return `<button type="button" class="segment${d ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${d}">${F(s)}</button>`;
+  segmentButton(t, e, i, s) {
+    const d = e === s;
+    return `<button type="button" class="segment${d ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${d}">${G(i)}</button>`;
   }
-  toggle(t, e, s, i) {
-    return `<label class="toggle-row"><span><strong>${F(e)}</strong><small>${F(s)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${i ? "checked" : ""}><i></i></span></label>`;
+  toggle(t, e, i, s) {
+    return `<label class="toggle-row"><span><strong>${G(e)}</strong><small>${G(i)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${s ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -973,7 +990,7 @@ class bt extends HTMLElement {
     `;
   }
 }
-const wt = "0.4.0", yt = {
+const wt = "0.4.1", yt = {
   version: wt
 }, j = "saltwatch-card", xt = yt.version;
 customElements.get(j) || customElements.define(j, pt);
