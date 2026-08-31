@@ -60,6 +60,35 @@ test("scales details typography with the card width", async ({ page }) => {
   expect(wide.fontSize).toBeGreaterThan(narrow.fontSize);
 });
 
+test("keeps paired values aligned when one label wraps", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await page.locator("#display-mode").selectOption("details");
+  await page.locator("#metric-mode").selectOption("both");
+  await frame.evaluate((element) => { element.style.width = "420px"; });
+  await expect(card.locator(".metrics-both")).toBeVisible();
+
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const levelValue = root.querySelector<HTMLElement>(".level-metric .metric-value")!;
+    const forecastValue = root.querySelector<HTMLElement>(".forecast-metric .metric-value")!;
+    const levelLabel = root.querySelector<HTMLElement>(".level-metric .metric-label")!;
+    const forecastLabel = root.querySelector<HTMLElement>(".forecast-metric .metric-label")!;
+    forecastLabel.style.maxWidth = "100px";
+    forecastLabel.style.marginInline = "auto";
+
+    return {
+      levelTop: levelValue.getBoundingClientRect().top,
+      forecastTop: forecastValue.getBoundingClientRect().top,
+      levelLabelHeight: levelLabel.getBoundingClientRect().height,
+      forecastLabelHeight: forecastLabel.getBoundingClientRect().height,
+    };
+  });
+
+  expect(result.forecastLabelHeight).toBeGreaterThan(result.levelLabelHeight);
+  expect(result.forecastTop).toBeCloseTo(result.levelTop, 0);
+});
+
 test("keeps every fixed-row card mode inside its assigned height", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");

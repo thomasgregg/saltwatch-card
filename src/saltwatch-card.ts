@@ -810,7 +810,7 @@ export class SaltWatchCard extends HTMLElement {
       .without-threshold-summary .reading { padding-bottom:0; }
       .metrics { display:grid; align-items:center; min-width:0; }
       .metrics-level,.metrics-forecast { grid-template-columns:minmax(0,1fr); }
-      .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:24px; }
+      .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); align-items:start; gap:24px; }
       .metric { min-width:0; overflow:hidden; text-align:center; }
       .metric-value { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
       .forecast-value { display:flex; justify-content:center; letter-spacing:-.055em; }
