@@ -44,6 +44,7 @@ percentage from 0 to 100.
   - [HACS](#hacs)
   - [Manual installation](#manual-installation)
 - [Graphical editor](#graphical-editor)
+  - [Dashboard sizing](#dashboard-sizing)
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
 - [Using another percentage sensor](#using-another-percentage-sensor)
@@ -158,6 +159,23 @@ lets you choose the displayed values and visible elements without touching
 YAML, while **Advanced** contains entity overrides and the fallback threshold.
 Tap, hold, and double-tap behavior stays organized in the separate **Actions**
 section.
+
+### Dashboard sizing
+
+The card uses automatic height by default. In a Sections dashboard, Home
+Assistant's Layout editor also prevents resizing the card below the smallest
+readable size for the selected content:
+
+| Selected content | Minimum grid size |
+| --- | --- |
+| Complete card (tank and details) | 6 columns × 4 rows |
+| Tank only | 3 columns × 3 rows |
+| Details with one value | 3 columns × 2 rows |
+| Details with level and forecast | 6 columns × 2 rows |
+
+These are Home Assistant grid cells, not pixels. Changing the card content or
+displayed values updates the resizing limits automatically. The minimums keep
+labels and values legible and prevent clipped or overlapping layouts.
 
 ## Card options
 

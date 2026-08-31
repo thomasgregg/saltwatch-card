@@ -33,5 +33,20 @@ and visibility choices easy to find. Manual entity overrides and the fallback
 threshold are grouped under **Advanced**, while tap, hold, and double-tap
 behavior has its own **Actions** section.
 
+## Responsive dashboard sizing
+
+The card uses automatic height by default. In a Sections dashboard, the Layout
+editor keeps each view at a readable minimum:
+
+| Selected content | Minimum grid size |
+| --- | --- |
+| Complete card (tank and details) | 6 columns × 4 rows |
+| Tank only | 3 columns × 3 rows |
+| Details with one value | 3 columns × 2 rows |
+| Details with level and forecast | 6 columns × 2 rows |
+
+Changing the selected content or displayed values updates these resizing
+limits automatically, preventing clipped or overlapping layouts.
+
 See the repository README for installation, configuration, and all available
 display options.

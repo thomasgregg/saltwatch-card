@@ -352,10 +352,30 @@ export class SaltWatchCard extends HTMLElement {
 
   public getGridOptions(): Record<string, string | number> {
     const displayMode = this.config?.display_mode ?? "both";
+
+    if (displayMode === "tank") {
+      return {
+        columns: 6,
+        min_columns: 3,
+        rows: "auto",
+        min_rows: 3,
+      };
+    }
+
+    if (displayMode === "details") {
+      return {
+        columns: 6,
+        min_columns: this.config?.metric_mode === "both" ? 6 : 3,
+        rows: "auto",
+        min_rows: 2,
+      };
+    }
+
     return {
-      columns: displayMode === "both" ? 12 : 6,
-      min_columns: 3,
+      columns: 12,
+      min_columns: 6,
       rows: "auto",
+      min_rows: 4,
     };
   }
 

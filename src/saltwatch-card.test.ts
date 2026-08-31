@@ -92,11 +92,12 @@ describe("SaltWatchCard", () => {
     expect(styles).not.toMatch(/--sw-(?:good|low|warning|fault):var\([^;]+,/);
   });
 
-  it("advertises responsive, auto-height sizing in sections dashboards", () => {
+  it("advertises readable mode-specific sizing in sections dashboards", () => {
     expect(card.getGridOptions()).toEqual({
       columns: 12,
-      min_columns: 3,
+      min_columns: 6,
       rows: "auto",
+      min_rows: 4,
     });
     expect(card.getCardSize()).toBe(13);
     card.setConfig({ ...config, display_mode: "tank" });
@@ -104,6 +105,7 @@ describe("SaltWatchCard", () => {
       columns: 6,
       min_columns: 3,
       rows: "auto",
+      min_rows: 3,
     });
     expect(card.getCardSize()).toBe(12);
     card.setConfig({ ...config, display_mode: "details" });
@@ -111,8 +113,23 @@ describe("SaltWatchCard", () => {
       columns: 6,
       min_columns: 3,
       rows: "auto",
+      min_rows: 2,
     });
     expect(card.getCardSize()).toBe(7);
+    card.setConfig({ ...config, display_mode: "details", metric_mode: "forecast" });
+    expect(card.getGridOptions()).toEqual({
+      columns: 6,
+      min_columns: 3,
+      rows: "auto",
+      min_rows: 2,
+    });
+    card.setConfig({ ...config, display_mode: "details", metric_mode: "both" });
+    expect(card.getGridOptions()).toEqual({
+      columns: 6,
+      min_columns: 6,
+      rows: "auto",
+      min_rows: 2,
+    });
   });
 
   it("uses a validated numeric slider with a 20 percent default", () => {
