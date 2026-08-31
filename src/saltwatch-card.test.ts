@@ -291,7 +291,8 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain(".marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning);");
     expect(styles).toContain(".forecast-symbol { display:block;");
     expect(styles).toContain("stroke:currentColor;");
-    expect(styles).toContain("background:color-mix(in srgb,var(--divider-color) 52%,transparent);");
+    expect(styles).toContain(".metric-divider { align-self:center;");
+    expect(styles).toContain("background:var(--sw-panel-divider);");
     expect(styles).toContain(".forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }");
   });
 

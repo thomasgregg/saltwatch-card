@@ -819,7 +819,7 @@ export class SaltWatchCard extends HTMLElement {
       .metrics-both .metric-value { display:flex; align-items:center; justify-content:center; height:1em; font-size:clamp(68px,7.8cqw,94px); line-height:.86; }
       .metrics-both .forecast-symbol { width:1em; height:1em; }
       .metrics-both .metric-label { margin-top:18px; font-size:clamp(16px,1.85cqw,20px); }
-      .metric-divider { align-self:center; width:1px; height:108px; background:color-mix(in srgb,var(--divider-color) 52%,transparent); }
+      .metric-divider { align-self:center; width:1px; height:108px; background:var(--sw-panel-divider); }
       .forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
@@ -858,7 +858,7 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .status-dot { width:clamp(8px,7cqh,11px); height:clamp(8px,7cqh,11px); }
         .fixed-height .reading { padding:clamp(2px,2cqh,5px) 0; }
         .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
-        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,25cqh,56px); }
+        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,min(25cqh,15cqw),56px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label,.fixed-height .metrics-both .metric-label { margin-top:clamp(1px,2cqh,4px); font-size:clamp(8px,6cqh,12px); line-height:1.05; }
         .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
         .fixed-height .threshold-summary { gap:5px; padding-top:clamp(2px,2cqh,5px); font-size:clamp(8px,6cqh,11px); }
@@ -910,6 +910,10 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .metric-divider { width:100%; height:1px; }
         .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
         .marker-line { width:clamp(18px,9cqw,34px); }
+      }
+      @container (max-width:400px) and (max-height:260px) {
+        .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
+        .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }

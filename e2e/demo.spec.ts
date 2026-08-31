@@ -130,6 +130,52 @@ test("keeps the percentage visible in a 6 by 4 horizontal details card", async (
   expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
 });
 
+test("keeps the percentage and vertical divider visible in a scaled 6 by 4 preview", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "220px";
+    element.style.height = "240px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: false,
+      grid_options: { columns: 6, rows: 4 },
+    });
+  });
+
+  await expect(card.locator("ha-card")).toHaveClass(/fixed-height/);
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const levelMetric = root.querySelector<HTMLElement>(".level-metric")!;
+    const forecastMetric = root.querySelector<HTMLElement>(".forecast-metric")!;
+    const levelValue = root.querySelector<HTMLElement>(".level-metric .metric-value")!;
+    const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
+    const levelBounds = levelMetric.getBoundingClientRect();
+    const forecastBounds = forecastMetric.getBoundingClientRect();
+    return {
+      metricsAreHorizontal: forecastBounds.left > levelBounds.right,
+      valueClientWidth: levelValue.clientWidth,
+      valueScrollWidth: levelValue.scrollWidth,
+      dividerWidth: divider.width,
+      dividerHeight: divider.height,
+    };
+  });
+
+  expect(result.metricsAreHorizontal).toBe(true);
+  expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
+  expect(result.dividerWidth).toBeCloseTo(1, 0);
+  expect(result.dividerHeight).toBeGreaterThan(20);
+});
+
 test("keeps every fixed-row card mode inside its assigned height", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");

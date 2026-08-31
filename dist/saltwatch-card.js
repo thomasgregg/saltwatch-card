@@ -135,7 +135,7 @@ function nt(a, t, e) {
     translationKey: I(a) ? "good" : void 0
   };
 }
-function f(a) {
+function u(a) {
   return String(a).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 const O = 20, q = { action: "more-info" }, y = { action: "none" }, lt = 500, dt = 250, N = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
@@ -325,8 +325,8 @@ class pt extends HTMLElement {
       metric_mode: "level",
       section_order: "tank-first",
       tap_action: q
-    }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), h = n("saltwatch", "forecast_status");
-    return r && (l.status_entity = r), c && (l.threshold_entity = c), u && (l.forecast_entity = u), h && (l.forecast_status_entity = h), l;
+    }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), f = n("saltwatch", "estimated_days_until_low_salt"), h = n("saltwatch", "forecast_status");
+    return r && (l.status_entity = r), c && (l.threshold_entity = c), f && (l.forecast_entity = f), h && (l.forecast_status_entity = h), l;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
@@ -384,15 +384,15 @@ class pt extends HTMLElement {
   render() {
     if (!this.shadowRoot || !this.config) return;
     if (!this.states) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${f(o("noCurrentReading"))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${u(o("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = Z(), e = T(this.states, this.config.entity), s = H(e), i = s === void 0 ? void 0 : X(s), d = H(T(this.states, this.config.threshold_entity)), n = X(d ?? this.config.low_threshold ?? O), l = T(this.states, this.config.status_entity), r = nt(l?.state, i, n), c = r.translationKey ? o(r.translationKey, t) : r.label, u = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", g = u !== "details", w = u !== "tank", v = this.config.show_low_marker !== !1, G = typeof this.config.grid_options?.rows == "number", K = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), P = "SaltWatch", b = i === void 0 ? "—" : C(i, t), S = i === void 0 ? o("noCurrentReading", t) : b, x = H(T(this.states, this.config.forecast_entity)), m = x === void 0 || x < 0 ? void 0 : Math.round(x), z = m === void 0 ? "—" : ct(m, t), V = T(this.states, this.config.forecast_status_entity)?.state, j = m === void 0 ? ht(V, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), A = `<div class="metric level-metric">
+    const t = Z(), e = T(this.states, this.config.entity), s = H(e), i = s === void 0 ? void 0 : X(s), d = H(T(this.states, this.config.threshold_entity)), n = X(d ?? this.config.low_threshold ?? O), l = T(this.states, this.config.status_entity), r = nt(l?.state, i, n), c = r.translationKey ? o(r.translationKey, t) : r.label, f = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", g = f !== "details", w = f !== "tank", v = this.config.show_low_marker !== !1, G = typeof this.config.grid_options?.rows == "number", K = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), P = "SaltWatch", b = i === void 0 ? "—" : C(i, t), S = i === void 0 ? o("noCurrentReading", t) : b, x = H(T(this.states, this.config.forecast_entity)), m = x === void 0 || x < 0 ? void 0 : Math.round(x), z = m === void 0 ? "—" : ct(m, t), V = T(this.states, this.config.forecast_status_entity)?.state, j = m === void 0 ? ht(V, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), A = `<div class="metric level-metric">
       <div class="metric-value level">${b}</div>
-      <div class="metric-label level-label">${f(o(h === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
+      <div class="metric-label level-label">${u(o(h === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, D = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${m === void 0 ? this.forecastSymbol() : z}</div>
-      <div class="metric-label forecast-label">${f(j)}</div>
+      <div class="metric-label forecast-label">${u(j)}</div>
     </div>`, $ = h === "both" ? `${A}<span class="metric-divider" aria-hidden="true"></span>${D}` : h === "forecast" ? D : A, U = m === void 0 ? j : `${z} ${j}`, tt = h === "both" ? `${S}, ${U}` : h === "forecast" ? U : S, et = 132, k = 474, Y = k - et, p = i === void 0 ? k : k - i / 100 * Y, at = k - n / 100 * Y, W = [
       `M96 ${(p + 2).toFixed(1)}`,
       `Q108 ${(p - 2).toFixed(1)} 120 ${(p - 3).toFixed(1)}`,
@@ -411,22 +411,22 @@ class pt extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${r.tone}${G ? " fixed-height" : ""}"${K ? ' tabindex="0" role="button"' : ""} aria-label="${P}: ${f(tt)}, ${f(c)}">
-        <div class="card-shell mode-${u} order-${this.config.section_order ?? "tank-first"}">
-          ${g ? `<section class="tank-panel" aria-label="${f(o("tankLevelVisualization", t))}">
+      <ha-card class="tone-${r.tone}${G ? " fixed-height" : ""}"${K ? ' tabindex="0" role="button"' : ""} aria-label="${P}: ${u(tt)}, ${u(c)}">
+        <div class="card-shell mode-${f} order-${this.config.section_order ?? "tank-first"}">
+          ${g ? `<section class="tank-panel" aria-label="${u(o("tankLevelVisualization", t))}">
             ${this.tankSvg(i, it, W, p, at, n, r.tone, t)}
           </section>` : ""}
           ${w ? `<section class="content-panel${v ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
-              <div class="status"><span class="status-dot"></span>${f(c)}</div>
+              <div class="status"><span class="status-dot"></span>${u(c)}</div>
             </header>` : ""}
             <div class="reading metric-mode-${h}${i === void 0 ? " state-reading" : ""}">
               ${i === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${h}">${$}</div>`}
-              ${i === void 0 && this.config.show_status ? "" : i === void 0 ? `<div class="level-label">${f(c)}</div>` : ""}
+              ${i === void 0 && this.config.show_status ? "" : i === void 0 ? `<div class="level-label">${u(c)}</div>` : ""}
             </div>
-            ${v ? `<div class="threshold-summary" aria-label="${f(o("lowMarkerAt", t, { value: C(n, t) }))}">
+            ${v ? `<div class="threshold-summary" aria-label="${u(o("lowMarkerAt", t, { value: C(n, t) }))}">
               <span class="marker-line"></span>
-              <span>${f(o("lowMarker", t))}</span>
+              <span>${u(o("lowMarker", t))}</span>
               <strong>${C(n, t)}</strong>
             </div>` : ""}
           </section>` : ""}
@@ -526,9 +526,9 @@ class pt extends HTMLElement {
     const c = Array.from({ length: 21 }, (K, P) => {
       const b = 100 - P * 5, S = 474 - b / 100 * 342, x = b % 25 === 0, m = !x && b % 10 === 0, z = x ? 60 : m ? 67 : 71;
       return `${x ? `<text x="52" y="${S + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${x ? "major" : m ? "medium" : "minor"}" d="M${z} ${S}H78"/>`;
-    }).join(""), u = t === void 0, h = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, v = 12 - w, G = u ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${C(t, r)}`;
+    }).join(""), f = t === void 0, h = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, v = 12 - w, G = f ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${C(t, r)}`;
     return `
-      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${f(G)}">
+      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${u(G)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -585,12 +585,12 @@ class pt extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${u ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${s}"/>`}
+          ${f ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${s}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${d.toFixed(1)}" d="M12 ${d.toFixed(1)}H326"/>
         <g class="threshold-label tone-${l}" transform="translate(${v} ${h - 15})">
-          <rect width="${w}" height="30" rx="9"/><text x="${w / 2}" y="20" text-anchor="middle">${f(g)}</text>
+          <rect width="${w}" height="30" rx="9"/><text x="${w / 2}" y="20" text-anchor="middle">${u(g)}</text>
         </g>
       </svg>`;
   }
@@ -645,7 +645,7 @@ class pt extends HTMLElement {
       .metrics-both .metric-value { display:flex; align-items:center; justify-content:center; height:1em; font-size:clamp(68px,7.8cqw,94px); line-height:.86; }
       .metrics-both .forecast-symbol { width:1em; height:1em; }
       .metrics-both .metric-label { margin-top:18px; font-size:clamp(16px,1.85cqw,20px); }
-      .metric-divider { align-self:center; width:1px; height:108px; background:color-mix(in srgb,var(--divider-color) 52%,transparent); }
+      .metric-divider { align-self:center; width:1px; height:108px; background:var(--sw-panel-divider); }
       .forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }
       .state-symbol { display:block; width:clamp(92px,10cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
@@ -684,7 +684,7 @@ class pt extends HTMLElement {
         .fixed-height .status-dot { width:clamp(8px,7cqh,11px); height:clamp(8px,7cqh,11px); }
         .fixed-height .reading { padding:clamp(2px,2cqh,5px) 0; }
         .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
-        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,25cqh,56px); }
+        .fixed-height .metric-value,.fixed-height .metrics-both .metric-value { font-size:clamp(24px,min(25cqh,15cqw),56px); }
         .fixed-height .metric-label,.fixed-height .state-reading .level-label,.fixed-height .metrics-both .metric-label { margin-top:clamp(1px,2cqh,4px); font-size:clamp(8px,6cqh,12px); line-height:1.05; }
         .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
         .fixed-height .threshold-summary { gap:5px; padding-top:clamp(2px,2cqh,5px); font-size:clamp(8px,6cqh,11px); }
@@ -737,6 +737,10 @@ class pt extends HTMLElement {
         .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
         .marker-line { width:clamp(18px,9cqw,34px); }
       }
+      @container (max-width:400px) and (max-height:260px) {
+        .fixed-height .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:clamp(5px,4cqh,10px); }
+        .fixed-height .metric-divider { width:1px; height:clamp(28px,30cqh,54px); }
+      }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
         @keyframes salt-settle { from { transform:translateY(-3px); opacity:0; } }
@@ -753,21 +757,21 @@ const E = [
 function Q(a) {
   return a.slice(a.indexOf(".") + 1);
 }
-function ut(a, t) {
+function ft(a, t) {
   const e = a.split("_"), s = t.split("_");
   let i = 0;
   for (; i < e.length && e[i] === s[i]; ) i += 1;
   return i;
 }
-function ft(a, t) {
+function ut(a, t) {
   if (!a || !t) return {};
   const e = Q(t), s = e.endsWith("_salt_level") ? e.slice(0, -10) : "", i = Object.keys(a.states);
   return Object.fromEntries(E.flatMap(({ key: d, domain: n, suffix: l }) => {
     const r = s ? `${n}.${s}${l}` : void 0;
     if (r && a.states[r]) return [[d, r]];
     if (s) return [];
-    const u = i.filter((h) => h.startsWith(`${n}.`) && Q(h).endsWith(l)).map((h) => ({ id: h, score: ut(e, Q(h)) })).sort((h, g) => g.score - h.score || h.id.localeCompare(g.id))[0];
-    return u && u.score > 0 ? [[d, u.id]] : [];
+    const f = i.filter((h) => h.startsWith(`${n}.`) && Q(h).endsWith(l)).map((h) => ({ id: h, score: ft(e, Q(h)) })).sort((h, g) => g.score - h.score || h.id.localeCompare(g.id))[0];
+    return f && f.score > 0 ? [[d, f.id]] : [];
   }));
 }
 const mt = {
@@ -871,7 +875,7 @@ class wt extends HTMLElement {
   }
   autoConfigureDetected() {
     if (!this._hass || !this._config?.entity) return !1;
-    const t = ft(this._hass, this._config.entity), e = Object.fromEntries(
+    const t = ut(this._hass, this._config.entity), e = Object.fromEntries(
       Object.entries(t).filter(([s]) => !this._config?.[s])
     );
     return Object.keys(e).length === 0 ? !1 : (this.updateConfig(e, !1), !0);
@@ -983,8 +987,8 @@ class wt extends HTMLElement {
       { name: "double_tap_action", selector: { ui_action: { actions: M, default_action: "none" } }, context: { entity_id: "entity" } }
     ], r, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
       c.addEventListener("click", () => {
-        const u = c.dataset.field;
-        this.updateConfig({ [u]: c.dataset.value });
+        const f = c.dataset.field;
+        this.updateConfig({ [f]: c.dataset.value });
       });
     }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
       c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
@@ -1076,7 +1080,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.8", yt = {
+const bt = "0.4.9", yt = {
   version: bt
 }, R = "saltwatch-card", vt = yt.version;
 customElements.get(R) || customElements.define(R, pt);
