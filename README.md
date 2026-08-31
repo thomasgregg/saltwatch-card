@@ -31,11 +31,6 @@ threshold is likely to be reached.
   </tr>
 </table>
 
-<p align="center">
-  <img src="images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, layout choices, values, visible elements, advanced settings, and live preview" width="78%"><br>
-  <sub><strong>Visual editor</strong> · configure entities, layout, values, and interactions with a live preview</sub>
-</p>
-
 SaltWatch Card is built primarily for the entities provided by the SaltWatch
 project, but it can also visualize any Home Assistant sensor that reports a
 percentage from 0 to 100.
@@ -154,7 +149,7 @@ automatically; if one cannot be found, **Configure** opens the relevant manual
 entity settings under **Advanced**.
 
 <p align="center">
-  <img src="images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor showing automatic entity detection and organized settings" width="86%">
+  <img src="images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor showing automatic entity detection and organized settings" width="58%">
 </p>
 
 Choose the complete, tank-only, or details-only layout visually. In the

@@ -24,7 +24,9 @@ compact card.
 
 ## Configure visually
 
-![SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview" width="58%">
+</p>
 
 SaltWatch Card detects related entities automatically and keeps layout, value,
 and visibility choices easy to find. Manual entity overrides and the fallback
