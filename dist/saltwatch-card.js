@@ -1097,7 +1097,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.17", yt = {
+const bt = "0.4.18", yt = {
   version: bt
 }, K = "saltwatch-card", vt = yt.version;
 customElements.get(K) || customElements.define(K, pt);
