@@ -22,5 +22,14 @@ A focused visual gauge with the percentage scale and configurable low marker.
 Current salt level, estimated days until low salt, and device health in one
 compact card.
 
+## Configure visually
+
+![SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png)
+
+SaltWatch Card detects related entities automatically and keeps layout, value,
+and visibility choices easy to find. Manual entity overrides and the fallback
+threshold are grouped under **Advanced**, while tap, hold, and double-tap
+behavior has its own **Actions** section.
+
 See the repository README for installation, configuration, and all available
 display options.

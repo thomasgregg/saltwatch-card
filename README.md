@@ -31,6 +31,11 @@ threshold is likely to be reached.
   </tr>
 </table>
 
+<p align="center">
+  <img src="images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, layout choices, values, visible elements, advanced settings, and live preview" width="78%"><br>
+  <sub><strong>Visual editor</strong> · configure entities, layout, values, and interactions with a live preview</sub>
+</p>
+
 SaltWatch Card is built primarily for the entities provided by the SaltWatch
 project, but it can also visualize any Home Assistant sensor that reports a
 percentage from 0 to 100.
@@ -43,6 +48,7 @@ percentage from 0 to 100.
 - [Installation](#installation)
   - [HACS](#hacs)
   - [Manual installation](#manual-installation)
+- [Graphical editor](#graphical-editor)
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
 - [Using another percentage sensor](#using-another-percentage-sensor)
@@ -139,6 +145,24 @@ actions into focused advanced sections.
 
 The `/config/www/` directory is exposed by Home Assistant under the `/local/`
 URL path, which is why the filesystem and resource paths are different.
+
+## Graphical editor
+
+The visual editor keeps the most useful settings easy to find and shows every
+change immediately in the live preview. It detects related SaltWatch entities
+automatically; if one cannot be found, **Configure** opens the relevant manual
+entity settings under **Advanced**.
+
+<p align="center">
+  <img src="images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor showing automatic entity detection and organized settings" width="86%">
+</p>
+
+Choose the complete, tank-only, or details-only layout visually. In the
+complete layout, you can place the tank or the details first. The editor also
+lets you choose the displayed values and visible elements without touching
+YAML, while **Advanced** contains entity overrides and the fallback threshold.
+Tap, hold, and double-tap behavior stays organized in the separate **Actions**
+section.
 
 ## Card options
 
