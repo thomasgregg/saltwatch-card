@@ -990,7 +990,7 @@ class bt extends HTMLElement {
     `;
   }
 }
-const wt = "0.4.1", yt = {
+const wt = "0.4.2", yt = {
   version: wt
 }, j = "saltwatch-card", xt = yt.version;
 customElements.get(j) || customElements.define(j, pt);
