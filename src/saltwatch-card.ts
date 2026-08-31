@@ -552,6 +552,31 @@ export class SaltWatchCard extends HTMLElement {
 
     if (verticallyClipped || panelsOverflow) this.inferredFixedHeight = true;
     card.classList.toggle("fixed-height", explicitlyFixed || this.inferredFixedHeight);
+    this.updateThresholdMarkerPosition();
+  }
+
+  private updateThresholdMarkerPosition(): void {
+    if (!this.shadowRoot) return;
+    const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
+    const panel = this.shadowRoot.querySelector<HTMLElement>(".tank-panel");
+    const svg = this.shadowRoot.querySelector<SVGSVGElement>("svg.tank");
+    const label = this.shadowRoot.querySelector<SVGGElement>(".threshold-label");
+    if (!card || !panel || !svg || !label) return;
+
+    const preferredX = Number(label.dataset.preferredX);
+    const safeX = Number(label.dataset.safeX);
+    const markerY = Number(label.dataset.markerY);
+    const matrix = svg.getScreenCTM();
+    if (![preferredX, safeX, markerY].every(Number.isFinite) || !matrix) return;
+
+    const cardBounds = card.getBoundingClientRect();
+    const panelBounds = panel.getBoundingClientRect();
+    const leftEdge = svg.createSVGPoint();
+    leftEdge.x = Math.max(cardBounds.left, panelBounds.left) + 4;
+    leftEdge.y = panelBounds.top;
+    const minimumX = leftEdge.matrixTransform(matrix.inverse()).x;
+    const markerX = Math.min(safeX, Math.max(preferredX, minimumX));
+    label.setAttribute("transform", `translate(${markerX.toFixed(1)} ${markerY.toFixed(1)})`);
   }
 
   private actionConfig(action: ActionType): LovelaceActionConfig {
@@ -687,15 +712,20 @@ export class SaltWatchCard extends HTMLElement {
     const labelY = Math.max(134, Math.min(470, thresholdY));
     const lowBadge = localize("lowBadge", locale);
     const lowBadgeWidth = locale === "de" ? 72 : 54;
-    const lowBadgeX = 12 - lowBadgeWidth;
     const tankVisualScale = 1.18;
     const tankVisualOffsetX = -60;
     const tankVisualCenterX = 210;
     const tankVisualCenterY = 296;
-    const thresholdStartX =
+    const thresholdStartX = 24;
+    const thresholdEndX = 324;
+    const thresholdVisualStartX =
+      tankVisualOffsetX +
       tankVisualCenterX +
-      (lowBadgeX - tankVisualOffsetX - tankVisualCenterX) / tankVisualScale;
+      (thresholdStartX - tankVisualCenterX) * tankVisualScale;
+    const preferredLowBadgeX = thresholdVisualStartX - lowBadgeWidth;
+    const safeLowBadgeX = thresholdVisualStartX;
     const scaledLabelY = tankVisualCenterY + (labelY - tankVisualCenterY) * tankVisualScale;
+    const lowBadgeY = (scaledLabelY - 15).toFixed(1);
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, locale)}`;
@@ -764,9 +794,9 @@ export class SaltWatchCard extends HTMLElement {
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX.toFixed(1)} ${thresholdY.toFixed(1)}H346"/>
+        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX} ${thresholdY.toFixed(1)}H${thresholdEndX}"/>
         </g>
-        <g class="threshold-label tone-${tone}" transform="translate(${lowBadgeX} ${(scaledLabelY - 15).toFixed(1)})">
+        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-safe-x="${safeLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${safeLowBadgeX.toFixed(1)} ${lowBadgeY})">
           <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
         </g>
       </svg>`;
