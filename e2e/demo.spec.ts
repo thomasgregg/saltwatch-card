@@ -42,11 +42,26 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
   const forecastValue = await card.locator(".forecast-metric .metric-value").boundingBox();
   const levelLabel = await card.locator(".level-metric .metric-label").boundingBox();
   const forecastLabel = await card.locator(".forecast-metric .metric-label").boundingBox();
+  const forecastMetric = await card.locator(".forecast-metric").boundingBox();
+  const forecastSymbol = await card.locator(".forecast-symbol").boundingBox();
+  const reading = await card.locator(".reading").boundingBox();
+  const metrics = await card.locator(".metrics").boundingBox();
   expect(levelValue).not.toBeNull();
   expect(forecastValue).not.toBeNull();
   expect(levelLabel).not.toBeNull();
   expect(forecastLabel).not.toBeNull();
+  expect(forecastMetric).not.toBeNull();
+  expect(forecastSymbol).not.toBeNull();
+  expect(reading).not.toBeNull();
+  expect(metrics).not.toBeNull();
   expect(Math.abs(levelValue!.height - forecastValue!.height)).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(
+    forecastMetric!.x + forecastMetric!.width / 2
+      - (forecastSymbol!.x + forecastSymbol!.width / 2),
+  )).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(
+    reading!.y + reading!.height / 2 - (metrics!.y + metrics!.height / 2),
+  )).toBeLessThanOrEqual(2);
   if (page.viewportSize()!.width > 400) {
     expect(Math.abs(levelLabel!.y - forecastLabel!.y)).toBeLessThanOrEqual(0.5);
   }

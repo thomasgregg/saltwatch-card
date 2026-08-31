@@ -700,17 +700,17 @@ export class SaltWatchCard extends HTMLElement {
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
       .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
-      .reading { margin:0; padding:36px 0 34px; }
+      .reading { flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .metrics { display:grid; align-items:center; min-width:0; }
       .metrics-level,.metrics-forecast { grid-template-columns:minmax(0,1fr); }
       .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:24px; }
-      .metric { min-width:0; }
+      .metric { min-width:0; text-align:center; }
       .metric-value { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
-      .forecast-value { letter-spacing:-.055em; }
+      .forecast-value { display:flex; justify-content:center; letter-spacing:-.055em; }
       .forecast-symbol { display:block; width:clamp(88px,10cqw,112px); height:auto; fill:none; stroke:currentColor; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
       .metric-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(22px,2.7cqw,29px); font-weight:430; letter-spacing:-.02em; }
-      .metrics-both .metric-value { display:flex; align-items:center; height:1em; font-size:clamp(68px,7.8cqw,94px); line-height:.86; }
+      .metrics-both .metric-value { display:flex; align-items:center; justify-content:center; height:1em; font-size:clamp(68px,7.8cqw,94px); line-height:.86; }
       .metrics-both .forecast-symbol { width:1em; height:1em; }
       .metrics-both .metric-label { margin-top:18px; font-size:clamp(16px,1.85cqw,20px); }
       .metric-divider { align-self:center; width:1px; height:108px; background:color-mix(in srgb,var(--divider-color) 52%,transparent); }
