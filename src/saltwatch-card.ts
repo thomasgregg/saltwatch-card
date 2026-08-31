@@ -690,7 +690,11 @@ export class SaltWatchCard extends HTMLElement {
     const lowBadgeX = 12 - lowBadgeWidth;
     const tankVisualScale = 1.18;
     const tankVisualOffsetX = -60;
+    const tankVisualCenterX = 210;
     const tankVisualCenterY = 296;
+    const thresholdStartX =
+      tankVisualCenterX +
+      (lowBadgeX - tankVisualOffsetX - tankVisualCenterX) / tankVisualScale;
     const scaledLabelY = tankVisualCenterY + (labelY - tankVisualCenterY) * tankVisualScale;
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
@@ -760,7 +764,7 @@ export class SaltWatchCard extends HTMLElement {
             : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M24 ${thresholdY.toFixed(1)}H346"/>
+        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX.toFixed(1)} ${thresholdY.toFixed(1)}H346"/>
         </g>
         <g class="threshold-label tone-${tone}" transform="translate(${lowBadgeX} ${(scaledLabelY - 15).toFixed(1)})">
           <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
