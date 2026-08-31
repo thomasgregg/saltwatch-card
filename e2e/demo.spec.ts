@@ -60,6 +60,159 @@ test("scales details typography with the card width", async ({ page }) => {
   expect(wide.fontSize).toBeGreaterThan(narrow.fontSize);
 });
 
+test("scales combined-card typography from the details pane instead of the full card", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "1200px";
+    element.style.height = "720px";
+  });
+  await page.locator("#level").evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = "100";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      display_mode: "both",
+      metric_mode: "level",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 12, rows: 6 },
+    });
+    // Home Assistant can present a narrow details pane inside a much wider card preview.
+    element.shadowRoot!.querySelector<HTMLElement>(".card-shell")!.style.gridTemplateColumns = "70% 30%";
+  });
+
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const content = root.querySelector<HTMLElement>(".content-panel")!.getBoundingClientRect();
+    const valueElement = root.querySelector<HTMLElement>(".metric-value")!;
+    const value = valueElement.getBoundingClientRect();
+    return {
+      valueInside: value.left >= content.left - 1 && value.right <= content.right + 1,
+      valueClientWidth: valueElement.clientWidth,
+      valueScrollWidth: valueElement.scrollWidth,
+    };
+  });
+
+  expect(result.valueInside).toBe(true);
+  expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
+});
+
+test("fills the tank pane while keeping the low marker inside the card", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "1000px";
+    element.style.height = "750px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      display_mode: "both",
+      metric_mode: "level",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 12, rows: 6 },
+    });
+  });
+
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const panel = root.querySelector<HTMLElement>(".tank-panel")!.getBoundingClientRect();
+    const glass = root.querySelector<SVGGraphicsElement>(".tank-glass")!.getBoundingClientRect();
+    const marker = root.querySelector<SVGGraphicsElement>(".threshold-label")!.getBoundingClientRect();
+    return {
+      glassWidthShare: glass.width / panel.width,
+      markerInside: marker.left >= panel.left - 1 && marker.right <= panel.right + 1,
+    };
+  });
+
+  expect(result.glassWidthShare).toBeGreaterThan(0.5);
+  expect(result.markerInside).toBe(true);
+});
+
+test("balances stacked panels when auto height is disabled", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "760px";
+    element.style.height = "950px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      display_mode: "both",
+      metric_mode: "level",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 12, rows: 8 },
+    });
+  });
+
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const tankPanel = root.querySelector<HTMLElement>(".tank-panel")!.getBoundingClientRect();
+    const contentPanel = root.querySelector<HTMLElement>(".content-panel")!.getBoundingClientRect();
+    const tank = root.querySelector<SVGGraphicsElement>(".tank")!.getBoundingClientRect();
+    return {
+      panelsAreStacked: contentPanel.top >= tankPanel.bottom - 1,
+      panelHeightDifference: Math.abs(tankPanel.height - contentPanel.height),
+      tankFillsPanel: tank.height / tankPanel.height,
+      tankTopGap: tank.top - tankPanel.top,
+      tankBottomGap: tankPanel.bottom - tank.bottom,
+    };
+  });
+
+  expect(result.panelsAreStacked).toBe(true);
+  expect(result.panelHeightDifference).toBeLessThanOrEqual(1);
+  expect(result.tankFillsPanel).toBeGreaterThan(0.85);
+  expect(result.tankTopGap).toBeGreaterThanOrEqual(20);
+  expect(result.tankBottomGap).toBeGreaterThanOrEqual(20);
+});
+
+test("keeps short fixed-height combined cards side by side", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "720px";
+    element.style.height = "250px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      display_mode: "both",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 12, rows: 2 },
+    });
+  });
+
+  const panelsAreSideBySide = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const tankPanel = root.querySelector<HTMLElement>(".tank-panel")!.getBoundingClientRect();
+    const contentPanel = root.querySelector<HTMLElement>(".content-panel")!.getBoundingClientRect();
+    return contentPanel.left >= tankPanel.right - 1;
+  });
+
+  expect(panelsAreSideBySide).toBe(true);
+});
+
 test("keeps paired values aligned when one label wraps", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
