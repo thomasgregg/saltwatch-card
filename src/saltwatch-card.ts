@@ -181,6 +181,18 @@ export class SaltWatchCard extends HTMLElement {
           },
         },
         {
+          name: "section_order",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "tank-first", label: "Tank first" },
+                { value: "details-first", label: "Details first" },
+              ],
+            },
+          },
+        },
+        {
           type: "grid",
           name: "",
           schema: [
@@ -231,6 +243,7 @@ export class SaltWatchCard extends HTMLElement {
           show_low_marker: localize("showLowMarker"),
           display_mode: localize("cardContent"),
           metric_mode: localize("valueDisplay"),
+          section_order: "Section order",
           status_entity: localize("statusEntity"),
           threshold_entity: localize("thresholdEntity"),
           forecast_entity: localize("forecastEntity"),
@@ -251,6 +264,10 @@ export class SaltWatchCard extends HTMLElement {
     };
   }
 
+  public static getConfigElement(): HTMLElement {
+    return document.createElement("saltwatch-card-editor");
+  }
+
   public static getStubConfig(
     hass: HomeAssistant,
     entities: string[] = [],
@@ -268,6 +285,7 @@ export class SaltWatchCard extends HTMLElement {
       show_low_marker: true,
       display_mode: "both",
       metric_mode: "level",
+      section_order: "tank-first",
       tap_action: DEFAULT_TAP_ACTION,
     };
     const status = find("saltwatch", "salt_status");
@@ -293,6 +311,7 @@ export class SaltWatchCard extends HTMLElement {
     const metricMode = config.metric_mode === "forecast" || config.metric_mode === "both"
       ? config.metric_mode
       : "level";
+    const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
     const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
     this.config = {
       ...config,
@@ -301,6 +320,7 @@ export class SaltWatchCard extends HTMLElement {
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
       metric_mode: metricMode,
+      section_order: sectionOrder,
       tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION),
       hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION),
       double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION),
@@ -428,7 +448,7 @@ export class SaltWatchCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <ha-card class="tone-${status.tone}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
-        <div class="card-shell mode-${displayMode}">
+        <div class="card-shell mode-${displayMode} order-${this.config.section_order ?? "tank-first"}">
           ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
             ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale)}
           </section>` : ""}
@@ -674,10 +694,13 @@ export class SaltWatchCard extends HTMLElement {
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
-      .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); min-height:560px; }
+      .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); grid-template-areas:"tank details"; min-height:560px; }
+      .card-shell.order-details-first { grid-template-columns:minmax(380px,1.02fr) minmax(390px,.98fr); grid-template-areas:"details tank"; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
-      .mode-tank .tank-panel { padding-block:8px; border-right:0; }
-      .tank-panel { display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
+      .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
+      .mode-tank .tank-panel { padding-block:8px; border:0; }
+      .tank-panel { grid-area:tank; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
+      .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,425px); height:auto; overflow:visible; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
@@ -695,7 +718,7 @@ export class SaltWatchCard extends HTMLElement {
       .threshold-label rect { fill:var(--sw-warning); }
       .threshold-label.tone-low rect { fill:var(--sw-low); }
       .threshold-label text { fill:var(--text-light-primary-color); font:750 13px system-ui,sans-serif; letter-spacing:.02em; }
-      .content-panel { min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
+      .content-panel { grid-area:details; min-width:0; display:flex; flex-direction:column; padding:48px 48px 38px; }
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(18px,2.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
@@ -725,9 +748,12 @@ export class SaltWatchCard extends HTMLElement {
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }
       .tone-low .marker-line { background:var(--sw-low); box-shadow:0 0 5px color-mix(in srgb,var(--sw-low) 12%,transparent); }
       @container (max-width:880px) {
-        .card-shell { grid-template-columns:1fr; min-height:0; }
-        .tank-panel { padding:8px 30px; border-right:0; border-bottom:1px solid var(--sw-panel-divider); }
-        .mode-tank .tank-panel { border-bottom:0; }
+        .card-shell { grid-template-columns:1fr; grid-template-areas:"tank" "details"; min-height:0; }
+        .card-shell.order-details-first { grid-template-columns:1fr; grid-template-areas:"details" "tank"; }
+        .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
+        .tank-panel,.order-details-first .tank-panel { padding:8px 30px; border-right:0; border-left:0; border-bottom:1px solid var(--sw-panel-divider); }
+        .order-details-first .tank-panel { border-top:1px solid var(--sw-panel-divider); border-bottom:0; }
+        .mode-tank .tank-panel { border:0; }
         .tank { width:min(74%,370px); }
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }

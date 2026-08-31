@@ -120,8 +120,9 @@ the latest release. If the button cannot find the repository, add it manually:
 4. Reload your Home Assistant dashboard.
 5. Add **SaltWatch Card** from the dashboard card picker.
 
-The graphical editor lets you select entities and adjust the main options
-without writing YAML.
+The graphical editor detects related SaltWatch entities automatically, keeps
+the everyday layout choices up front, and groups manual entity overrides and
+actions into focused advanced sections.
 
 ### Manual installation
 
@@ -153,6 +154,7 @@ URL path, which is why the filesystem and resource paths are different.
 | `show_low_marker` | Shows or hides the low-marker summary below the values. The marker on the tank remains visible. | `true` |
 | `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
 | `metric_mode` | Shows the current level (`level`), refill forecast (`forecast`), or both values side by side (`both`). | `level` |
+| `section_order` | Places the tank first (`tank-first`) or the details first (`details-first`) in the complete layout. | `tank-first` |
 | `tap_action` | Chooses what happens when the card is tapped. | `more-info` |
 | `hold_action` | Chooses what happens when the card is held. | `none` |
 | `double_tap_action` | Chooses what happens when the card is double-tapped. | `none` |

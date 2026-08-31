@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SaltWatchCard } from "./saltwatch-card";
+import { detectRelatedEntities, SaltWatchCardEditor } from "./saltwatch-card-editor";
 import type { HassEntity, HomeAssistant, SaltWatchCardConfig } from "./types";
 
 const makeEntity = (entityId: string, state: string): HassEntity => ({
@@ -281,6 +282,52 @@ describe("SaltWatchCard", () => {
     card.setConfig({ ...config, display_mode: "details" });
     expect(card.shadowRoot?.querySelector(".tank-panel")).toBeNull();
     expect(card.shadowRoot?.querySelector(".content-panel")).not.toBeNull();
+  });
+
+  it("can place details before the tank in complete mode", () => {
+    card.setConfig({ ...config, display_mode: "both", section_order: "details-first" });
+    expect(card.shadowRoot?.querySelector(".card-shell")?.classList).toContain("order-details-first");
+    expect(card.shadowRoot?.querySelector(".tank-panel")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".content-panel")).not.toBeNull();
+
+    card.setConfig({ ...config, display_mode: "both", section_order: "tank-first" });
+    expect(card.shadowRoot?.querySelector(".card-shell")?.classList).toContain("order-tank-first");
+  });
+
+  it("detects related SaltWatch entities belonging to the selected level sensor", () => {
+    const hass = makeHass();
+    hass.states["sensor.guest_saltwatch_salt_level"] = makeEntity("sensor.guest_saltwatch_salt_level", "45");
+    hass.states["sensor.guest_saltwatch_salt_status"] = makeEntity("sensor.guest_saltwatch_salt_status", "Good");
+    hass.states["number.guest_saltwatch_low_salt_threshold"] = makeEntity("number.guest_saltwatch_low_salt_threshold", "18");
+    hass.states["sensor.guest_saltwatch_estimated_days_until_low_salt"] = makeEntity("sensor.guest_saltwatch_estimated_days_until_low_salt", "12");
+    hass.states["sensor.guest_saltwatch_forecast_status"] = makeEntity("sensor.guest_saltwatch_forecast_status", "Available");
+
+    expect(detectRelatedEntities(hass, "sensor.guest_saltwatch_salt_level")).toEqual({
+      status_entity: "sensor.guest_saltwatch_salt_status",
+      threshold_entity: "number.guest_saltwatch_low_salt_threshold",
+      forecast_entity: "sensor.guest_saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.guest_saltwatch_forecast_status",
+    });
+  });
+
+  it("shows a configure warning when related entities cannot all be detected", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
+    editor.hass = {
+      states: {
+        "sensor.saltwatch_salt_level": makeEntity("sensor.saltwatch_salt_level", "50"),
+      },
+    };
+    expect(editor.shadowRoot?.querySelector(".notice.warning")?.textContent).toContain(
+      "Some SaltWatch entities weren’t found",
+    );
+    const configure = editor.shadowRoot?.querySelector<HTMLButtonElement>(".configure");
+    expect(configure).not.toBeNull();
+    configure?.click();
+    expect(editor.shadowRoot?.querySelector<HTMLDetailsElement>("#advanced")?.open).toBe(true);
   });
 
   it("removes the salt and shows an explicit unavailable state", () => {
