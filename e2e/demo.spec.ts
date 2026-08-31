@@ -21,6 +21,45 @@ test("renders every card mode without horizontal overflow", async ({ page }) => 
   }
 });
 
+test("scales details typography with the card width", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await page.locator("#display-mode").selectOption("details");
+  await page.locator("#metric-mode").selectOption("both");
+
+  await frame.evaluate((element) => { element.style.width = "220px"; });
+  await expect(card.locator(".metrics-both")).toBeVisible();
+  const narrow = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+    const values = [...root.querySelectorAll<HTMLElement>(".metric-value")];
+    return {
+      width: surface.width,
+      fontSize: Number.parseFloat(getComputedStyle(values[0]!).fontSize),
+      valuesInside: values.every((value) => {
+        const box = value.getBoundingClientRect();
+        return box.left >= surface.left - 1 && box.right <= surface.right + 1;
+      }),
+    };
+  });
+
+  await frame.evaluate((element) => { element.style.width = "720px"; });
+  const wide = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+    const value = root.querySelector<HTMLElement>(".metric-value")!;
+    return {
+      width: surface.width,
+      fontSize: Number.parseFloat(getComputedStyle(value).fontSize),
+    };
+  });
+
+  expect(narrow.width).toBeCloseTo(220, 0);
+  expect(narrow.valuesInside).toBe(true);
+  expect(wide.width).toBeCloseTo(720, 0);
+  expect(wide.fontSize).toBeGreaterThan(narrow.fontSize);
+});
+
 test("switches between salt level, forecast, and both values", async ({ page }) => {
   const card = page.locator("saltwatch-card");
 

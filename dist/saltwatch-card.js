@@ -86,16 +86,16 @@ const ot = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
     valueDisplay: "Angezeigte Werte"
   }
 };
-function M(a) {
+function O(a) {
   return (document.documentElement.lang ?? navigator.language).toLowerCase().startsWith("de") ? "de" : "en";
 }
-function o(a, t = M(), e = {}) {
+function o(a, t = O(), e = {}) {
   return Object.entries(e).reduce(
-    (i, [s, d]) => i.replaceAll(`{${s}}`, d),
+    (i, [s, c]) => i.replaceAll(`{${s}}`, c),
     it[t][a]
   );
 }
-function N(a, t = M()) {
+function N(a, t = O()) {
   return new Intl.NumberFormat(t, {
     style: "percent",
     maximumFractionDigits: 0
@@ -116,7 +116,7 @@ function st(a) {
 function I(a, t = 0, e = 100) {
   return Math.min(e, Math.max(t, a));
 }
-function q(a) {
+function Q(a) {
   return st(a?.state);
 }
 function rt(a, t, e) {
@@ -138,7 +138,7 @@ function rt(a, t, e) {
 function m(a) {
   return String(a).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
-const Z = 20, F = { action: "more-info" }, y = { action: "none" }, nt = 500, lt = 250, P = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+const Z = 20, F = { action: "more-info" }, x = { action: "none" }, nt = 500, lt = 250, G = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
 function T(a, t) {
   return t ? a?.[t] : void 0;
 }
@@ -151,14 +151,14 @@ function X(a) {
 }
 function L(a, t) {
   if (a === void 0) return t;
-  if (typeof a != "object" || a === null || typeof a.action != "string" || !P.includes(a.action))
+  if (typeof a != "object" || a === null || typeof a.action != "string" || !G.includes(a.action))
     throw new Error("Card actions must use a supported Home Assistant action.");
   return a;
 }
-function dt(a, t) {
+function ct(a, t) {
   return new Intl.NumberFormat(t, { maximumFractionDigits: 0 }).format(a);
 }
-function ct(a, t) {
+function dt(a, t) {
   const e = a?.trim().toLowerCase() ?? "";
   return e.includes("confirming") && e.includes("refill") ? o("forecastConfirmingRefill", t) : e.includes("insufficient") ? o("forecastInsufficientChange", t) : e.includes("waiting") && e.includes("measurement") ? o("forecastWaitingForMeasurement", t) : e.includes("waiting") && e.includes("time") ? o("forecastWaitingForTime", t) : e.includes("learning") ? o("forecastLearning", t) : e.includes("initializing") ? o("forecastInitializing", t) : e.includes("calibration") ? o("calibrationRequired", t) : e.includes("fault") || e.includes("error") ? o("sensorFault", t) : e.includes("low") ? o("lowThresholdReached", t) : !e || e === "available" || e === "unknown" || e === "unavailable" ? o("forecastUnavailable", t) : a?.trim() || o("forecastUnavailable", t);
 }
@@ -271,17 +271,17 @@ class pt extends HTMLElement {
           schema: [
             {
               name: "tap_action",
-              selector: { ui_action: { actions: P, default_action: "more-info" } },
+              selector: { ui_action: { actions: G, default_action: "more-info" } },
               context: { entity_id: "entity" }
             },
             {
               name: "hold_action",
-              selector: { ui_action: { actions: P, default_action: "none" } },
+              selector: { ui_action: { actions: G, default_action: "none" } },
               context: { entity_id: "entity" }
             },
             {
               name: "double_tap_action",
-              selector: { ui_action: { actions: P, default_action: "none" } },
+              selector: { ui_action: { actions: G, default_action: "none" } },
               context: { entity_id: "entity" }
             }
           ]
@@ -304,7 +304,7 @@ class pt extends HTMLElement {
         double_tap_action: o("doubleTapAction")
       })[t.name] ?? t.name,
       assertConfig: (t) => {
-        t.low_threshold !== void 0 && X(t.low_threshold), L(t.tap_action, F), L(t.hold_action, y), L(t.double_tap_action, y);
+        t.low_threshold !== void 0 && X(t.low_threshold), L(t.tap_action, F), L(t.hold_action, x), L(t.double_tap_action, x);
       }
     };
   }
@@ -312,7 +312,7 @@ class pt extends HTMLElement {
     return document.createElement("saltwatch-card-editor");
   }
   static getStubConfig(t, e = [], i = []) {
-    const s = [...e, ...i, ...Object.keys(t.states)], d = [...new Set(s)], n = (...g) => d.find((b) => g.every((x) => b.includes(x))), l = {
+    const s = [...e, ...i, ...Object.keys(t.states)], c = [...new Set(s)], n = (...g) => c.find((w) => g.every((y) => w.includes(y))), l = {
       entity: n("saltwatch", "salt_level") ?? n("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: Z,
       show_status: !0,
@@ -321,25 +321,25 @@ class pt extends HTMLElement {
       metric_mode: "level",
       section_order: "tank-first",
       tap_action: F
-    }, r = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), h = n("saltwatch", "estimated_days_until_low_salt"), p = n("saltwatch", "forecast_status");
-    return r && (l.status_entity = r), c && (l.threshold_entity = c), h && (l.forecast_entity = h), p && (l.forecast_status_entity = p), l;
+    }, r = n("saltwatch", "salt_status"), d = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), p = n("saltwatch", "forecast_status");
+    return r && (l.status_entity = r), d && (l.threshold_entity = d), u && (l.forecast_entity = u), p && (l.forecast_status_entity = p), l;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     this.clearInteractionTimers();
-    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", i = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", s = t.section_order === "details-first" ? "details-first" : "tank-first", d = X(t.low_threshold ?? Z);
+    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", i = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", s = t.section_order === "details-first" ? "details-first" : "tank-first", c = X(t.low_threshold ?? Z);
     this.config = {
       ...t,
-      low_threshold: d,
+      low_threshold: c,
       show_status: t.show_status ?? !0,
       show_low_marker: t.show_low_marker ?? !0,
       display_mode: e,
       metric_mode: i,
       section_order: s,
       tap_action: L(t.tap_action, F),
-      hold_action: L(t.hold_action, y),
-      double_tap_action: L(t.double_tap_action, y)
+      hold_action: L(t.hold_action, x),
+      double_tap_action: L(t.double_tap_action, x)
     }, this.lastRenderKey = void 0, this.render();
   }
   getCardSize() {
@@ -347,7 +347,11 @@ class pt extends HTMLElement {
     return t > 0 ? Math.max(1, Math.ceil(t / 50)) : this.config?.display_mode === "tank" ? 12 : this.config?.display_mode === "details" ? 7 : 13;
   }
   getGridOptions() {
-    return { columns: "full" };
+    return {
+      columns: (this.config?.display_mode ?? "both") === "both" ? 12 : 6,
+      min_columns: 3,
+      rows: "auto"
+    };
   }
   updateStates(t) {
     this.states = t, this.currentRenderKey() !== this.lastRenderKey && this.render();
@@ -367,22 +371,22 @@ class pt extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${m(o("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = M(), e = T(this.states, this.config.entity), i = q(e), s = i === void 0 ? void 0 : I(i), d = q(T(this.states, this.config.threshold_entity)), n = I(d ?? this.config.low_threshold ?? Z), l = T(this.states, this.config.status_entity), r = rt(l?.state, s, n), c = r.translationKey ? o(r.translationKey, t) : r.label, h = this.config.display_mode ?? "both", p = this.config.metric_mode ?? "level", g = h !== "details", b = h !== "tank", x = this.config.show_low_marker !== !1, R = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), H = "SaltWatch", C = s === void 0 ? "—" : N(s, t), w = s === void 0 ? o("noCurrentReading", t) : C, v = q(T(this.states, this.config.forecast_entity)), f = v === void 0 || v < 0 ? void 0 : Math.round(v), S = f === void 0 ? "—" : dt(f, t), Q = T(this.states, this.config.forecast_status_entity)?.state, z = f === void 0 ? ct(Q, t) : o(f === 0 ? "lowThresholdReached" : f === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), V = `<div class="metric level-metric">
+    const t = O(), e = T(this.states, this.config.entity), i = Q(e), s = i === void 0 ? void 0 : I(i), c = Q(T(this.states, this.config.threshold_entity)), n = I(c ?? this.config.low_threshold ?? Z), l = T(this.states, this.config.status_entity), r = rt(l?.state, s, n), d = r.translationKey ? o(r.translationKey, t) : r.label, u = this.config.display_mode ?? "both", p = this.config.metric_mode ?? "level", g = u !== "details", w = u !== "tank", y = this.config.show_low_marker !== !1, j = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), H = "SaltWatch", C = s === void 0 ? "—" : N(s, t), b = s === void 0 ? o("noCurrentReading", t) : C, v = Q(T(this.states, this.config.forecast_entity)), f = v === void 0 || v < 0 ? void 0 : Math.round(v), S = f === void 0 ? "—" : ct(f, t), R = T(this.states, this.config.forecast_status_entity)?.state, z = f === void 0 ? dt(R, t) : o(f === 0 ? "lowThresholdReached" : f === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), V = `<div class="metric level-metric">
       <div class="metric-value level">${C}</div>
       <div class="metric-label level-label">${m(o(p === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, D = `<div class="metric forecast-metric${f === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${f === void 0 ? this.forecastSymbol() : S}</div>
       <div class="metric-label forecast-label">${m(z)}</div>
-    </div>`, _ = p === "both" ? `${V}<span class="metric-divider" aria-hidden="true"></span>${D}` : p === "forecast" ? D : V, A = f === void 0 ? z : `${S} ${z}`, $ = p === "both" ? `${w}, ${A}` : p === "forecast" ? A : w, tt = 132, k = 474, Y = k - tt, u = s === void 0 ? k : k - s / 100 * Y, et = k - n / 100 * Y, W = [
-      `M96 ${(u + 2).toFixed(1)}`,
-      `Q108 ${(u - 2).toFixed(1)} 120 ${(u - 3).toFixed(1)}`,
-      `Q132 ${(u - 6).toFixed(1)} 145 ${(u - 4).toFixed(1)}`,
-      `Q159 ${(u - 1).toFixed(1)} 174 ${(u - 2).toFixed(1)}`,
-      `Q189 ${(u - 4).toFixed(1)} 204 ${(u - 3).toFixed(1)}`,
-      `Q220 ${(u + 1).toFixed(1)} 236 ${(u - 1).toFixed(1)}`,
-      `Q253 ${(u - 4).toFixed(1)} 270 ${(u - 2).toFixed(1)}`,
-      `Q288 ${(u + 1).toFixed(1)} 305 ${(u - 1).toFixed(1)}`,
-      `Q315 ${(u - 3).toFixed(1)} 324 ${(u + 1).toFixed(1)}`
+    </div>`, _ = p === "both" ? `${V}<span class="metric-divider" aria-hidden="true"></span>${D}` : p === "forecast" ? D : V, A = f === void 0 ? z : `${S} ${z}`, $ = p === "both" ? `${b}, ${A}` : p === "forecast" ? A : b, tt = 132, k = 474, Y = k - tt, h = s === void 0 ? k : k - s / 100 * Y, et = k - n / 100 * Y, W = [
+      `M96 ${(h + 2).toFixed(1)}`,
+      `Q108 ${(h - 2).toFixed(1)} 120 ${(h - 3).toFixed(1)}`,
+      `Q132 ${(h - 6).toFixed(1)} 145 ${(h - 4).toFixed(1)}`,
+      `Q159 ${(h - 1).toFixed(1)} 174 ${(h - 2).toFixed(1)}`,
+      `Q189 ${(h - 4).toFixed(1)} 204 ${(h - 3).toFixed(1)}`,
+      `Q220 ${(h + 1).toFixed(1)} 236 ${(h - 1).toFixed(1)}`,
+      `Q253 ${(h - 4).toFixed(1)} 270 ${(h - 2).toFixed(1)}`,
+      `Q288 ${(h + 1).toFixed(1)} 305 ${(h - 1).toFixed(1)}`,
+      `Q315 ${(h - 3).toFixed(1)} 324 ${(h + 1).toFixed(1)}`
     ].join(" "), at = [
       W,
       `L324 ${k}`,
@@ -391,20 +395,20 @@ class pt extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${r.tone}"${R ? ' tabindex="0" role="button"' : ""} aria-label="${H}: ${m($)}, ${m(c)}">
-        <div class="card-shell mode-${h} order-${this.config.section_order ?? "tank-first"}">
+      <ha-card class="tone-${r.tone}"${j ? ' tabindex="0" role="button"' : ""} aria-label="${H}: ${m($)}, ${m(d)}">
+        <div class="card-shell mode-${u} order-${this.config.section_order ?? "tank-first"}">
           ${g ? `<section class="tank-panel" aria-label="${m(o("tankLevelVisualization", t))}">
-            ${this.tankSvg(s, at, W, u, et, n, r.tone, t)}
+            ${this.tankSvg(s, at, W, h, et, n, r.tone, t)}
           </section>` : ""}
-          ${b ? `<section class="content-panel${x ? "" : " without-threshold-summary"}">
+          ${w ? `<section class="content-panel${y ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
-              <div class="status"><span class="status-dot"></span>${m(c)}</div>
+              <div class="status"><span class="status-dot"></span>${m(d)}</div>
             </header>` : ""}
             <div class="reading metric-mode-${p}${s === void 0 ? " state-reading" : ""}">
               ${s === void 0 ? this.stateSymbol(r.tone) : `<div class="metrics metrics-${p}">${_}</div>`}
-              ${s === void 0 && this.config.show_status ? "" : s === void 0 ? `<div class="level-label">${m(c)}</div>` : ""}
+              ${s === void 0 && this.config.show_status ? "" : s === void 0 ? `<div class="level-label">${m(d)}</div>` : ""}
             </div>
-            ${x ? `<div class="threshold-summary" aria-label="${m(o("lowMarkerAt", t, { value: N(n, t) }))}">
+            ${y ? `<div class="threshold-summary" aria-label="${m(o("lowMarkerAt", t, { value: N(n, t) }))}">
               <span class="marker-line"></span>
               <span>${m(o("lowMarker", t))}</span>
               <strong>${N(n, t)}</strong>
@@ -416,7 +420,7 @@ class pt extends HTMLElement {
     U && this.configureInteractions(U), this.lastRenderKey = this.currentRenderKey();
   }
   actionConfig(t) {
-    return this.config ? t === "tap" ? this.config.tap_action ?? F : t === "hold" ? this.config.hold_action ?? y : this.config.double_tap_action ?? y : y;
+    return this.config ? t === "tap" ? this.config.tap_action ?? F : t === "hold" ? this.config.hold_action ?? x : this.config.double_tap_action ?? x : x;
   }
   hasAction(t) {
     return this.actionConfig(t).action !== "none";
@@ -476,13 +480,13 @@ class pt extends HTMLElement {
       <path d="M62 52V61L68 65"/>
     </svg>`;
   }
-  tankSvg(t, e, i, s, d, n, l, r) {
-    const c = Array.from({ length: 21 }, (H, C) => {
-      const w = 100 - C * 5, v = 474 - w / 100 * 342, f = w % 25 === 0, S = !f && w % 10 === 0, Q = f ? 60 : S ? 67 : 71;
-      return `${f ? `<text x="52" y="${v + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${f ? "major" : S ? "medium" : "minor"}" d="M${Q} ${v}H78"/>`;
-    }).join(""), h = t === void 0, p = Math.max(134, Math.min(470, d)), g = o("lowBadge", r), b = r === "de" ? 72 : 54, x = 12 - b, R = h ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${N(t, r)}`;
+  tankSvg(t, e, i, s, c, n, l, r) {
+    const d = Array.from({ length: 21 }, (H, C) => {
+      const b = 100 - C * 5, v = 474 - b / 100 * 342, f = b % 25 === 0, S = !f && b % 10 === 0, R = f ? 60 : S ? 67 : 71;
+      return `${f ? `<text x="52" y="${v + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${f ? "major" : S ? "medium" : "minor"}" d="M${R} ${v}H78"/>`;
+    }).join(""), u = t === void 0, p = Math.max(134, Math.min(470, c)), g = o("lowBadge", r), w = r === "de" ? 72 : 54, y = 12 - w, j = u ? o("noCurrentReading", r) : o("estimatedLevel", r) + `: ${N(t, r)}`;
     return `
-      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${m(R)}">
+      <svg class="tank" viewBox="0 30 400 534" role="img" aria-label="${m(j)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -526,7 +530,7 @@ class pt extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${c}</g>
+        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${d}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
@@ -539,25 +543,25 @@ class pt extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${h ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${s.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
+          ${u ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${s.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${d.toFixed(1)}" d="M12 ${d.toFixed(1)}H326"/>
-        <g class="threshold-label tone-${l}" transform="translate(${x} ${p - 15})">
-          <rect width="${b}" height="30" rx="9"/><text x="${b / 2}" y="20" text-anchor="middle">${m(g)}</text>
+        <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${c.toFixed(1)}" d="M12 ${c.toFixed(1)}H326"/>
+        <g class="threshold-label tone-${l}" transform="translate(${y} ${p - 15})">
+          <rect width="${w}" height="30" rx="9"/><text x="${w / 2}" y="20" text-anchor="middle">${m(g)}</text>
         </g>
       </svg>`;
   }
   styles() {
     return `
-      :host { display:block; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
+      :host { display:block; width:100%; max-width:100%; min-width:0; height:100%; container-type:inline-size; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
       * { box-sizing:border-box; }
-      ha-card { display:block; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
+      ha-card { display:block; width:100%; max-width:100%; min-width:0; height:100%; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
-      .card-shell { display:grid; grid-template-columns:minmax(390px,.98fr) minmax(380px,1.02fr); grid-template-areas:"tank details"; min-height:560px; }
-      .card-shell.order-details-first { grid-template-columns:minmax(380px,1.02fr) minmax(390px,.98fr); grid-template-areas:"details tank"; }
+      .card-shell { display:grid; width:100%; min-width:0; height:100%; grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr); grid-template-areas:"tank details"; }
+      .card-shell.order-details-first { grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr); grid-template-areas:"details tank"; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
       .mode-tank .tank-panel { padding-block:8px; border:0; }
@@ -590,7 +594,7 @@ class pt extends HTMLElement {
       .metrics { display:grid; align-items:center; min-width:0; }
       .metrics-level,.metrics-forecast { grid-template-columns:minmax(0,1fr); }
       .metrics-both { grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr); gap:24px; }
-      .metric { min-width:0; text-align:center; }
+      .metric { min-width:0; overflow:hidden; text-align:center; }
       .metric-value { font-size:clamp(112px,13cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; }
       .forecast-value { display:flex; justify-content:center; letter-spacing:-.055em; }
       .forecast-symbol { display:block; width:clamp(88px,10cqw,112px); height:auto; fill:none; stroke:currentColor; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
@@ -620,36 +624,41 @@ class pt extends HTMLElement {
         .content-panel { padding:28px; }
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
-        .metric-value { font-size:clamp(110px,24cqw,154px); }
+        .metric-value { font-size:clamp(54px,24cqw,154px); }
         .forecast-symbol { margin-inline:auto; }
-        .metric-label,.state-reading .level-label { font-size:26px; }
-        .metrics-both .metric-value { justify-content:center; font-size:clamp(72px,15cqw,100px); }
-        .metrics-both .metric-label { font-size:20px; }
+        .metric-label,.state-reading .level-label { font-size:clamp(16px,4.5cqw,26px); }
+        .metrics-both .metric-value { justify-content:center; font-size:clamp(52px,15cqw,100px); }
+        .metrics-both .metric-label { font-size:clamp(15px,3.5cqw,20px); }
         .threshold-summary { padding-top:22px; }
       }
       @container (max-width:520px) {
         .tank-panel { padding:7px 14px; }
         .tank { width:min(76%,320px); }
-        .content-panel { padding:20px 24px; }
+        .content-panel { padding:clamp(14px,4cqw,20px) clamp(14px,5cqw,24px); }
         header { align-items:center; }
-        .status { font-size:18px; }
+        .status { font-size:clamp(14px,4cqw,18px); }
+        .status-dot { width:clamp(12px,3.5cqw,17px); height:clamp(12px,3.5cqw,17px); }
         .reading { margin:0; padding:20px 0; }
-        .state-symbol { width:90px; }
-        .metric-value { font-size:clamp(94px,29cqw,126px); }
-        .metric-label,.state-reading .level-label { margin-top:22px; font-size:21px; }
+        .state-symbol { width:clamp(58px,20cqw,90px); }
+        .metric-value { font-size:clamp(48px,29cqw,126px); }
+        .metric-label,.state-reading .level-label { margin-top:clamp(12px,4cqw,22px); font-size:clamp(14px,4.8cqw,21px); }
         .metrics-both { gap:14px; }
-        .metrics-both .metric-value { font-size:clamp(58px,16cqw,78px); }
-        .metrics-both .metric-label { margin-top:14px; font-size:17px; }
-        .metric-divider { height:92px; }
-        .threshold-summary { padding-top:18px; font-size:16px; }
+        .metrics-both .metric-value { font-size:clamp(44px,16cqw,78px); }
+        .metrics-both .metric-label { margin-top:clamp(9px,3cqw,14px); font-size:clamp(13px,3.8cqw,17px); }
+        .metric-divider { height:clamp(58px,18cqw,92px); }
+        .threshold-summary { padding-top:clamp(12px,3.5cqw,18px); font-size:clamp(13px,3.5cqw,16px); }
       }
       @container (max-width:400px) {
-        .content-panel { padding-inline:16px; }
-        .status { gap:8px; font-size:15px; }
-        .status-dot { width:14px; height:14px; }
-        .metrics-both { grid-template-columns:1fr; gap:18px; }
-        .metrics-both .metric-value { font-size:clamp(76px,25cqw,100px); }
+        .content-panel { padding-inline:clamp(10px,4cqw,16px); }
+        .status { gap:clamp(6px,2.5cqw,8px); font-size:clamp(12px,4cqw,15px); }
+        .status-dot { width:clamp(10px,3.5cqw,14px); height:clamp(10px,3.5cqw,14px); }
+        .reading { padding:clamp(12px,5cqw,20px) 0; }
+        .metrics-both { grid-template-columns:1fr; gap:clamp(12px,5cqw,18px); }
+        .metrics-both .metric-value { font-size:clamp(40px,25cqw,100px); }
+        .metrics-both .metric-label { font-size:clamp(12px,5cqw,17px); }
         .metric-divider { width:100%; height:1px; }
+        .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
+        .marker-line { width:clamp(18px,9cqw,34px); }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
@@ -664,24 +673,24 @@ const E = [
   { key: "forecast_entity", domain: "sensor", suffix: "estimated_days_until_low_salt" },
   { key: "forecast_status_entity", domain: "sensor", suffix: "forecast_status" }
 ], K = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function O(a) {
+function M(a) {
   return a.slice(a.indexOf(".") + 1);
 }
-function ut(a, t) {
+function ht(a, t) {
   const e = a.split("_"), i = t.split("_");
   let s = 0;
   for (; s < e.length && e[s] === i[s]; ) s += 1;
   return s;
 }
-function ht(a, t) {
+function ut(a, t) {
   if (!a || !t) return {};
-  const e = O(t), i = e.endsWith("_salt_level") ? e.slice(0, -10) : "", s = Object.keys(a.states);
-  return Object.fromEntries(E.flatMap(({ key: d, domain: n, suffix: l }) => {
+  const e = M(t), i = e.endsWith("_salt_level") ? e.slice(0, -10) : "", s = Object.keys(a.states);
+  return Object.fromEntries(E.flatMap(({ key: c, domain: n, suffix: l }) => {
     const r = i ? `${n}.${i}${l}` : void 0;
-    if (r && a.states[r]) return [[d, r]];
+    if (r && a.states[r]) return [[c, r]];
     if (i) return [];
-    const h = s.filter((p) => p.startsWith(`${n}.`) && O(p).endsWith(l)).map((p) => ({ id: p, score: ut(e, O(p)) })).sort((p, g) => g.score - p.score || p.id.localeCompare(g.id))[0];
-    return h && h.score > 0 ? [[d, h.id]] : [];
+    const u = s.filter((p) => p.startsWith(`${n}.`) && M(p).endsWith(l)).map((p) => ({ id: p, score: ht(e, M(p)) })).sort((p, g) => g.score - p.score || p.id.localeCompare(g.id))[0];
+    return u && u.score > 0 ? [[c, u.id]] : [];
   }));
 }
 const ft = {
@@ -760,10 +769,10 @@ const ft = {
 function gt() {
   return document.documentElement.lang.toLowerCase().startsWith("de") ? mt : ft;
 }
-function G(a) {
+function q(a) {
   return a.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
-class bt extends HTMLElement {
+class wt extends HTMLElement {
   _hass;
   _config;
   advancedOpen = !1;
@@ -785,7 +794,7 @@ class bt extends HTMLElement {
   }
   autoConfigureDetected() {
     if (!this._hass || !this._config?.entity) return !1;
-    const t = ht(this._hass, this._config.entity), e = Object.fromEntries(
+    const t = ut(this._hass, this._config.entity), e = Object.fromEntries(
       Object.entries(t).filter(([i]) => !this._config?.[i])
     );
     return Object.keys(e).length === 0 ? !1 : (this.updateConfig(e, !1), !0);
@@ -822,7 +831,7 @@ class bt extends HTMLElement {
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const t = gt(), e = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", s = this._config.section_order ?? "tank-first", d = e !== "tank", n = this.relatedState(), l = n.connected === n.total, r = this._config;
+    const t = gt(), e = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", s = this._config.section_order ?? "tank-first", c = e !== "tank", n = this.relatedState(), l = n.connected === n.total, r = this._config;
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
@@ -853,7 +862,7 @@ class bt extends HTMLElement {
             </div>` : ""}
         </section>
 
-        ${d ? `<section class="section compact-section">
+        ${c ? `<section class="section compact-section">
           <h3>${t.values}</h3>
           <div class="segments three" role="group" aria-label="${t.values}">
             ${this.segmentButton("metric_mode", "level", t.level, i)}
@@ -895,44 +904,44 @@ class bt extends HTMLElement {
       { name: "tap_action", selector: { ui_action: { actions: K, default_action: "more-info" } }, context: { entity_id: "entity" } },
       { name: "hold_action", selector: { ui_action: { actions: K, default_action: "none" } }, context: { entity_id: "entity" } },
       { name: "double_tap_action", selector: { ui_action: { actions: K, default_action: "none" } }, context: { entity_id: "entity" } }
-    ], r, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
-      c.addEventListener("click", () => {
-        const h = c.dataset.field;
-        this.updateConfig({ [h]: c.dataset.value });
+    ], r, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((d) => {
+      d.addEventListener("click", () => {
+        const u = d.dataset.field;
+        this.updateConfig({ [u]: d.dataset.value });
       });
-    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
-      c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
+    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((d) => {
+      d.addEventListener("change", () => this.updateConfig({ [d.dataset.field]: d.checked }));
     }), this.shadowRoot.querySelector(".configure")?.addEventListener("click", () => {
       this.advancedOpen = !0, this.render(), this.shadowRoot?.querySelector("#advanced")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }), this.shadowRoot.querySelector("#advanced")?.addEventListener("toggle", (c) => {
-      this.advancedOpen = c.currentTarget.open;
-    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (c) => {
-      this.actionsOpen = c.currentTarget.open;
+    }), this.shadowRoot.querySelector("#advanced")?.addEventListener("toggle", (d) => {
+      this.advancedOpen = d.currentTarget.open;
+    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (d) => {
+      this.actionsOpen = d.currentTarget.open;
     });
   }
   setupForm(t, e, i, s) {
-    const d = this.shadowRoot?.querySelector(`#${t}`);
-    if (!d) return;
+    const c = this.shadowRoot?.querySelector(`#${t}`);
+    if (!c) return;
     const n = document.createElement("ha-form");
     n.hass = this._hass, n.data = i, n.schema = e, n.computeLabel = (l) => s[l.name] ?? l.name, n.addEventListener("value-changed", (l) => {
       const r = l.detail?.value;
       r && (this.updateConfig(r), t === "level-form" && (this.autoConfigureDetected(), this.render()));
-    }), d.append(n);
+    }), c.append(n);
   }
   layoutButton(t, e, i) {
     const s = t === i;
     return `<button type="button" class="layout-option${s ? " selected" : ""}" data-field="display_mode" data-value="${t}" aria-pressed="${s}">
       <span class="layout-preview layout-${t}" aria-hidden="true"><i></i><b></b></span>
-      <span>${G(e)}</span>
+      <span>${q(e)}</span>
       ${s ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
   segmentButton(t, e, i, s) {
-    const d = e === s;
-    return `<button type="button" class="segment${d ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${d}">${G(i)}</button>`;
+    const c = e === s;
+    return `<button type="button" class="segment${c ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${c}">${q(i)}</button>`;
   }
   toggle(t, e, i, s) {
-    return `<label class="toggle-row"><span><strong>${G(e)}</strong><small>${G(i)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${s ? "checked" : ""}><i></i></span></label>`;
+    return `<label class="toggle-row"><span><strong>${q(e)}</strong><small>${q(i)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${s ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -990,14 +999,14 @@ class bt extends HTMLElement {
     `;
   }
 }
-const wt = "0.4.2", yt = {
-  version: wt
-}, j = "saltwatch-card", xt = yt.version;
-customElements.get(j) || customElements.define(j, pt);
-customElements.get("saltwatch-card-editor") || customElements.define("saltwatch-card-editor", bt);
+const bt = "0.4.3", xt = {
+  version: bt
+}, P = "saltwatch-card", yt = xt.version;
+customElements.get(P) || customElements.define(P, pt);
+customElements.get("saltwatch-card-editor") || customElements.define("saltwatch-card-editor", wt);
 window.customCards = window.customCards || [];
-window.customCards.some((a) => a.type === j) || window.customCards.push({
-  type: j,
+window.customCards.some((a) => a.type === P) || window.customCards.push({
+  type: P,
   name: "SaltWatch Card",
   description: "Visualize estimated water-softener salt level in a detailed granular tank.",
   preview: !0,
@@ -1008,11 +1017,11 @@ window.customCards.some((a) => a.type === j) || window.customCards.push({
   }
 });
 console.info(
-  `%c SALTWATCH-CARD %c ${xt} `,
+  `%c SALTWATCH-CARD %c ${yt} `,
   "color:#102820;background:#f4ad32;font-weight:700;padding:2px 5px;border-radius:3px 0 0 3px",
   "color:#f4f6f7;background:#263139;font-weight:700;padding:2px 5px;border-radius:0 3px 3px 0"
 );
 export {
   pt as SaltWatchCard,
-  bt as SaltWatchCardEditor
+  wt as SaltWatchCardEditor
 };

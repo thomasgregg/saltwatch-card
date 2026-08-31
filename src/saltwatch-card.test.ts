@@ -92,13 +92,26 @@ describe("SaltWatchCard", () => {
     expect(styles).not.toMatch(/--sw-(?:good|low|warning|fault):var\([^;]+,/);
   });
 
-  it("uses full-width, intrinsic-height sizing in sections dashboards", () => {
-    expect(card.getGridOptions()).toEqual({ columns: "full" });
-    expect(card.getGridOptions()).not.toHaveProperty("rows");
+  it("advertises responsive, auto-height sizing in sections dashboards", () => {
+    expect(card.getGridOptions()).toEqual({
+      columns: 12,
+      min_columns: 3,
+      rows: "auto",
+    });
     expect(card.getCardSize()).toBe(13);
     card.setConfig({ ...config, display_mode: "tank" });
+    expect(card.getGridOptions()).toEqual({
+      columns: 6,
+      min_columns: 3,
+      rows: "auto",
+    });
     expect(card.getCardSize()).toBe(12);
     card.setConfig({ ...config, display_mode: "details" });
+    expect(card.getGridOptions()).toEqual({
+      columns: 6,
+      min_columns: 3,
+      rows: "auto",
+    });
     expect(card.getCardSize()).toBe(7);
   });
 
