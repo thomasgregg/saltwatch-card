@@ -634,7 +634,7 @@ class st extends HTMLElement {
     `;
   }
 }
-const lt = "0.3.1", ct = {
+const lt = "0.3.2", ct = {
   version: lt
 }, G = "saltwatch-card", dt = ct.version;
 customElements.get(G) || customElements.define(G, st);

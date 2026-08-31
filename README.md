@@ -14,7 +14,22 @@ from across the room—no interpreting raw percentages. It can also show
 SaltWatch's refill forecast, so you know how much salt remains and when the low
 threshold is likely to be reached.
 
-![SaltWatch Card showing an estimated salt level of 62 percent](images/saltwatch-card.jpg)
+<p align="center">
+  <img src="images/saltwatch-card-complete.png" alt="SaltWatch Card complete view showing salt level, refill forecast, status, and low marker" width="100%">
+</p>
+
+<table>
+  <tr>
+    <td width="31%" align="center">
+      <img src="images/saltwatch-card-tank.png" alt="SaltWatch Card tank-only display" width="100%"><br>
+      <sub><strong>Tank only</strong> · a focused visual gauge</sub>
+    </td>
+    <td width="69%" align="center">
+      <img src="images/saltwatch-card-details.png" alt="SaltWatch Card details-only display with salt level and refill forecast" width="100%"><br>
+      <sub><strong>Details only</strong> · level, forecast, and status at a glance</sub>
+    </td>
+  </tr>
+</table>
 
 SaltWatch Card is built primarily for the entities provided by the SaltWatch
 project, but it can also visualize any Home Assistant sensor that reports a
@@ -31,7 +46,6 @@ percentage from 0 to 100.
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
 - [Using another percentage sensor](#using-another-percentage-sensor)
-- [Development](#development)
 
 ## Why use it?
 
