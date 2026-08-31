@@ -139,7 +139,7 @@ function u(a) {
   return String(a).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 const K = 20, j = { action: "more-info" }, y = { action: "none" }, lt = 500, dt = 250, O = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function L(a, t) {
+function S(a, t) {
   return t ? a?.[t] : void 0;
 }
 function _(a) {
@@ -149,7 +149,7 @@ function _(a) {
     throw new Error("Fallback low threshold must be between 0 and 100.");
   return a;
 }
-function S(a, t) {
+function L(a, t) {
   if (a === void 0) return t;
   if (typeof a != "object" || a === null || typeof a.action != "string" || !O.includes(a.action))
     throw new Error("Card actions must use a supported Home Assistant action.");
@@ -308,7 +308,7 @@ class pt extends HTMLElement {
         double_tap_action: o("doubleTapAction")
       })[t.name] ?? t.name,
       assertConfig: (t) => {
-        t.low_threshold !== void 0 && _(t.low_threshold), S(t.tap_action, j), S(t.hold_action, y), S(t.double_tap_action, y);
+        t.low_threshold !== void 0 && _(t.low_threshold), L(t.tap_action, j), L(t.hold_action, y), L(t.double_tap_action, y);
       }
     };
   }
@@ -341,9 +341,9 @@ class pt extends HTMLElement {
       display_mode: e,
       metric_mode: r,
       section_order: i,
-      tap_action: S(t.tap_action, j),
-      hold_action: S(t.hold_action, y),
-      double_tap_action: S(t.double_tap_action, y)
+      tap_action: L(t.tap_action, j),
+      hold_action: L(t.hold_action, y),
+      double_tap_action: L(t.double_tap_action, y)
     }, this.lastRenderKey = void 0, this.render();
   }
   getCardSize() {
@@ -379,7 +379,7 @@ class pt extends HTMLElement {
         this.config.status_entity,
         this.config.threshold_entity,
         ...this.config.metric_mode === "level" ? [] : [this.config.forecast_entity, this.config.forecast_status_entity]
-      ].map((t) => `${t ?? ""}:${L(this.states, t)?.state ?? "missing"}`).join("|");
+      ].map((t) => `${t ?? ""}:${S(this.states, t)?.state ?? "missing"}`).join("|");
   }
   render() {
     if (!this.shadowRoot || !this.config) return;
@@ -387,7 +387,7 @@ class pt extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${u(o("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = D(), e = L(this.states, this.config.entity), r = Z(e), i = r === void 0 ? void 0 : J(r), d = Z(L(this.states, this.config.threshold_entity)), n = J(d ?? this.config.low_threshold ?? K), l = L(this.states, this.config.status_entity), s = nt(l?.state, i, n), c = s.translationKey ? o(s.translationKey, t) : s.label, f = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", g = f !== "details", w = f !== "tank", v = this.config.show_low_marker !== !1, C = typeof this.config.grid_options?.rows == "number", Q = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), k = "SaltWatch", q = i === void 0 ? "—" : P(i, t), F = i === void 0 ? o("noCurrentReading", t) : q, N = Z(L(this.states, this.config.forecast_entity)), m = N === void 0 || N < 0 ? void 0 : Math.round(N), b = m === void 0 ? "—" : ct(m, t), R = L(this.states, this.config.forecast_status_entity)?.state, x = m === void 0 ? ht(R, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), E = `<div class="metric level-metric">
+    const t = D(), e = S(this.states, this.config.entity), r = Z(e), i = r === void 0 ? void 0 : J(r), d = Z(S(this.states, this.config.threshold_entity)), n = J(d ?? this.config.low_threshold ?? K), l = S(this.states, this.config.status_entity), s = nt(l?.state, i, n), c = s.translationKey ? o(s.translationKey, t) : s.label, f = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", g = f !== "details", w = f !== "tank", v = this.config.show_low_marker !== !1, C = typeof this.config.grid_options?.rows == "number", Q = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), k = "SaltWatch", q = i === void 0 ? "—" : P(i, t), F = i === void 0 ? o("noCurrentReading", t) : q, N = Z(S(this.states, this.config.forecast_entity)), m = N === void 0 || N < 0 ? void 0 : Math.round(N), b = m === void 0 ? "—" : ct(m, t), R = S(this.states, this.config.forecast_status_entity)?.state, x = m === void 0 ? ht(R, t) : o(m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), E = `<div class="metric level-metric">
       <div class="metric-value level">${q}</div>
       <div class="metric-label level-label">${u(o(h === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, G = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
@@ -444,12 +444,7 @@ class pt extends HTMLElement {
     if (!this.shadowRoot || !this.config) return;
     const t = this.shadowRoot.querySelector("ha-card");
     if (!t || t.clientHeight === 0) return;
-    const e = this.config.grid_options?.rows;
-    if (e === "auto") {
-      this.inferredFixedHeight = !1, t.classList.remove("fixed-height");
-      return;
-    }
-    const r = typeof e == "number", i = t.getBoundingClientRect(), d = [
+    const r = typeof this.config.grid_options?.rows == "number", i = t.getBoundingClientRect(), d = [
       ...this.shadowRoot.querySelectorAll(
         ".status,.metric-value,.metric-label,.threshold-summary,.tank"
       )
@@ -609,7 +604,7 @@ class pt extends HTMLElement {
       .card-shell.order-details-first { grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr); grid-template-areas:"details tank"; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
-      .mode-tank .tank-panel { padding-block:8px; border:0; }
+      .mode-tank .tank-panel { padding-block:20px; border:0; }
       .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,582px); height:auto; overflow:visible; }
@@ -1091,7 +1086,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.13", yt = {
+const bt = "0.4.14", yt = {
   version: bt
 }, M = "saltwatch-card", vt = yt.version;
 customElements.get(M) || customElements.define(M, pt);

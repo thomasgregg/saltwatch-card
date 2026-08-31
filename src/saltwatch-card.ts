@@ -535,12 +535,6 @@ export class SaltWatchCard extends HTMLElement {
     if (!card || card.clientHeight === 0) return;
 
     const configuredRows = this.config.grid_options?.rows;
-    if (configuredRows === "auto") {
-      this.inferredFixedHeight = false;
-      card.classList.remove("fixed-height");
-      return;
-    }
-
     const explicitlyFixed = typeof configuredRows === "number";
     const cardBounds = card.getBoundingClientRect();
     const verticallyClipped = [
@@ -787,7 +781,7 @@ export class SaltWatchCard extends HTMLElement {
       .card-shell.order-details-first { grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr); grid-template-areas:"details tank"; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
       .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
-      .mode-tank .tank-panel { padding-block:8px; border:0; }
+      .mode-tank .tank-panel { padding-block:20px; border:0; }
       .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
       .tank { width:min(100%,582px); height:auto; overflow:visible; }
