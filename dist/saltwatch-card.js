@@ -9,6 +9,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   disabled: "deaktiviert",
   detectedText: "Die benötigten SaltWatch-Entitäten sind mit diesem Gerät verknüpft.",
   detectedTitle: "SaltWatch-Entitäten erkannt",
+  deviceUnavailableHelp: "Wähle ein verfügbares SaltWatch-Gerät aus.",
+  deviceUnavailableTitle: "SaltWatch-Gerät nicht verfügbar",
   doubleTap: "Doppelt tippen",
   doubleTapAction: "Doppeltipp-Aktion",
   duplicate: "doppelt vorhanden",
@@ -41,7 +43,6 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   incompleteDeviceHelp: "Aktiviere die aufgeführten Entitäten oder installiere die neueste SaltWatch-Firmware.",
   level: "Salzstand",
   levelAndForecast: "Salzstand und Prognose",
-  liveData: "Live-Daten",
   loadingDevices: "SaltWatch-Geräte werden geladen…",
   lowBadge: "NIEDRIG",
   lowMarker: "Niedrig-Markierung",
@@ -53,6 +54,7 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   missingDeviceError: "SaltWatch Card benötigt ein SaltWatch-Gerät.",
   missingTitle: "Einige SaltWatch-Entitäten wurden nicht gefunden",
   noCurrentReading: "Kein aktueller Messwert",
+  noDevicesFound: "In Home Assistant wurden keine SaltWatch-Geräte gefunden.",
   registryError: "Home Assistant konnte die Entitätsregistrierung nicht lesen",
   percentageOnly: "Nur Details",
   saltLevel: "Salzstand",
@@ -60,6 +62,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   saltLevelOnly: "Nur Salzstand",
   sectionOrder: "Reihenfolge",
   sensorFault: "Sensorfehler",
+  selectDeviceHelp: "Wähle das Gerät aus, das diese Karte anzeigen soll.",
+  selectDeviceTitle: "SaltWatch-Gerät auswählen",
   selectSaltWatchDevice: "Wähle ein vollständiges SaltWatch-Gerät aus.",
   showLowMarker: "Niedrig-Markierung unter den Werten anzeigen",
   showStatus: "Status anzeigen",
@@ -87,6 +91,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   disabled: "disabled",
   detectedText: "Required SaltWatch entities are linked from this device.",
   detectedTitle: "SaltWatch entities detected",
+  deviceUnavailableHelp: "Select an available SaltWatch device.",
+  deviceUnavailableTitle: "SaltWatch device unavailable",
   doubleTap: "Double-tap action",
   doubleTapAction: "Double-tap action",
   duplicate: "duplicate",
@@ -119,7 +125,6 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   incompleteDeviceHelp: "Enable the listed entities or install the latest SaltWatch firmware.",
   level: "Salt level",
   levelAndForecast: "Salt level and forecast",
-  liveData: "Live data",
   loadingDevices: "Loading SaltWatch devices…",
   lowBadge: "LOW",
   lowMarker: "Low marker",
@@ -131,6 +136,7 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   missingDeviceError: "SaltWatch Card requires a SaltWatch device.",
   missingTitle: "Some SaltWatch entities weren’t found",
   noCurrentReading: "No current reading",
+  noDevicesFound: "No SaltWatch devices were found in Home Assistant.",
   registryError: "Home Assistant could not read the entity registry",
   percentageOnly: "Details only",
   saltLevel: "Salt level",
@@ -138,6 +144,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   saltLevelOnly: "Salt level only",
   sectionOrder: "Section order",
   sensorFault: "Sensor fault",
+  selectDeviceHelp: "Choose the device this card should display.",
+  selectDeviceTitle: "Select a SaltWatch device",
   selectSaltWatchDevice: "Select a complete SaltWatch device.",
   showLowMarker: "Show low marker below values",
   showStatus: "Show status",
@@ -154,8 +162,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   valueDisplay: "Displayed values",
   values: "Values",
   visible: "Visible elements"
-}, re = { de: fe, en: me };
-function j(a) {
+}, oe = { de: fe, en: me };
+function W(a) {
   const e = a?.trim() || (typeof document < "u" ? document.documentElement.lang : "") || (typeof navigator < "u" ? navigator.language : "") || "en";
   try {
     return Intl.getCanonicalLocales(e)[0] ?? "en";
@@ -163,38 +171,38 @@ function j(a) {
     return "en";
   }
 }
-function q(a) {
-  const e = j(a).toLowerCase();
+function E(a) {
+  const e = W(a).toLowerCase();
   return e === "de" || e.startsWith("de-") ? "de" : "en";
 }
-function xe(a = q()) {
-  return re[a];
+function xe(a = E()) {
+  return oe[a];
 }
-function o(a, e = q(), t = {}) {
+function s(a, e = E(), t = {}) {
   return Object.entries(t).reduce(
-    (i, [r, n]) => i.replaceAll(`{${r}}`, n),
-    re[e][a]
+    (i, [o, n]) => i.replaceAll(`{${o}}`, n),
+    oe[e][a]
   );
 }
-function K(a, e = j()) {
-  return new Intl.NumberFormat(j(e), {
+function K(a, e = W()) {
+  return new Intl.NumberFormat(W(e), {
     style: "percent",
     maximumFractionDigits: 0
   }).format(a / 100);
 }
-const oe = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "nan"]);
+const se = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "nan"]);
 function ae(a) {
-  return a === void 0 || oe.has(a.trim().toLowerCase());
+  return a === void 0 || se.has(a.trim().toLowerCase());
 }
 function ve(a) {
   if (typeof a == "number")
     return Number.isFinite(a) ? a : void 0;
-  if (typeof a != "string" || oe.has(a.trim().toLowerCase()))
+  if (typeof a != "string" || se.has(a.trim().toLowerCase()))
     return;
   const e = Number(a);
   return Number.isFinite(e) ? e : void 0;
 }
-function se(a, e = 0, t = 100) {
+function re(a, e = 0, t = 100) {
   return Math.min(t, Math.max(e, a));
 }
 function B(a) {
@@ -246,55 +254,55 @@ async function we(a, e) {
 }
 function le(a, e) {
   const t = e.filter(
-    (c) => c.device_id === a && c.platform === "esphome"
-  ), i = {}, r = [], n = [], s = [];
-  for (const [c, d] of Object.entries(J)) {
+    (l) => l.device_id === a && l.platform === "esphome"
+  ), i = {}, o = [], n = [], r = [];
+  for (const [l, d] of Object.entries(J)) {
     const g = t.filter(
-      (l) => l.entity_id.startsWith(`${d.domain}.`) && l.original_name === d.originalName
+      (f) => f.entity_id.startsWith(`${d.domain}.`) && f.original_name === d.originalName
     );
     if (g.length === 0) {
-      r.push(c);
+      o.push(l);
       continue;
     }
     if (g.length > 1) {
-      n.push(c);
+      n.push(l);
       continue;
     }
-    const u = g[0];
-    i[c] = u.entity_id, u.disabled_by !== null && s.push(c);
+    const p = g[0];
+    i[l] = p.entity_id, p.disabled_by !== null && r.push(l);
   }
   return {
     deviceId: a,
-    entities: r.length === 0 && n.length === 0 ? i : void 0,
-    missing: r,
+    entities: o.length === 0 && n.length === 0 ? i : void 0,
+    missing: o,
     duplicates: n,
-    disabled: s
+    disabled: r
   };
 }
-function z(a) {
+function q(a) {
   return J[a].originalName;
 }
-const O = { action: "more-info" }, w = { action: "none" }, ye = 500, ke = 250, Z = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function y(a, e) {
+const O = { action: "more-info" }, y = { action: "none" }, ye = 500, ke = 250, Z = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+function k(a, e) {
   return e ? a?.[e] : void 0;
 }
-function T(a, e, t = q()) {
+function C(a, e, t = E()) {
   if (a === void 0) return e;
   if (typeof a != "object" || a === null || typeof a.action != "string" || !Z.includes(a.action))
-    throw new Error(o("unsupportedActionError", t));
+    throw new Error(s("unsupportedActionError", t));
   return a;
 }
 function Se(a, e) {
   return new Intl.NumberFormat(e, { maximumFractionDigits: 0 }).format(a);
 }
 function Le(a, e) {
-  const t = a?.trim() ?? "", i = t.toLowerCase(), r = i.match(/^(\d+)\s+of\s+(\d+)\s+days?\s+collected$/);
-  if (r)
-    return o("forecastDetailsLearning", e, {
-      current: r[1] ?? "0",
-      required: r[2] ?? "7"
+  const t = a?.trim() ?? "", i = t.toLowerCase(), o = i.match(/^(\d+)\s+of\s+(\d+)\s+days?\s+collected$/);
+  if (o)
+    return s("forecastDetailsLearning", e, {
+      current: o[1] ?? "0",
+      required: o[2] ?? "7"
     });
-  const s = {
+  const r = {
     "starting forecast": "forecastDetailsStarting",
     "waiting for valid readings": "forecastDetailsWaitingForValidReadings",
     "calibration required": "calibrationRequired",
@@ -304,7 +312,7 @@ function Le(a, e) {
     "readings are too inconsistent": "forecastDetailsInconsistent",
     "checking possible refill": "forecastDetailsCheckingRefill"
   }[i];
-  return s ? o(s, e) : !t || i === "unknown" || i === "unavailable" ? o("forecastUnavailable", e) : t;
+  return r ? s(r, e) : !t || i === "unknown" || i === "unavailable" ? s("forecastUnavailable", e) : t;
 }
 class Te extends HTMLElement {
   config;
@@ -354,8 +362,8 @@ class Te extends HTMLElement {
         cancelable: !0
       });
       e.context = "hassInternationalization", e.subscribe = !0, e.callback = (t, i) => {
-        const r = this.activeLanguage();
-        this.internationalization = t, this.unsubscribeInternationalization = i, this.activeLanguage() !== r && (this.lastRenderKey = void 0, this.render());
+        const o = this.activeLanguage();
+        this.internationalization = t, this.unsubscribeInternationalization = i, this.activeLanguage() !== o && (this.lastRenderKey = void 0, this.render());
       }, this.dispatchEvent(e);
     }
     !this.heightObserver && typeof ResizeObserver < "u" && (this.heightObserver = new ResizeObserver(() => this.scheduleHeightModeUpdate()), this.heightObserver.observe(this)), this.scheduleHeightModeUpdate();
@@ -386,9 +394,9 @@ class Te extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "both", label: o("tankAndPercentage") },
-                { value: "tank", label: o("tankOnly") },
-                { value: "details", label: o("percentageOnly") }
+                { value: "both", label: s("tankAndPercentage") },
+                { value: "tank", label: s("tankOnly") },
+                { value: "details", label: s("percentageOnly") }
               ]
             }
           }
@@ -399,9 +407,9 @@ class Te extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "level", label: o("saltLevelOnly") },
-                { value: "forecast", label: o("forecastOnly") },
-                { value: "both", label: o("levelAndForecast") }
+                { value: "level", label: s("saltLevelOnly") },
+                { value: "forecast", label: s("forecastOnly") },
+                { value: "both", label: s("levelAndForecast") }
               ]
             }
           }
@@ -412,8 +420,8 @@ class Te extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "tank-first", label: o("tankFirst") },
-                { value: "details-first", label: o("detailsFirst") }
+                { value: "tank-first", label: s("tankFirst") },
+                { value: "details-first", label: s("detailsFirst") }
               ]
             }
           }
@@ -421,7 +429,7 @@ class Te extends HTMLElement {
         {
           type: "expandable",
           name: "actions",
-          title: o("actions"),
+          title: s("actions"),
           flatten: !0,
           schema: [
             {
@@ -440,20 +448,20 @@ class Te extends HTMLElement {
         }
       ],
       computeLabel: (e) => ({
-        device_id: o("saltWatchDevice"),
-        show_status: o("showStatus"),
-        show_low_marker: o("showLowMarker"),
-        display_mode: o("cardContent"),
-        metric_mode: o("valueDisplay"),
-        section_order: o("sectionOrder"),
-        tap_action: o("tapAction"),
-        hold_action: o("holdAction"),
-        double_tap_action: o("doubleTapAction")
+        device_id: s("saltWatchDevice"),
+        show_status: s("showStatus"),
+        show_low_marker: s("showLowMarker"),
+        display_mode: s("cardContent"),
+        metric_mode: s("valueDisplay"),
+        section_order: s("sectionOrder"),
+        tap_action: s("tapAction"),
+        hold_action: s("holdAction"),
+        double_tap_action: s("doubleTapAction")
       })[e.name] ?? e.name,
       assertConfig: (e) => {
         if (!e.device_id || typeof e.device_id != "string")
-          throw new Error(o("missingDeviceError"));
-        T(e.tap_action, O), T(e.hold_action, w), T(e.double_tap_action, w);
+          throw new Error(s("missingDeviceError"));
+        C(e.tap_action, O), C(e.hold_action, y), C(e.double_tap_action, y);
       }
     };
   }
@@ -474,19 +482,19 @@ class Te extends HTMLElement {
     };
   }
   setConfig(e) {
-    const t = q(this.activeLanguage()), i = e.device_id !== this.config?.device_id;
+    const t = E(this.activeLanguage()), i = e.device_id !== this.config?.device_id;
     this.clearInteractionTimers();
-    const r = e.display_mode === "tank" || e.display_mode === "details" ? e.display_mode : "both", n = e.metric_mode === "forecast" || e.metric_mode === "both" ? e.metric_mode : "level", s = e.section_order === "details-first" ? "details-first" : "tank-first";
+    const o = e.display_mode === "tank" || e.display_mode === "details" ? e.display_mode : "both", n = e.metric_mode === "forecast" || e.metric_mode === "both" ? e.metric_mode : "level", r = e.section_order === "details-first" ? "details-first" : "tank-first";
     this.config = {
       ...e,
       show_status: e.show_status ?? !0,
       show_low_marker: e.show_low_marker ?? !0,
-      display_mode: r,
+      display_mode: o,
       metric_mode: n,
-      section_order: s,
-      tap_action: T(e.tap_action, O, t),
-      hold_action: T(e.hold_action, w, t),
-      double_tap_action: T(e.double_tap_action, w, t)
+      section_order: r,
+      tap_action: C(e.tap_action, O, t),
+      hold_action: C(e.hold_action, y, t),
+      double_tap_action: C(e.double_tap_action, y, t)
     }, i && (this.lastThreshold = void 0, this.resolvedEntities = void 0, this.resolution = void 0, this.resolutionError = void 0, this.resolutionKey = void 0), this.lastRenderKey = void 0, this.render(), i && this.resolveConfiguredDevice();
   }
   getCardSize() {
@@ -522,20 +530,20 @@ class Te extends HTMLElement {
     const t = ne(this.hassData, e), i = `${e}|${t.join("|")}`;
     if (i === this.resolutionKey && (this.resolution || this.resolutionError)) return;
     this.resolutionKey = i;
-    const r = ++this.resolutionRequest;
+    const o = ++this.resolutionRequest;
     this.resolvedEntities = void 0, this.resolution = void 0, this.resolutionError = void 0, this.lastRenderKey = void 0, this.render();
     try {
       const n = await we(this.hassData, e);
-      if (r !== this.resolutionRequest || this.config?.device_id !== e) return;
+      if (o !== this.resolutionRequest || this.config?.device_id !== e) return;
       this.resolution = n, this.resolvedEntities = n.entities;
     } catch (n) {
-      if (r !== this.resolutionRequest || this.config?.device_id !== e) return;
+      if (o !== this.resolutionRequest || this.config?.device_id !== e) return;
       this.resolutionError = n instanceof Error ? n.message : String(n);
     }
     this.lastRenderKey = void 0, this.render();
   }
   activeLanguage() {
-    return j(
+    return W(
       this.internationalization?.locale.language ?? this.internationalization?.language
     );
   }
@@ -547,80 +555,80 @@ class Te extends HTMLElement {
       e.status,
       e.threshold,
       ...this.config.metric_mode === "level" ? [] : [e.forecast, e.forecastStatus, e.forecastDetails]
-    ].map((t) => `${t ?? ""}:${y(this.states, t)?.state ?? "missing"}`).join("|") : `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
+    ].map((t) => `${t ?? ""}:${k(this.states, t)?.state ?? "missing"}`).join("|") : `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
   }
   render() {
     if (!this.shadowRoot || !this.config) return;
-    const e = this.activeLanguage(), t = q(e);
+    const e = this.activeLanguage(), t = E(e);
     if (!this.config.device_id) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${h(o("missingDeviceError", t))}</strong><small>${h(o("selectSaltWatchDevice", t))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${h(s("selectDeviceTitle", t))}</strong><small>${h(s("selectDeviceHelp", t))}</small></div></ha-card>`;
       return;
     }
     if (!this.states || !this.hassData || !this.resolution && !this.resolutionError) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${h(o("noCurrentReading", t))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${h(s("noCurrentReading", t))}</div></ha-card>`;
       return;
     }
     if (this.resolutionError) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${h(o("registryError", t))}</strong><span>${h(this.resolutionError)}</span></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${h(s("registryError", t))}</strong><span>${h(this.resolutionError)}</span></div></ha-card>`;
       return;
     }
     if (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0) {
       const ue = [
-        ...this.resolution?.missing.map(z) ?? [],
-        ...this.resolution?.duplicates.map((I) => `${z(I)} (${o("duplicate", t)})`) ?? [],
-        ...this.resolution?.disabled.map((I) => `${z(I)} (${o("disabled", t)})`) ?? []
+        ...this.resolution?.missing.map(q) ?? [],
+        ...this.resolution?.duplicates.map((I) => `${q(I)} (${s("duplicate", t)})`) ?? [],
+        ...this.resolution?.disabled.map((I) => `${q(I)} (${s("disabled", t)})`) ?? []
       ];
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${h(o("incompleteDevice", t))}</strong><span>${h(ue.join(", "))}</span><small>${h(o("incompleteDeviceHelp", t))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${h(s("incompleteDevice", t))}</strong><span>${h(ue.join(", "))}</span><small>${h(s("incompleteDeviceHelp", t))}</small></div></ha-card>`;
       return;
     }
-    const i = this.resolvedEntities, r = y(this.states, i.level), n = B(r), s = n === void 0 ? void 0 : se(n), c = B(y(this.states, i.threshold));
-    c !== void 0 && (this.lastThreshold = se(c));
+    const i = this.resolvedEntities, o = k(this.states, i.level), n = B(o), r = n === void 0 ? void 0 : re(n), l = B(k(this.states, i.threshold));
+    l !== void 0 && (this.lastThreshold = re(l));
     const d = this.lastThreshold;
     if (d === void 0) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${h(o("noCurrentReading", t))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${h(s("noCurrentReading", t))}</div></ha-card>`;
       return;
     }
-    const g = y(this.states, i.status), u = be(g?.state, s, d), l = u.translationKey ? o(u.translationKey, t) : u.label, m = this.config.display_mode ?? "both", x = this.config.metric_mode ?? "level", E = m !== "details", N = m !== "tank", R = this.config.show_low_marker !== !1, M = typeof this.config.grid_options?.rows == "number", k = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), W = "SaltWatch", H = s === void 0 ? "—" : K(s, e), F = s === void 0 ? o("noCurrentReading", t) : H, D = B(y(this.states, i.forecast)), f = D === void 0 || D < 0 ? void 0 : Math.round(D), V = f === void 0 ? "—" : Se(f, e), P = y(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = y(this.states, i.forecastDetails)?.state, v = f === void 0 && P !== "available" && P !== "low salt" ? Le(_, t) : f === void 0 ? o("forecastUnavailable", t) : void 0, S = o(f === void 0 ? "forecast" : f === 0 ? "lowThresholdReached" : f === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), b = `<div class="metric level-metric">
-      <div class="metric-value level">${H}</div>
-      <div class="metric-label level-label">${h(o(x === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
-    </div>`, G = `<div class="metric forecast-metric${f === void 0 ? " unavailable" : ""}">
-      <div class="metric-value forecast-value">${f === void 0 ? '<span class="forecast-placeholder">—</span>' : V}</div>
-      <div class="metric-label forecast-label">${h(S)}</div>
-      ${v ? `<div class="forecast-detail">${h(v)}</div>` : ""}
-    </div>`, U = x === "both" ? `${b}<span class="metric-divider" aria-hidden="true"></span>${G}` : x === "forecast" ? G : b, Y = f === void 0 ? `${S}: ${v}` : `${V} ${S}`, ce = x === "both" ? `${F}, ${Y}` : x === "forecast" ? Y : F, de = 132, L = 474, ee = L - de, p = s === void 0 ? L : L - s / 100 * ee, he = L - d / 100 * ee, te = [
-      `M96 ${(p + 2).toFixed(1)}`,
-      `Q108 ${(p - 2).toFixed(1)} 120 ${(p - 3).toFixed(1)}`,
-      `Q132 ${(p - 6).toFixed(1)} 145 ${(p - 4).toFixed(1)}`,
-      `Q159 ${(p - 1).toFixed(1)} 174 ${(p - 2).toFixed(1)}`,
-      `Q189 ${(p - 4).toFixed(1)} 204 ${(p - 3).toFixed(1)}`,
-      `Q220 ${(p + 1).toFixed(1)} 236 ${(p - 1).toFixed(1)}`,
-      `Q253 ${(p - 4).toFixed(1)} 270 ${(p - 2).toFixed(1)}`,
-      `Q288 ${(p + 1).toFixed(1)} 305 ${(p - 1).toFixed(1)}`,
-      `Q315 ${(p - 3).toFixed(1)} 324 ${(p + 1).toFixed(1)}`
+    const g = k(this.states, i.status), p = be(g?.state, r, d), f = p.translationKey ? s(p.translationKey, t) : p.label, x = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", v = x !== "details", N = x !== "tank", F = this.config.show_low_marker !== !1, H = typeof this.config.grid_options?.rows == "number", S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), M = "SaltWatch", j = r === void 0 ? "—" : K(r, e), R = r === void 0 ? s("noCurrentReading", t) : j, D = B(k(this.states, i.forecast)), m = D === void 0 || D < 0 ? void 0 : Math.round(D), V = m === void 0 ? "—" : Se(m, e), P = k(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = k(this.states, i.forecastDetails)?.state, b = m === void 0 && P !== "available" && P !== "low salt" ? Le(_, t) : m === void 0 ? s("forecastUnavailable", t) : void 0, L = s(m === void 0 ? "forecast" : m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), w = `<div class="metric level-metric">
+      <div class="metric-value level">${j}</div>
+      <div class="metric-label level-label">${h(s(c === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
+    </div>`, G = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
+      <div class="metric-value forecast-value">${m === void 0 ? '<span class="forecast-placeholder">—</span>' : V}</div>
+      <div class="metric-label forecast-label">${h(L)}</div>
+      ${b ? `<div class="forecast-detail">${h(b)}</div>` : ""}
+    </div>`, U = c === "both" ? `${w}<span class="metric-divider" aria-hidden="true"></span>${G}` : c === "forecast" ? G : w, Y = m === void 0 ? `${L}: ${b}` : `${V} ${L}`, ce = c === "both" ? `${R}, ${Y}` : c === "forecast" ? Y : R, de = 132, T = 474, ee = T - de, u = r === void 0 ? T : T - r / 100 * ee, he = T - d / 100 * ee, te = [
+      `M96 ${(u + 2).toFixed(1)}`,
+      `Q108 ${(u - 2).toFixed(1)} 120 ${(u - 3).toFixed(1)}`,
+      `Q132 ${(u - 6).toFixed(1)} 145 ${(u - 4).toFixed(1)}`,
+      `Q159 ${(u - 1).toFixed(1)} 174 ${(u - 2).toFixed(1)}`,
+      `Q189 ${(u - 4).toFixed(1)} 204 ${(u - 3).toFixed(1)}`,
+      `Q220 ${(u + 1).toFixed(1)} 236 ${(u - 1).toFixed(1)}`,
+      `Q253 ${(u - 4).toFixed(1)} 270 ${(u - 2).toFixed(1)}`,
+      `Q288 ${(u + 1).toFixed(1)} 305 ${(u - 1).toFixed(1)}`,
+      `Q315 ${(u - 3).toFixed(1)} 324 ${(u + 1).toFixed(1)}`
     ].join(" "), pe = [
       te,
-      `L324 ${L}`,
-      `L96 ${L}`,
+      `L324 ${T}`,
+      `L96 ${T}`,
       "Z"
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${u.tone}${M ? " fixed-height" : ""}"${k ? ' tabindex="0" role="button"' : ""} aria-label="${W}: ${h(ce)}, ${h(l)}">
-        <div class="card-shell mode-${m} order-${this.config.section_order ?? "tank-first"}">
-          ${E ? `<section class="tank-panel" aria-label="${h(o("tankLevelVisualization", t))}">
-            ${this.tankSvg(s, pe, te, p, he, d, u.tone, t, e)}
+      <ha-card class="tone-${p.tone}${H ? " fixed-height" : ""}"${S ? ' tabindex="0" role="button"' : ""} aria-label="${M}: ${h(ce)}, ${h(f)}">
+        <div class="card-shell mode-${x} order-${this.config.section_order ?? "tank-first"}">
+          ${v ? `<section class="tank-panel" aria-label="${h(s("tankLevelVisualization", t))}">
+            ${this.tankSvg(r, pe, te, u, he, d, p.tone, t, e)}
           </section>` : ""}
-          ${N ? `<section class="content-panel${R ? "" : " without-threshold-summary"}">
+          ${N ? `<section class="content-panel${F ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
-              <div class="status"><span class="status-dot"></span>${h(l)}</div>
+              <div class="status"><span class="status-dot"></span>${h(f)}</div>
             </header>` : ""}
-            <div class="reading metric-mode-${x}${s === void 0 ? " state-reading" : ""}">
-              ${s === void 0 ? this.stateSymbol(u.translationKey, u.tone) : `<div class="metrics metrics-${x}">${U}</div>`}
-              ${s === void 0 && this.config.show_status ? "" : s === void 0 ? `<div class="level-label">${h(l)}</div>` : ""}
+            <div class="reading metric-mode-${c}${r === void 0 ? " state-reading" : ""}">
+              ${r === void 0 ? this.stateSymbol(p.translationKey, p.tone) : `<div class="metrics metrics-${c}">${U}</div>`}
+              ${r === void 0 && this.config.show_status ? "" : r === void 0 ? `<div class="level-label">${h(f)}</div>` : ""}
             </div>
-            ${R ? `<div class="threshold-summary" aria-label="${h(o("lowMarkerAt", t, { value: K(d, e) }))}">
+            ${F ? `<div class="threshold-summary" aria-label="${h(s("lowMarkerAt", t, { value: K(d, e) }))}">
               <span class="marker-line"></span>
-              <span>${h(o("lowMarker", t))}</span>
+              <span>${h(s("lowMarker", t))}</span>
               <strong>${K(d, e)}</strong>
             </div>` : ""}
           </section>` : ""}
@@ -640,31 +648,31 @@ class Te extends HTMLElement {
     if (!e || e.clientHeight === 0) return;
     const i = typeof this.config.grid_options?.rows == "number";
     i || e.classList.remove("fixed-height");
-    const r = e.getBoundingClientRect(), n = [
+    const o = e.getBoundingClientRect(), n = [
       ...this.shadowRoot.querySelectorAll(
         ".status,.metric-value,.metric-label,.threshold-summary,.tank"
       )
     ].some((d) => {
       const g = d.getBoundingClientRect();
-      return g.height > 0 && (g.top < r.top - 1 || g.bottom > r.bottom + 1);
-    }), s = [
+      return g.height > 0 && (g.top < o.top - 1 || g.bottom > o.bottom + 1);
+    }), r = [
       ...this.shadowRoot.querySelectorAll(".card-shell,.tank-panel,.content-panel,.reading")
-    ].some((d) => d.scrollHeight > d.clientHeight + 1), c = !i && (n || s);
-    e.classList.toggle("fixed-height", i || c), this.updateThresholdMarkerPosition();
+    ].some((d) => d.scrollHeight > d.clientHeight + 1), l = !i && (n || r);
+    e.classList.toggle("fixed-height", i || l), this.updateThresholdMarkerPosition();
   }
   updateThresholdMarkerPosition() {
     if (!this.shadowRoot) return;
-    const e = this.shadowRoot.querySelector("ha-card"), t = this.shadowRoot.querySelector(".tank-panel"), i = this.shadowRoot.querySelector("svg.tank"), r = this.shadowRoot.querySelector(".threshold-label");
-    if (!e || !t || !i || !r) return;
-    const n = Number(r.dataset.preferredX), s = Number(r.dataset.safeX), c = Number(r.dataset.markerY), d = i.getScreenCTM();
-    if (![n, s, c].every(Number.isFinite) || !d) return;
-    const g = e.getBoundingClientRect(), u = t.getBoundingClientRect(), l = i.createSVGPoint();
-    l.x = Math.max(g.left, u.left) + 4, l.y = u.top;
-    const m = l.matrixTransform(d.inverse()).x, x = Math.min(s, Math.max(n, m));
-    r.setAttribute("transform", `translate(${x.toFixed(1)} ${c.toFixed(1)})`);
+    const e = this.shadowRoot.querySelector("ha-card"), t = this.shadowRoot.querySelector(".tank-panel"), i = this.shadowRoot.querySelector("svg.tank"), o = this.shadowRoot.querySelector(".threshold-label");
+    if (!e || !t || !i || !o) return;
+    const n = Number(o.dataset.preferredX), r = Number(o.dataset.safeX), l = Number(o.dataset.markerY), d = i.getScreenCTM();
+    if (![n, r, l].every(Number.isFinite) || !d) return;
+    const g = e.getBoundingClientRect(), p = t.getBoundingClientRect(), f = i.createSVGPoint();
+    f.x = Math.max(g.left, p.left) + 4, f.y = p.top;
+    const x = f.matrixTransform(d.inverse()).x, c = Math.min(r, Math.max(n, x));
+    o.setAttribute("transform", `translate(${c.toFixed(1)} ${l.toFixed(1)})`);
   }
   actionConfig(e) {
-    return this.config ? e === "tap" ? this.config.tap_action ?? O : e === "hold" ? this.config.hold_action ?? w : this.config.double_tap_action ?? w : w;
+    return this.config ? e === "tap" ? this.config.tap_action ?? O : e === "hold" ? this.config.hold_action ?? y : this.config.double_tap_action ?? y : y;
   }
   hasAction(e) {
     return this.actionConfig(e).action !== "none";
@@ -725,11 +733,11 @@ class Te extends HTMLElement {
       <circle class="symbol-dot" cx="48" cy="71" r="3.8"/>
     </svg>`;
   }
-  tankSvg(e, t, i, r, n, s, c, d, g) {
-    const u = Array.from({ length: 21 }, (_, $) => {
-      const v = 100 - $ * 5, S = 474 - v / 100 * 342, b = v % 25 === 0, G = !b && v % 10 === 0, U = b ? 60 : G ? 67 : 71;
-      return `${b ? `<text x="52" y="${S + 5}" text-anchor="end">${v}%</text>` : ""}<path class="${b ? "major" : G ? "medium" : "minor"}" d="M${U} ${S}H78"/>`;
-    }).join(""), l = e === void 0, m = Math.max(134, Math.min(470, n)), x = o("lowBadge", d), E = d === "de" ? 72 : 54, N = 1.18, R = -60, M = 210, k = 296, W = 12, H = 324, F = R + M + (W - M) * N, D = F - E, f = F, A = (k + (m - k) * N - 15).toFixed(1), P = l ? o("noCurrentReading", d) : o("estimatedLevel", d) + `: ${K(e, g)}`;
+  tankSvg(e, t, i, o, n, r, l, d, g) {
+    const p = Array.from({ length: 21 }, (_, $) => {
+      const b = 100 - $ * 5, L = 474 - b / 100 * 342, w = b % 25 === 0, G = !w && b % 10 === 0, U = w ? 60 : G ? 67 : 71;
+      return `${w ? `<text x="52" y="${L + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${w ? "major" : G ? "medium" : "minor"}" d="M${U} ${L}H78"/>`;
+    }).join(""), f = e === void 0, x = Math.max(134, Math.min(470, n)), c = s("lowBadge", d), v = d === "de" ? 72 : 54, N = 1.18, F = -60, H = 210, S = 296, M = 12, j = 324, R = F + H + (M - H) * N, D = R - v, m = R, A = (S + (x - S) * N - 15).toFixed(1), P = f ? s("noCurrentReading", d) : s("estimatedLevel", d) + `: ${K(e, g)}`;
     return `
       <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${h(P)}">
         <defs>
@@ -775,8 +783,8 @@ class Te extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="tank-visual" transform="translate(${R} 0) translate(210 ${k}) scale(${N}) translate(-210 -${k})">
-        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${u}</g>
+        <g class="tank-visual" transform="translate(${F} 0) translate(210 ${S}) scale(${N}) translate(-210 -${S})">
+        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${p}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
@@ -789,13 +797,13 @@ class Te extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${l ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${e}" data-surface-y="${r.toFixed(1)}" d="${t}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ge}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${t}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
+          ${f ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${e}" data-surface-y="${o.toFixed(1)}" d="${t}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ge}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${t}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${c}" data-threshold="${s}" data-threshold-y="${n.toFixed(1)}" d="M${W} ${n.toFixed(1)}H${H}"/>
+        <path class="threshold tone-${l}" data-threshold="${r}" data-threshold-y="${n.toFixed(1)}" d="M${M} ${n.toFixed(1)}H${j}"/>
         </g>
-        <g class="threshold-label tone-${c}" data-preferred-x="${D.toFixed(1)}" data-safe-x="${f.toFixed(1)}" data-marker-y="${A}" transform="translate(${f.toFixed(1)} ${A})">
-          <rect width="${E}" height="30" rx="9"/><text x="${E / 2}" y="20" text-anchor="middle">${h(x)}</text>
+        <g class="threshold-label tone-${l}" data-preferred-x="${D.toFixed(1)}" data-safe-x="${m.toFixed(1)}" data-marker-y="${A}" transform="translate(${m.toFixed(1)} ${A})">
+          <rect width="${v}" height="30" rx="9"/><text x="${v / 2}" y="20" text-anchor="middle">${h(c)}</text>
         </g>
       </svg>`;
   }
@@ -808,6 +816,11 @@ class Te extends HTMLElement {
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
+      .configuration-empty { min-height:180px; display:grid; justify-items:center; align-content:center; gap:8px; padding:32px; text-align:center; color:var(--secondary-text-color,#aab2b7); }
+      .configuration-empty-icon { width:42px; height:42px; margin-bottom:4px; color:var(--primary-color,#03a9f4); fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+      .configuration-empty-icon circle { fill:currentColor; stroke:none; }
+      .configuration-empty strong { color:var(--primary-text-color,#f4f6f7); font-size:18px; }
+      .configuration-empty small { max-width:34ch; color:var(--secondary-text-color,#aab2b7); font-size:14px; line-height:1.4; }
       .configuration-error { min-height:160px; display:flex; flex-direction:column; justify-content:center; gap:8px; padding:32px; color:var(--error-color,#db4437); }
       .configuration-error strong { font-size:18px; }.configuration-error span,.configuration-error small { color:var(--primary-text-color,#f4f6f7); line-height:1.4; }.configuration-error small { color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; width:100%; min-width:0; height:100%; grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr); grid-template-areas:"tank details"; }
@@ -966,7 +979,7 @@ class Te extends HTMLElement {
   }
 }
 const X = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function C(a) {
+function z(a) {
   return a.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 class Ce extends HTMLElement {
@@ -998,8 +1011,8 @@ class Ce extends HTMLElement {
         cancelable: !0
       });
       e.context = "hassInternationalization", e.subscribe = !0, e.callback = (t, i) => {
-        const r = this.activeLanguage();
-        this.internationalization = t, this.unsubscribeInternationalization = i, this.activeLanguage() !== r && this.render();
+        const o = this.activeLanguage();
+        this.internationalization = t, this.unsubscribeInternationalization = i, this.activeLanguage() !== o && this.render();
       }, this.dispatchEvent(e);
     }
   }
@@ -1025,14 +1038,14 @@ class Ce extends HTMLElement {
     const e = this._hass, t = ++this.registryRequest;
     this.registryLoading = !0, this.registryError = void 0, this.render();
     try {
-      const i = Object.values(e.entities).filter((s) => s.platform === "esphome" && s.device_id).map((s) => s.entity_id), r = i.length === 0 ? {} : await e.callWS({
+      const i = Object.values(e.entities).filter((r) => r.platform === "esphome" && r.device_id).map((r) => r.entity_id), o = i.length === 0 ? {} : await e.callWS({
         type: "config/entity_registry/get_entries",
         entity_ids: i
       });
       if (t !== this.registryRequest) return;
-      this.registryEntries = Object.values(r), this.refreshResolutions();
+      this.registryEntries = Object.values(o), this.refreshResolutions();
       const n = [...this.deviceResolutions.values()].filter(
-        (s) => s.entities && s.disabled.length === 0
+        (r) => r.entities && r.disabled.length === 0
       );
       !this._config?.device_id && n.length === 1 && this.updateConfig({ device_id: n[0].deviceId }, !1);
     } catch (i) {
@@ -1074,30 +1087,48 @@ class Ce extends HTMLElement {
     })), t && this.render());
   }
   activeLanguage() {
-    return j(
+    return W(
       this.internationalization?.locale.language ?? this.internationalization?.language ?? this._hass?.locale?.language ?? this._hass?.language
     );
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const e = xe(q(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", r = this._config.section_order ?? "tank-first", n = t !== "tank", s = this._config, c = s.device_id ? this.deviceResolutions.get(s.device_id) : void 0, d = !!(c?.entities && c.disabled.length === 0), g = c ? [
-      ...c.missing.map(z),
-      ...c.duplicates.map((l) => `${z(l)} (${e.duplicate})`),
-      ...c.disabled.map((l) => `${z(l)} (${e.disabled})`)
-    ] : [];
+    const e = xe(E(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", n = t !== "tank", r = this._config, l = r.device_id ? this.deviceResolutions.get(r.device_id) : void 0, d = !!(l?.entities && l.disabled.length === 0), g = l ? [
+      ...l.missing.map(q),
+      ...l.duplicates.map((c) => `${q(c)} (${e.duplicate})`),
+      ...l.disabled.map((c) => `${q(c)} (${e.disabled})`)
+    ] : [], p = [...this.deviceResolutions.keys()].map((c) => ({
+      value: c,
+      label: this.deviceLabel(c)
+    })).sort((c, v) => c.label.localeCompare(v.label)), f = !!r.device_id, x = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : f ? d ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : l ? {
+      tone: "warning",
+      icon: "!",
+      title: e.incompleteDevice,
+      text: g.length > 0 ? g.join(", ") : e.incompleteDeviceHelp
+    } : {
+      tone: "error",
+      icon: "!",
+      title: e.deviceUnavailableTitle,
+      text: e.deviceUnavailableHelp
+    } : {
+      tone: "info",
+      icon: "i",
+      title: e.selectDeviceTitle,
+      text: p.length === 0 ? e.noDevicesFound : e.selectDeviceHelp
+    };
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
-        <section class="section live-data">
-          <h3>${e.liveData}</h3>
+        <section class="section device-section">
+          <h3>${e.saltWatchDevice}</h3>
           <div id="device-form"></div>
-          <div class="notice ${d ? "success" : "warning"}" role="status">
-            <span class="notice-icon">${d ? "✓" : "!"}</span>
-            <span class="notice-copy"><strong>${d ? e.detectedTitle : e.missingTitle}</strong><small>${d ? e.detectedText : this.registryLoading ? e.loadingDevices : this.registryError ? `${e.registryError}: ${C(this.registryError)}` : g.length > 0 ? `${e.incompleteDevice}: ${C(g.join(", "))}` : e.selectSaltWatchDevice}</small></span>
+          <div class="notice ${x.tone}" role="status" aria-live="polite">
+            <span class="notice-icon" aria-hidden="true">${x.icon}</span>
+            <span class="notice-copy"><strong>${z(x.title)}</strong><small>${z(x.text)}</small></span>
           </div>
         </section>
 
-        <section class="section">
+        ${d ? `<section class="section">
           <h3>${e.cardLayout}</h3>
           <div class="layout-options" role="group" aria-label="${e.cardLayout}">
             ${this.layoutButton("both", e.tankDetails, t)}
@@ -1108,8 +1139,8 @@ class Ce extends HTMLElement {
             <div class="sub-control">
               <label>${e.sectionOrder}</label>
               <div class="segments" role="group" aria-label="${e.sectionOrder}">
-                ${this.segmentButton("section_order", "tank-first", e.tankFirst, r)}
-                ${this.segmentButton("section_order", "details-first", e.detailsFirst, r)}
+                ${this.segmentButton("section_order", "tank-first", e.tankFirst, o)}
+                ${this.segmentButton("section_order", "details-first", e.detailsFirst, o)}
               </div>
             </div>` : ""}
         </section>
@@ -1125,66 +1156,61 @@ class Ce extends HTMLElement {
 
         <section class="section compact-section">
           <h3>${e.visible}</h3>
-          ${this.toggle("show_status", e.status, e.statusHelp, s.show_status !== !1)}
-          ${this.toggle("show_low_marker", e.marker, e.markerHelp, s.show_low_marker !== !1)}
+          ${this.toggle("show_status", e.status, e.statusHelp, r.show_status !== !1)}
+          ${this.toggle("show_low_marker", e.marker, e.markerHelp, r.show_low_marker !== !1)}
         </section>` : ""}
 
         <details class="fold" id="actions" ${this.actionsOpen ? "open" : ""}>
           <summary><span><strong>${e.actions}</strong><small>${e.actionsHelp}</small></span><span class="chevron">⌄</span></summary>
           <div class="fold-content" id="actions-form"></div>
-        </details>
-      </div>`;
-    const u = [...this.deviceResolutions.keys()].map((l) => ({
-      value: l,
-      label: this.deviceLabel(l)
-    })).sort((l, m) => l.label.localeCompare(m.label));
-    this.setupForm("device-form", [
-      { name: "device_id", required: !0, selector: { select: { mode: "dropdown", options: u } } }
-    ], { device_id: s.device_id }, { device_id: e.saltWatchDevice }), this.setupForm("actions-form", [
+        </details>` : ""}
+      </div>`, this.setupForm("device-form", [
+      { name: "device_id", required: !0, selector: { select: { mode: "dropdown", options: p } } }
+    ], { device_id: r.device_id }, { device_id: e.saltWatchDevice }), this.setupForm("actions-form", [
       { name: "tap_action", selector: { ui_action: { actions: X, default_action: "more-info" } } },
       { name: "hold_action", selector: { ui_action: { actions: X, default_action: "none" } } },
       { name: "double_tap_action", selector: { ui_action: { actions: X, default_action: "none" } } }
-    ], s, { tap_action: e.tap, hold_action: e.hold, double_tap_action: e.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((l) => {
-      l.addEventListener("click", () => {
-        const m = l.dataset.field;
-        this.updateConfig({ [m]: l.dataset.value });
+    ], r, { tap_action: e.tap, hold_action: e.hold, double_tap_action: e.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
+      c.addEventListener("click", () => {
+        const v = c.dataset.field;
+        this.updateConfig({ [v]: c.dataset.value });
       });
-    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((l) => {
-      l.addEventListener("change", () => this.updateConfig({ [l.dataset.field]: l.checked }));
-    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (l) => {
-      this.actionsOpen = l.currentTarget.open;
+    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
+      c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
+    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (c) => {
+      this.actionsOpen = c.currentTarget.open;
     });
   }
-  setupForm(e, t, i, r) {
+  setupForm(e, t, i, o) {
     const n = this.shadowRoot?.querySelector(`#${e}`);
     if (!n) return;
-    const s = document.createElement("ha-form");
-    s.hass = this._hass, s.data = i, s.schema = t, s.computeLabel = (c) => r[c.name] ?? c.name, s.addEventListener("value-changed", (c) => {
-      const d = c.detail?.value;
+    const r = document.createElement("ha-form");
+    r.hass = this._hass, r.data = i, r.schema = t, r.computeLabel = (l) => o[l.name] ?? l.name, r.addEventListener("value-changed", (l) => {
+      const d = l.detail?.value;
       d && this.updateConfig(d);
-    }), n.append(s);
+    }), n.append(r);
   }
   deviceLabel(e) {
     const t = this._hass?.devices[e], i = t?.name_by_user || t?.name || "SaltWatch";
     return Object.keys(this._hass?.devices ?? {}).filter((n) => {
-      const s = this._hass?.devices[n];
-      return (s?.name_by_user || s?.name) === i && this.deviceResolutions.has(n);
+      const r = this._hass?.devices[n];
+      return (r?.name_by_user || r?.name) === i && this.deviceResolutions.has(n);
     }).length > 1 ? `${i} · ${e.slice(-6)}` : i;
   }
   layoutButton(e, t, i) {
-    const r = e === i;
-    return `<button type="button" class="layout-option${r ? " selected" : ""}" data-field="display_mode" data-value="${e}" aria-pressed="${r}">
+    const o = e === i;
+    return `<button type="button" class="layout-option${o ? " selected" : ""}" data-field="display_mode" data-value="${e}" aria-pressed="${o}">
       <span class="layout-preview layout-${e}" aria-hidden="true"><i></i><b></b></span>
-      <span>${C(t)}</span>
-      ${r ? '<span class="selected-mark">✓</span>' : ""}
+      <span>${z(t)}</span>
+      ${o ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
-  segmentButton(e, t, i, r) {
-    const n = t === r;
-    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${C(i)}</button>`;
+  segmentButton(e, t, i, o) {
+    const n = t === o;
+    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${z(i)}</button>`;
   }
-  toggle(e, t, i, r) {
-    return `<label class="toggle-row"><span><strong>${C(t)}</strong><small>${C(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${r ? "checked" : ""}><i></i></span></label>`;
+  toggle(e, t, i, o) {
+    return `<label class="toggle-row"><span><strong>${z(t)}</strong><small>${z(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${o ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -1194,8 +1220,10 @@ class Ce extends HTMLElement {
       .section,.fold { margin:0; padding:18px; border:1px solid var(--divider-color,#ddd); border-radius:14px; background:var(--card-background-color,var(--ha-card-background,#fff)); }
       h3 { margin:0 0 16px; font-size:16px; font-weight:650; }
       .notice { display:flex; align-items:center; gap:12px; margin-top:14px; padding:13px 14px; border-radius:11px; }
+      .notice.info { color:var(--primary-color,#03a9f4); background:color-mix(in srgb,var(--primary-color,#03a9f4) 9%,transparent); }
       .notice.success { color:var(--success-color,#43a047); background:color-mix(in srgb,var(--success-color,#43a047) 11%,transparent); }
       .notice.warning { color:var(--warning-color,#ffa000); background:color-mix(in srgb,var(--warning-color,#ffa000) 12%,transparent); }
+      .notice.error { color:var(--error-color,#db4437); background:color-mix(in srgb,var(--error-color,#db4437) 11%,transparent); }
       .notice-icon { display:grid; place-items:center; flex:0 0 25px; width:25px; height:25px; border:2px solid currentColor; border-radius:50%; font-weight:800; }
       .notice-copy { min-width:0; display:grid; gap:2px; color:var(--primary-text-color); }
       .notice-copy strong { font-size:14px; }
@@ -1241,7 +1269,7 @@ class Ce extends HTMLElement {
     `;
   }
 }
-const ze = "0.5.1", qe = {
+const ze = "0.5.2", qe = {
   version: ze
 }, Q = "saltwatch-card", Ee = qe.version;
 customElements.get(Q) || customElements.define(Q, Te);

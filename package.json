@@ -1,6 +1,6 @@
 {
   "name": "saltwatch-card",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A detailed Home Assistant tank visualization for estimated water-softener salt level.",
   "type": "module",
   "scripts": {

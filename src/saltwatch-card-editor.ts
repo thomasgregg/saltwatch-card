@@ -206,28 +206,51 @@ export class SaltWatchCardEditor extends HTMLElement {
       ...resolution.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${copy.duplicate})`),
       ...resolution.disabled.map((role) => `${saltWatchRoleLabel(role)} (${copy.disabled})`),
     ] : [];
+    const deviceOptions = [...this.deviceResolutions.keys()].map((deviceId) => ({
+      value: deviceId,
+      label: this.deviceLabel(deviceId),
+    })).sort((left, right) => left.label.localeCompare(right.label));
+    const hasSelection = Boolean(config.device_id);
+    const notice = this.registryLoading
+      ? { tone: "info", icon: "i", title: copy.selectDeviceTitle, text: copy.loadingDevices }
+      : this.registryError
+        ? { tone: "error", icon: "!", title: copy.registryError, text: this.registryError }
+        : !hasSelection
+          ? {
+            tone: "info",
+            icon: "i",
+            title: copy.selectDeviceTitle,
+            text: deviceOptions.length === 0 ? copy.noDevicesFound : copy.selectDeviceHelp,
+          }
+          : complete
+            ? { tone: "success", icon: "✓", title: copy.detectedTitle, text: copy.detectedText }
+            : resolution
+              ? {
+                tone: "warning",
+                icon: "!",
+                title: copy.incompleteDevice,
+                text: problems.length > 0 ? problems.join(", ") : copy.incompleteDeviceHelp,
+              }
+              : {
+                tone: "error",
+                icon: "!",
+                title: copy.deviceUnavailableTitle,
+                text: copy.deviceUnavailableHelp,
+              };
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
-        <section class="section live-data">
-          <h3>${copy.liveData}</h3>
+        <section class="section device-section">
+          <h3>${copy.saltWatchDevice}</h3>
           <div id="device-form"></div>
-          <div class="notice ${complete ? "success" : "warning"}" role="status">
-            <span class="notice-icon">${complete ? "✓" : "!"}</span>
-            <span class="notice-copy"><strong>${complete ? copy.detectedTitle : copy.missingTitle}</strong><small>${complete
-              ? copy.detectedText
-              : this.registryLoading
-                ? copy.loadingDevices
-                : this.registryError
-                  ? `${copy.registryError}: ${escapeAttribute(this.registryError)}`
-                  : problems.length > 0
-                    ? `${copy.incompleteDevice}: ${escapeAttribute(problems.join(", "))}`
-                    : copy.selectSaltWatchDevice}</small></span>
+          <div class="notice ${notice.tone}" role="status" aria-live="polite">
+            <span class="notice-icon" aria-hidden="true">${notice.icon}</span>
+            <span class="notice-copy"><strong>${escapeAttribute(notice.title)}</strong><small>${escapeAttribute(notice.text)}</small></span>
           </div>
         </section>
 
-        <section class="section">
+        ${complete ? `<section class="section">
           <h3>${copy.cardLayout}</h3>
           <div class="layout-options" role="group" aria-label="${copy.cardLayout}">
             ${this.layoutButton("both", copy.tankDetails, displayMode)}
@@ -262,13 +285,9 @@ export class SaltWatchCardEditor extends HTMLElement {
         <details class="fold" id="actions" ${this.actionsOpen ? "open" : ""}>
           <summary><span><strong>${copy.actions}</strong><small>${copy.actionsHelp}</small></span><span class="chevron">⌄</span></summary>
           <div class="fold-content" id="actions-form"></div>
-        </details>
+        </details>` : ""}
       </div>`;
 
-    const deviceOptions = [...this.deviceResolutions.keys()].map((deviceId) => ({
-      value: deviceId,
-      label: this.deviceLabel(deviceId),
-    })).sort((left, right) => left.label.localeCompare(right.label));
     this.setupForm("device-form", [
       { name: "device_id", required: true, selector: { select: { mode: "dropdown", options: deviceOptions } } },
     ], { device_id: config.device_id }, { device_id: copy.saltWatchDevice });
@@ -350,8 +369,10 @@ export class SaltWatchCardEditor extends HTMLElement {
       .section,.fold { margin:0; padding:18px; border:1px solid var(--divider-color,#ddd); border-radius:14px; background:var(--card-background-color,var(--ha-card-background,#fff)); }
       h3 { margin:0 0 16px; font-size:16px; font-weight:650; }
       .notice { display:flex; align-items:center; gap:12px; margin-top:14px; padding:13px 14px; border-radius:11px; }
+      .notice.info { color:var(--primary-color,#03a9f4); background:color-mix(in srgb,var(--primary-color,#03a9f4) 9%,transparent); }
       .notice.success { color:var(--success-color,#43a047); background:color-mix(in srgb,var(--success-color,#43a047) 11%,transparent); }
       .notice.warning { color:var(--warning-color,#ffa000); background:color-mix(in srgb,var(--warning-color,#ffa000) 12%,transparent); }
+      .notice.error { color:var(--error-color,#db4437); background:color-mix(in srgb,var(--error-color,#db4437) 11%,transparent); }
       .notice-icon { display:grid; place-items:center; flex:0 0 25px; width:25px; height:25px; border:2px solid currentColor; border-radius:50%; font-weight:800; }
       .notice-copy { min-width:0; display:grid; gap:2px; color:var(--primary-text-color); }
       .notice-copy strong { font-size:14px; }

@@ -460,16 +460,16 @@ export class SaltWatchCard extends HTMLElement {
     const language = this.activeLanguage();
     const locale = resolveLocale(language);
     if (!this.config.device_id) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("missingDeviceError", locale))}</strong><small>${escapeHtml(localize("selectSaltWatchDevice", locale))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${escapeHtml(localize("selectDeviceTitle", locale))}</strong><small>${escapeHtml(localize("selectDeviceHelp", locale))}</small></div></ha-card>`;
       return;
     }
     if (!this.states || !this.hassData || (!this.resolution && !this.resolutionError)) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;
     }
 
     if (this.resolutionError) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("registryError", locale))}</strong><span>${escapeHtml(this.resolutionError)}</span></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${escapeHtml(localize("registryError", locale))}</strong><span>${escapeHtml(this.resolutionError)}</span></div></ha-card>`;
       return;
     }
 
@@ -479,7 +479,7 @@ export class SaltWatchCard extends HTMLElement {
         ...this.resolution?.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${localize("duplicate", locale)})`) ?? [],
         ...this.resolution?.disabled.map((role) => `${saltWatchRoleLabel(role)} (${localize("disabled", locale)})`) ?? [],
       ];
-      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("incompleteDevice", locale))}</strong><span>${escapeHtml(problems.join(", "))}</span><small>${escapeHtml(localize("incompleteDeviceHelp", locale))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${escapeHtml(localize("incompleteDevice", locale))}</strong><span>${escapeHtml(problems.join(", "))}</span><small>${escapeHtml(localize("incompleteDeviceHelp", locale))}</small></div></ha-card>`;
       return;
     }
 
@@ -492,7 +492,7 @@ export class SaltWatchCard extends HTMLElement {
     if (thresholdValue !== undefined) this.lastThreshold = clamp(thresholdValue);
     const threshold = this.lastThreshold;
     if (threshold === undefined) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;
     }
     const statusEntity = entity(this.states, entities.status);
@@ -917,6 +917,11 @@ export class SaltWatchCard extends HTMLElement {
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
+      .configuration-empty { min-height:180px; display:grid; justify-items:center; align-content:center; gap:8px; padding:32px; text-align:center; color:var(--secondary-text-color,#aab2b7); }
+      .configuration-empty-icon { width:42px; height:42px; margin-bottom:4px; color:var(--primary-color,#03a9f4); fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+      .configuration-empty-icon circle { fill:currentColor; stroke:none; }
+      .configuration-empty strong { color:var(--primary-text-color,#f4f6f7); font-size:18px; }
+      .configuration-empty small { max-width:34ch; color:var(--secondary-text-color,#aab2b7); font-size:14px; line-height:1.4; }
       .configuration-error { min-height:160px; display:flex; flex-direction:column; justify-content:center; gap:8px; padding:32px; color:var(--error-color,#db4437); }
       .configuration-error strong { font-size:18px; }.configuration-error span,.configuration-error small { color:var(--primary-text-color,#f4f6f7); line-height:1.4; }.configuration-error small { color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; width:100%; min-width:0; height:100%; grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr); grid-template-areas:"tank details"; }

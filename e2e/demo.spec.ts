@@ -5,6 +5,33 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator("saltwatch-card .level")).toHaveText("62%");
 });
 
+test("presents a centered neutral empty state until a device is selected", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      device_id: "",
+    });
+  });
+
+  await expect(card.locator(".configuration-empty")).toContainText("Select a SaltWatch device");
+  const alignment = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector<HTMLElement>("ha-card")!.getBoundingClientRect();
+    const content = root.querySelector<HTMLElement>(".configuration-empty")!.getBoundingClientRect();
+    const icon = root.querySelector<SVGGraphicsElement>(".configuration-empty-icon")!.getBoundingClientRect();
+    return {
+      horizontalOffset: Math.abs(
+        (content.left + content.width / 2) - (surface.left + surface.width / 2),
+      ),
+      iconVisible: icon.width > 0 && icon.height > 0,
+    };
+  });
+
+  expect(alignment.horizontalOffset).toBeLessThanOrEqual(1);
+  expect(alignment.iconVisible).toBe(true);
+});
+
 test("renders every card mode without horizontal overflow", async ({ page }) => {
   const card = page.locator("saltwatch-card");
   const viewport = page.viewportSize();

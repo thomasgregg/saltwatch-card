@@ -58,6 +58,15 @@ function makeHass(level = "62", status = "Good"): HomeAssistant {
   return hass;
 }
 
+function makeEmptyHass(): HomeAssistant {
+  return {
+    states: {},
+    entities: {},
+    devices: {},
+    callWS: async <T>(): Promise<T> => ({}) as T,
+  };
+}
+
 describe("SaltWatchCard", () => {
   let card: SaltWatchCard;
   let host: HTMLElement;
@@ -193,7 +202,9 @@ describe("SaltWatchCard", () => {
     expect(form.schema.some((item) => item.name === "low_threshold")).toBe(false);
     expect(form.schema.some((item) => item.schema?.some((field) => field.name.endsWith("_entity")))).toBe(false);
     card.setConfig({ ...config, device_id: "" });
-    expect(card.shadowRoot?.textContent).toContain("requires a SaltWatch device");
+    expect(card.shadowRoot?.querySelector(".configuration-empty")).not.toBeNull();
+    expect(card.shadowRoot?.textContent).toContain("Select a SaltWatch device");
+    expect(card.shadowRoot?.querySelector("style")?.textContent).toContain(".configuration-empty");
     expect(() => form.assertConfig({ device_id: "" })).toThrow(/requires a SaltWatch device/);
   });
 
@@ -595,7 +606,25 @@ describe("SaltWatchCard", () => {
     await vi.waitFor(() => expect(editor.shadowRoot?.querySelector(".notice.warning")?.textContent).toContain(
       "Forecast Details",
     ));
+    expect(editor.shadowRoot?.textContent).not.toContain("Card layout");
     expect(editor.shadowRoot?.querySelector("#advanced")).toBeNull();
+  });
+
+  it("uses a neutral device-selection step before revealing dependent settings", async () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    editor.setConfig({ device_id: "" });
+    editor.hass = makeEmptyHass();
+    host.append(editor);
+
+    await vi.waitFor(() => expect(editor.shadowRoot?.querySelector(".notice.info")?.textContent).toContain(
+      "Select a SaltWatch device",
+    ));
+    expect(editor.shadowRoot?.textContent).toContain("SaltWatch device");
+    expect(editor.shadowRoot?.textContent).not.toContain("Card layout");
+    expect(editor.shadowRoot?.querySelector("#actions")).toBeNull();
   });
 
   it("keeps editor controls mounted across routine Home Assistant state updates", async () => {
@@ -714,7 +743,7 @@ describe("SaltWatchCard", () => {
     expect((listener.mock.calls[0]?.[0] as CustomEvent).detail).toMatchObject({ action: "tap" });
   });
 
-  it("updates the graphical editor when the Home Assistant language changes", () => {
+  it("updates the graphical editor when the Home Assistant language changes", async () => {
     if (!customElements.get("saltwatch-card-editor-test")) {
       customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
     }
@@ -723,9 +752,9 @@ describe("SaltWatchCard", () => {
     editor.setConfig({ device_id: DEVICE_ID });
     host.append(editor);
 
-    expect(editor.shadowRoot?.textContent).toContain("Live data");
+    expect(editor.shadowRoot?.textContent).toContain("SaltWatch device");
     pushLanguage("de-DE");
-    expect(editor.shadowRoot?.textContent).toContain("Live-Daten");
-    expect(editor.shadowRoot?.textContent).toContain("Reihenfolge");
+    expect(editor.shadowRoot?.textContent).toContain("SaltWatch-Gerät");
+    await vi.waitFor(() => expect(editor.shadowRoot?.textContent).toContain("Reihenfolge"));
   });
 });
