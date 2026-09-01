@@ -1241,7 +1241,7 @@ class Ce extends HTMLElement {
     `;
   }
 }
-const ze = "0.5.0", qe = {
+const ze = "0.5.1", qe = {
   version: ze
 }, Q = "saltwatch-card", Ee = qe.version;
 customElements.get(Q) || customElements.define(Q, Te);

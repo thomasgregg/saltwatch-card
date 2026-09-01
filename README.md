@@ -25,10 +25,6 @@ SaltWatch Card is designed specifically for devices running the official
 SaltWatch firmware. It uses Home Assistant's device and entity registries so
 renamed entities and multiple SaltWatch devices remain unambiguous.
 
-> **Configuration change:** current versions require selecting a SaltWatch
-> device. Configurations that list individual entity IDs are intentionally no
-> longer supported; open the graphical editor and select the device once.
-
 ## Contents
 
 - [Why use it?](#why-use-it)
