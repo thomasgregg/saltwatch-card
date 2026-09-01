@@ -21,9 +21,13 @@ threshold is likely to be reached.
 | ![SaltWatch Card tank-only display](images/saltwatch-card-tank.png) | ![SaltWatch Card details-only display with salt level and refill forecast](images/saltwatch-card-details.png) |
 | A focused visual gauge | Level, forecast, and status at a glance |
 
-SaltWatch Card is built primarily for the entities provided by the SaltWatch
-project, but it can also visualize any Home Assistant sensor that reports a
-percentage from 0 to 100.
+SaltWatch Card is designed specifically for devices running the official
+SaltWatch firmware. It uses Home Assistant's device and entity registries so
+renamed entities and multiple SaltWatch devices remain unambiguous.
+
+> **Configuration change:** current versions require selecting a SaltWatch
+> device. Configurations that list individual entity IDs are intentionally no
+> longer supported; open the graphical editor and select the device once.
 
 ## Contents
 
@@ -38,7 +42,6 @@ percentage from 0 to 100.
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
 - [Languages](#languages)
-- [Using another percentage sensor](#using-another-percentage-sensor)
 
 ## Why use it?
 
@@ -48,6 +51,8 @@ percentage from 0 to 100.
   chose in SaltWatch.
 - **Look ahead.** Optionally show SaltWatch's estimated days until low salt by
   itself or beside the current level.
+- **Understand forecast learning.** When no estimate is ready, the card shows a
+  concise reason or progress such as `4 of 7 days collected`.
 - **Spot problems quickly.** Good, low-salt, calibration, and sensor-fault
   states have clear labels and familiar Home Assistant colors.
 - **Looks at home in Home Assistant.** The card follows the active light, dark,
@@ -69,20 +74,25 @@ the most important SaltWatch information as one focused visual:
 - the configured low-salt threshold;
 - the current SaltWatch health status.
 
-With the standard SaltWatch entity names, the configuration is simply:
+The graphical editor stores the selected Home Assistant device rather than a
+collection of rename-prone entity IDs:
 
 ```yaml
 type: custom:saltwatch-card
-entity: sensor.saltwatch_salt_level
-status_entity: sensor.saltwatch_salt_status
-threshold_entity: number.saltwatch_low_salt_threshold
-forecast_entity: sensor.saltwatch_estimated_days_until_low_salt
-forecast_status_entity: sensor.saltwatch_forecast_status
+device_id: 01JEXAMPLEHOMEASSISTANTDEVICEID
 ```
 
-The main `entity` is the only required option. The status and threshold entities
-make the experience richer, while the forecast entities add the optional refill
-estimate. The card can derive a useful state without any of them.
+Select the SaltWatch device in the graphical editor; there is normally no need
+to find or type the device ID. The card resolves the level, health, threshold,
+forecast, and forecast-detail entities from that device at runtime. User-renamed
+entity IDs therefore continue to work, and entities from different SaltWatch
+devices cannot be combined accidentally.
+
+Use the latest official SaltWatch firmware. The selected device must provide
+all six card entities: **Salt Level**, **Salt Status**, **Low Salt Threshold**,
+**Estimated Days Until Low Salt**, **Forecast Status**, and **Forecast
+Details**. The editor reports missing, duplicate, or disabled entries instead
+of silently substituting another entity.
 
 ## What the states mean
 
@@ -115,9 +125,9 @@ the latest release. If the button cannot find the repository, add it manually:
 4. Reload your Home Assistant dashboard.
 5. Add **SaltWatch Card** from the dashboard card picker.
 
-The graphical editor detects related SaltWatch entities automatically, keeps
-the everyday layout choices up front, and groups manual entity overrides and
-actions into focused advanced sections.
+The graphical editor lists detected SaltWatch devices, keeps the everyday
+layout choices up front, and groups tap, hold, and double-tap behaviour in a
+focused Actions section.
 
 ### Manual installation
 
@@ -138,18 +148,18 @@ URL path, which is why the filesystem and resource paths are different.
 ## Graphical editor
 
 The visual editor keeps the most useful settings easy to find and shows every
-change immediately in the live preview. It detects related SaltWatch entities
-automatically; if one cannot be found, **Configure** opens the relevant manual
-entity settings under **Advanced**.
+change immediately in the live preview. Choose a SaltWatch device once; the
+card then follows its Home Assistant device relationship instead of relying on
+entity names. If required firmware entities are missing or disabled, the editor
+lists them explicitly instead of guessing or pairing another device.
 
 ![SaltWatch Card graphical editor showing automatic entity detection and organized settings](images/saltwatch-card-editor.png)
 
 Choose the complete, tank-only, or details-only layout visually. In the
 complete layout, you can place the tank or the details first. The editor also
 lets you choose the displayed values and visible elements without touching
-YAML, while **Advanced** contains entity overrides and the fallback threshold.
-Tap, hold, and double-tap behavior stays organized in the separate **Actions**
-section.
+YAML. Tap, hold, and double-tap behavior stays organized in the separate
+**Actions** section.
 
 ### Dashboard sizing
 
@@ -172,12 +182,7 @@ labels and values legible and prevent clipped or overlapping layouts.
 
 | Option | What it does | Default |
 | --- | --- | --- |
-| `entity` | Supplies the estimated salt percentage and moves the salt surface. | Required |
-| `status_entity` | Supplies SaltWatch's Initializing, Good, Low Salt, Calibration Required, or Sensor Fault status. | Derived from the level |
-| `threshold_entity` | Keeps the orange LOW marker synchronized with SaltWatch's adjustable threshold. | Not set |
-| `forecast_entity` | Supplies SaltWatch's estimated days until the low-salt threshold. | Suggested automatically for SaltWatch |
-| `forecast_status_entity` | Explains when the forecast is learning, confirming a refill, or temporarily unavailable. | Suggested automatically for SaltWatch |
-| `low_threshold` | Sets a fixed LOW marker when no threshold entity is available. | `20` |
+| `device_id` | Selects the SaltWatch device. All required entities are resolved from its Home Assistant registry relationship. | Required |
 | `show_status` | Shows or hides the status label in the upper-right corner. | `true` |
 | `show_low_marker` | Shows or hides the low-marker summary below the values. The marker on the tank remains visible. | `true` |
 | `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
@@ -193,9 +198,7 @@ The tank can stand on its own when you want a more visual dashboard:
 
 ```yaml
 type: custom:saltwatch-card
-entity: sensor.saltwatch_salt_level
-status_entity: sensor.saltwatch_salt_status
-threshold_entity: number.saltwatch_low_salt_threshold
+device_id: 01JEXAMPLEHOMEASSISTANTDEVICEID
 display_mode: tank
 ```
 
@@ -224,23 +227,9 @@ German regional variants such as `de-DE` and `de-AT` share the German
 translation while keeping their regional number formatting. Unsupported
 languages fall back safely to English.
 
-The card deliberately stays focused on the tank and its refill timing. Pair it
+The card deliberately stays focused on SaltWatch, its tank, and its refill timing. Pair it
 with Home Assistant's native Tile and Statistics Graph cards when you also want
 threshold controls, measurement history, or distance details.
-
-## Using another percentage sensor
-
-SaltWatch Card works with any numeric Home Assistant sensor whose value is a
-percentage between 0 and 100:
-
-```yaml
-type: custom:saltwatch-card
-entity: sensor.my_salt_level
-low_threshold: 20
-```
-
-Without a status entity, the card automatically shows **Low salt** when the
-reading reaches the configured threshold.
 
 ## License
 

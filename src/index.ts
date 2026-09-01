@@ -18,18 +18,9 @@ if (!window.customCards.some((card) => card.type === CARD_TAG)) {
   window.customCards.push({
     type: CARD_TAG,
     name: "SaltWatch Card",
-    description: "Visualize estimated water-softener salt level in a detailed granular tank.",
+    description: "Visualize a SaltWatch water-softener monitor as a detailed granular tank.",
     preview: true,
     documentationURL: "https://github.com/thomasgregg/saltwatch-card",
-    getEntitySuggestion: (hass, entityId) => {
-      const state = hass.states[entityId];
-      const isSaltPercentage = entityId.startsWith("sensor.") &&
-        entityId.toLowerCase().includes("salt") &&
-        state?.attributes.unit_of_measurement === "%";
-      return isSaltPercentage
-        ? { config: { type: "custom:saltwatch-card", entity: entityId } }
-        : null;
-    },
   });
 }
 

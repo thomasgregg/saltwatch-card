@@ -13,6 +13,12 @@ import {
   escapeHtml,
 } from "./model";
 import type { CardTone, StatusTranslationKey } from "./model";
+import {
+  resolveSaltWatchDevice,
+  saltWatchDeviceEntityIds,
+  saltWatchRoleLabel,
+} from "./saltwatch-device";
+import type { SaltWatchEntities, SaltWatchResolution } from "./saltwatch-device";
 import type {
   HassEntity,
   HomeAssistant,
@@ -21,7 +27,6 @@ import type {
   SaltWatchCardConfig,
 } from "./types";
 
-const DEFAULT_THRESHOLD = 20;
 const DEFAULT_TAP_ACTION: LovelaceActionConfig = { action: "more-info" };
 const DEFAULT_NO_ACTION: LovelaceActionConfig = { action: "none" };
 const HOLD_DELAY = 500;
@@ -51,16 +56,6 @@ function entity(states: HassStates | undefined, entityId: string | undefined): H
   return entityId ? states?.[entityId] : undefined;
 }
 
-function validatedThreshold(value: unknown, locale = resolveLocale()): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(localize("fallbackThresholdNumberError", locale));
-  }
-  if (value < 0 || value > 100) {
-    throw new Error(localize("fallbackThresholdRangeError", locale));
-  }
-  return value;
-}
-
 function validatedAction(
   value: unknown,
   fallback: LovelaceActionConfig,
@@ -82,36 +77,45 @@ function formatForecastDays(value: number, language: string): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(value);
 }
 
-function forecastStatusLabel(state: string | undefined, locale: SupportedLocale): string {
-  const normalized = state?.trim().toLowerCase() ?? "";
-  if (normalized.includes("confirming") && normalized.includes("refill")) {
-    return localize("forecastConfirmingRefill", locale);
+function forecastDetailsLabel(state: string | undefined, locale: SupportedLocale): string {
+  const value = state?.trim() ?? "";
+  const normalized = value.toLowerCase();
+  const learning = normalized.match(/^(\d+)\s+of\s+(\d+)\s+days?\s+collected$/);
+  if (learning) {
+    return localize("forecastDetailsLearning", locale, {
+      current: learning[1] ?? "0",
+      required: learning[2] ?? "7",
+    });
   }
-  if (normalized.includes("insufficient")) {
-    return localize("forecastInsufficientChange", locale);
-  }
-  if (normalized.includes("waiting") && normalized.includes("measurement")) {
-    return localize("forecastWaitingForMeasurement", locale);
-  }
-  if (normalized.includes("waiting") && normalized.includes("time")) {
-    return localize("forecastWaitingForTime", locale);
-  }
-  if (normalized.includes("learning")) return localize("forecastLearning", locale);
-  if (normalized.includes("initializing")) return localize("forecastInitializing", locale);
-  if (normalized.includes("calibration")) return localize("calibrationRequired", locale);
-  if (normalized.includes("fault") || normalized.includes("error")) {
-    return localize("sensorFault", locale);
-  }
-  if (normalized.includes("low")) return localize("lowThresholdReached", locale);
-  if (!normalized || normalized === "available" || normalized === "unknown" || normalized === "unavailable") {
+  const labels: Record<string, Parameters<typeof localize>[0]> = {
+    "starting forecast": "forecastDetailsStarting",
+    "waiting for valid readings": "forecastDetailsWaitingForValidReadings",
+    "calibration required": "calibrationRequired",
+    "waiting for first reading": "forecastDetailsWaitingForReading",
+    "waiting for date and time": "forecastDetailsWaitingForTime",
+    "not enough salt usage yet": "forecastDetailsNotEnoughUsage",
+    "readings are too inconsistent": "forecastDetailsInconsistent",
+    "checking possible refill": "forecastDetailsCheckingRefill",
+  };
+  const key = labels[normalized];
+  if (key) return localize(key, locale);
+  if (!value || normalized === "unknown" || normalized === "unavailable") {
     return localize("forecastUnavailable", locale);
   }
-  return state?.trim() || localize("forecastUnavailable", locale);
+  return value;
 }
 
 export class SaltWatchCard extends HTMLElement {
   private config?: SaltWatchCardConfig;
+  private hassData?: HomeAssistant;
   private states?: HassStates;
+  private resolvedEntities?: SaltWatchEntities;
+  private resolution?: SaltWatchResolution;
+  private resolutionError?: string;
+  private resolutionKey?: string;
+  private resolutionRequest = 0;
+  private registryReference?: HomeAssistant["entities"];
+  private lastThreshold?: number;
   private unsubscribeStates?: Unsubscribe;
   private internationalization?: HomeAssistantInternationalization;
   private unsubscribeInternationalization?: Unsubscribe;
@@ -181,6 +185,18 @@ export class SaltWatchCard extends HTMLElement {
     this.scheduleHeightModeUpdate();
   }
 
+  public set hass(hass: HomeAssistant) {
+    const registryChanged = this.registryReference !== hass.entities;
+    this.hassData = hass;
+    this.registryReference = hass.entities;
+    this.updateStates(hass.states);
+    if (registryChanged) void this.resolveConfiguredDevice();
+  }
+
+  public get hass(): HomeAssistant | undefined {
+    return this.hassData;
+  }
+
   public disconnectedCallback(): void {
     this.unsubscribeStates?.();
     this.unsubscribeStates = undefined;
@@ -199,9 +215,9 @@ export class SaltWatchCard extends HTMLElement {
     return {
       schema: [
         {
-          name: "entity",
+          name: "device_id",
           required: true,
-          selector: { entity: { domain: "sensor" } },
+          selector: { device: { filter: { integration: "esphome" } } },
         },
         { name: "show_status", selector: { boolean: {} } },
         { name: "show_low_marker", selector: { boolean: {} } },
@@ -244,26 +260,6 @@ export class SaltWatchCard extends HTMLElement {
           },
         },
         {
-          type: "grid",
-          name: "",
-          schema: [
-            { name: "status_entity", selector: { entity: {} } },
-            { name: "threshold_entity", selector: { entity: {} } },
-          ],
-        },
-        {
-          type: "grid",
-          name: "",
-          schema: [
-            { name: "forecast_entity", selector: { entity: { domain: "sensor" } } },
-            { name: "forecast_status_entity", selector: { entity: {} } },
-          ],
-        },
-        {
-          name: "low_threshold",
-          selector: { number: { min: 0, max: 100, step: 1, mode: "slider" } },
-        },
-        {
           type: "expandable",
           name: "actions",
           title: localize("actions"),
@@ -272,34 +268,26 @@ export class SaltWatchCard extends HTMLElement {
             {
               name: "tap_action",
               selector: { ui_action: { actions: ACTIONS, default_action: "more-info" } },
-              context: { entity_id: "entity" },
             },
             {
               name: "hold_action",
               selector: { ui_action: { actions: ACTIONS, default_action: "none" } },
-              context: { entity_id: "entity" },
             },
             {
               name: "double_tap_action",
               selector: { ui_action: { actions: ACTIONS, default_action: "none" } },
-              context: { entity_id: "entity" },
             },
           ],
         },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
-          entity: localize("estimatedLevelEntity"),
+          device_id: localize("saltWatchDevice"),
           show_status: localize("showStatus"),
           show_low_marker: localize("showLowMarker"),
           display_mode: localize("cardContent"),
           metric_mode: localize("valueDisplay"),
           section_order: localize("sectionOrder"),
-          status_entity: localize("statusEntity"),
-          threshold_entity: localize("thresholdEntity"),
-          forecast_entity: localize("forecastEntity"),
-          forecast_status_entity: localize("forecastStatusEntity"),
-          low_threshold: localize("fallbackThreshold"),
           tap_action: localize("tapAction"),
           hold_action: localize("holdAction"),
           double_tap_action: localize("doubleTapAction"),
@@ -307,7 +295,9 @@ export class SaltWatchCard extends HTMLElement {
         return labels[schema.name] ?? schema.name;
       },
       assertConfig: (config: Record<string, unknown>) => {
-        if (config.low_threshold !== undefined) validatedThreshold(config.low_threshold);
+        if (!config.device_id || typeof config.device_id !== "string") {
+          throw new Error(localize("missingDeviceError"));
+        }
         validatedAction(config.tap_action, DEFAULT_TAP_ACTION);
         validatedAction(config.hold_action, DEFAULT_NO_ACTION);
         validatedAction(config.double_tap_action, DEFAULT_NO_ACTION);
@@ -320,18 +310,14 @@ export class SaltWatchCard extends HTMLElement {
   }
 
   public static getStubConfig(
-    hass: HomeAssistant,
-    entities: string[] = [],
-    entitiesFallback: string[] = [],
+    _hass: HomeAssistant,
+    _entities: string[] = [],
+    _entitiesFallback: string[] = [],
   ): Omit<SaltWatchCardConfig, "type"> {
-    const candidates = [...entities, ...entitiesFallback, ...Object.keys(hass.states)];
-    const unique = [...new Set(candidates)];
-    const find = (...needles: string[]) =>
-      unique.find((entityId) => needles.every((needle) => entityId.includes(needle)));
-
     const config: Omit<SaltWatchCardConfig, "type"> = {
-      entity: find("saltwatch", "salt_level") ?? find("salt", "level") ?? "sensor.saltwatch_salt_level",
-      low_threshold: DEFAULT_THRESHOLD,
+      // The editor performs strict asynchronous registry validation and will
+      // auto-select only when exactly one complete SaltWatch device exists.
+      device_id: "",
       show_status: true,
       show_low_marker: true,
       display_mode: "both",
@@ -339,23 +325,12 @@ export class SaltWatchCard extends HTMLElement {
       section_order: "tank-first",
       tap_action: DEFAULT_TAP_ACTION,
     };
-    const status = find("saltwatch", "salt_status");
-    const threshold = find("saltwatch", "low_salt_threshold");
-    const forecast = find("saltwatch", "estimated_days_until_low_salt");
-    const forecastStatus = find("saltwatch", "forecast_status");
-    if (status) config.status_entity = status;
-    if (threshold) config.threshold_entity = threshold;
-    if (forecast) config.forecast_entity = forecast;
-    if (forecastStatus) config.forecast_status_entity = forecastStatus;
     return config;
   }
 
   public setConfig(config: SaltWatchCardConfig): void {
     const locale = resolveLocale(this.activeLanguage());
-    if (!config.entity || typeof config.entity !== "string") {
-      throw new Error(localize("missingEntityError", locale));
-    }
-
+    const deviceChanged = config.device_id !== this.config?.device_id;
     this.clearInteractionTimers();
     const displayMode = config.display_mode === "tank" || config.display_mode === "details"
       ? config.display_mode
@@ -364,10 +339,8 @@ export class SaltWatchCard extends HTMLElement {
       ? config.metric_mode
       : "level";
     const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
-    const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD, locale);
     this.config = {
       ...config,
-      low_threshold: lowThreshold,
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
@@ -377,8 +350,16 @@ export class SaltWatchCard extends HTMLElement {
       hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION, locale),
       double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION, locale),
     };
+    if (deviceChanged) {
+      this.lastThreshold = undefined;
+      this.resolvedEntities = undefined;
+      this.resolution = undefined;
+      this.resolutionError = undefined;
+      this.resolutionKey = undefined;
+    }
     this.lastRenderKey = undefined;
     this.render();
+    if (deviceChanged) void this.resolveConfiguredDevice();
   }
 
   public getCardSize(): number {
@@ -420,7 +401,37 @@ export class SaltWatchCard extends HTMLElement {
 
   private updateStates(states: HassStates): void {
     this.states = states;
+    if (this.hassData && this.hassData.states !== states) {
+      this.hassData = { ...this.hassData, states };
+    }
     if (this.currentRenderKey() !== this.lastRenderKey) this.render();
+  }
+
+  private async resolveConfiguredDevice(): Promise<void> {
+    if (!this.config || !this.hassData) return;
+    const deviceId = this.config.device_id;
+    if (!deviceId) return;
+    const entityIds = saltWatchDeviceEntityIds(this.hassData, deviceId);
+    const key = `${deviceId}|${entityIds.join("|")}`;
+    if (key === this.resolutionKey && (this.resolution || this.resolutionError)) return;
+    this.resolutionKey = key;
+    const request = ++this.resolutionRequest;
+    this.resolvedEntities = undefined;
+    this.resolution = undefined;
+    this.resolutionError = undefined;
+    this.lastRenderKey = undefined;
+    this.render();
+    try {
+      const resolution = await resolveSaltWatchDevice(this.hassData, deviceId);
+      if (request !== this.resolutionRequest || this.config?.device_id !== deviceId) return;
+      this.resolution = resolution;
+      this.resolvedEntities = resolution.entities;
+    } catch (error) {
+      if (request !== this.resolutionRequest || this.config?.device_id !== deviceId) return;
+      this.resolutionError = error instanceof Error ? error.message : String(error);
+    }
+    this.lastRenderKey = undefined;
+    this.render();
   }
 
   private activeLanguage(): string {
@@ -432,13 +443,15 @@ export class SaltWatchCard extends HTMLElement {
 
   private currentRenderKey(): string | undefined {
     if (!this.config || !this.states) return undefined;
+    const entities = this.resolvedEntities;
+    if (!entities) return `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
     return [
-      this.config.entity,
-      this.config.status_entity,
-      this.config.threshold_entity,
+      entities.level,
+      entities.status,
+      entities.threshold,
       ...(this.config.metric_mode === "level"
         ? []
-        : [this.config.forecast_entity, this.config.forecast_status_entity]),
+        : [entities.forecast, entities.forecastStatus, entities.forecastDetails]),
     ].map((entityId) => `${entityId ?? ""}:${entity(this.states, entityId)?.state ?? "missing"}`).join("|");
   }
 
@@ -446,17 +459,43 @@ export class SaltWatchCard extends HTMLElement {
     if (!this.shadowRoot || !this.config) return;
     const language = this.activeLanguage();
     const locale = resolveLocale(language);
-    if (!this.states) {
+    if (!this.config.device_id) {
+      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("missingDeviceError", locale))}</strong><small>${escapeHtml(localize("selectSaltWatchDevice", locale))}</small></div></ha-card>`;
+      return;
+    }
+    if (!this.states || !this.hassData || (!this.resolution && !this.resolutionError)) {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;
     }
 
-    const levelEntity = entity(this.states, this.config.entity);
+    if (this.resolutionError) {
+      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("registryError", locale))}</strong><span>${escapeHtml(this.resolutionError)}</span></div></ha-card>`;
+      return;
+    }
+
+    if (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0) {
+      const problems = [
+        ...this.resolution?.missing.map(saltWatchRoleLabel) ?? [],
+        ...this.resolution?.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${localize("duplicate", locale)})`) ?? [],
+        ...this.resolution?.disabled.map((role) => `${saltWatchRoleLabel(role)} (${localize("disabled", locale)})`) ?? [],
+      ];
+      this.shadowRoot.innerHTML = `<ha-card><div class="configuration-error"><strong>${escapeHtml(localize("incompleteDevice", locale))}</strong><span>${escapeHtml(problems.join(", "))}</span><small>${escapeHtml(localize("incompleteDeviceHelp", locale))}</small></div></ha-card>`;
+      return;
+    }
+
+    const entities = this.resolvedEntities;
+
+    const levelEntity = entity(this.states, entities.level);
     const rawLevel = entityNumber(levelEntity);
     const level = rawLevel === undefined ? undefined : clamp(rawLevel);
-    const thresholdEntityValue = entityNumber(entity(this.states, this.config.threshold_entity));
-    const threshold = clamp(thresholdEntityValue ?? this.config.low_threshold ?? DEFAULT_THRESHOLD);
-    const statusEntity = entity(this.states, this.config.status_entity);
+    const thresholdValue = entityNumber(entity(this.states, entities.threshold));
+    if (thresholdValue !== undefined) this.lastThreshold = clamp(thresholdValue);
+    const threshold = this.lastThreshold;
+    if (threshold === undefined) {
+      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
+      return;
+    }
+    const statusEntity = entity(this.states, entities.status);
     const status = deriveStatus(statusEntity?.state, level, threshold);
     const statusLabel = status.translationKey
       ? localize(status.translationKey, locale)
@@ -473,16 +512,26 @@ export class SaltWatchCard extends HTMLElement {
     const accessibleLevel = level === undefined
       ? localize("noCurrentReading", locale)
       : displayLevel;
-    const rawForecast = entityNumber(entity(this.states, this.config.forecast_entity));
+    const rawForecast = entityNumber(entity(this.states, entities.forecast));
     const forecastDays = rawForecast === undefined || rawForecast < 0
       ? undefined
       : Math.round(rawForecast);
     const forecastDisplay = forecastDays === undefined
       ? "—"
       : formatForecastDays(forecastDays, language);
-    const forecastState = entity(this.states, this.config.forecast_status_entity)?.state;
+    const forecastState = entity(this.states, entities.forecastStatus)?.state;
+    const normalizedForecastState = forecastState?.trim().toLowerCase() ?? "";
+    const forecastDetailsState = entity(this.states, entities.forecastDetails)?.state;
+    const forecastNeedsExplanation = forecastDays === undefined &&
+      normalizedForecastState !== "available" &&
+      normalizedForecastState !== "low salt";
+    const forecastDetail = forecastNeedsExplanation
+      ? forecastDetailsLabel(forecastDetailsState, locale)
+      : forecastDays === undefined
+        ? localize("forecastUnavailable", locale)
+        : undefined;
     const forecastLabel = forecastDays === undefined
-      ? forecastStatusLabel(forecastState, locale)
+      ? localize("forecast", locale)
       : forecastDays === 0
         ? localize("lowThresholdReached", locale)
         : localize(forecastDays === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", locale);
@@ -491,8 +540,9 @@ export class SaltWatchCard extends HTMLElement {
       <div class="metric-label level-label">${escapeHtml(metricMode === "both" ? localize("saltLevel", locale) : localize("estimatedLevel", locale))}</div>
     </div>`;
     const forecastMetric = `<div class="metric forecast-metric${forecastDays === undefined ? " unavailable" : ""}">
-      <div class="metric-value forecast-value">${forecastDays === undefined ? this.forecastSymbol() : forecastDisplay}</div>
+      <div class="metric-value forecast-value">${forecastDays === undefined ? '<span class="forecast-placeholder">—</span>' : forecastDisplay}</div>
       <div class="metric-label forecast-label">${escapeHtml(forecastLabel)}</div>
+      ${forecastDetail ? `<div class="forecast-detail">${escapeHtml(forecastDetail)}</div>` : ""}
     </div>`;
     const metricsMarkup = metricMode === "both"
       ? `${levelMetric}<span class="metric-divider" aria-hidden="true"></span>${forecastMetric}`
@@ -500,7 +550,7 @@ export class SaltWatchCard extends HTMLElement {
         ? forecastMetric
         : levelMetric;
     const accessibleForecast = forecastDays === undefined
-      ? forecastLabel
+      ? `${forecastLabel}: ${forecastDetail}`
       : `${forecastDisplay} ${forecastLabel}`;
     const accessibleMetrics = metricMode === "both"
       ? `${accessibleLevel}, ${accessibleForecast}`
@@ -640,10 +690,13 @@ export class SaltWatchCard extends HTMLElement {
 
   private fireAction(action: ActionType): void {
     if (!this.config || !this.hasAction(action)) return;
+    const actionConfig = this.resolvedEntities
+      ? { ...this.config, entity: this.resolvedEntities.level }
+      : this.config;
     this.dispatchEvent(new CustomEvent("hass-action", {
       bubbles: true,
       composed: true,
-      detail: { config: this.config, action },
+      detail: { config: actionConfig, action },
     }));
   }
 
@@ -736,15 +789,6 @@ export class SaltWatchCard extends HTMLElement {
       <circle cx="48" cy="48" r="34"/>
       <path d="M35 37C35 29 40 24 48 24C57 24 62 29 62 37C62 44 58 47 53 51C49 54 48 57 48 61"/>
       <circle class="symbol-dot" cx="48" cy="71" r="3.8"/>
-    </svg>`;
-  }
-
-  private forecastSymbol(): string {
-    return `<svg class="forecast-symbol" viewBox="0 0 96 96" aria-hidden="true">
-      <rect x="10" y="17" width="76" height="68" rx="10"/>
-      <path d="M29 9V27M67 9V27M10 36H86"/>
-      <circle cx="62" cy="61" r="15"/>
-      <path d="M62 52V61L68 65"/>
     </svg>`;
   }
 
@@ -873,6 +917,8 @@ export class SaltWatchCard extends HTMLElement {
       ha-card[role="button"] { cursor:pointer; }
       ha-card:focus-visible { outline:2px solid var(--primary-color,#03a9f4); outline-offset:2px; }
       .loading { padding:32px; color:var(--secondary-text-color,#aab2b7); }
+      .configuration-error { min-height:160px; display:flex; flex-direction:column; justify-content:center; gap:8px; padding:32px; color:var(--error-color,#db4437); }
+      .configuration-error strong { font-size:18px; }.configuration-error span,.configuration-error small { color:var(--primary-text-color,#f4f6f7); line-height:1.4; }.configuration-error small { color:var(--secondary-text-color,#aab2b7); }
       .card-shell { display:grid; width:100%; min-width:0; height:100%; grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr); grid-template-areas:"tank details"; }
       .card-shell.order-details-first { grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr); grid-template-areas:"details tank"; }
       .card-shell.mode-tank,.card-shell.mode-details { grid-template-columns:1fr; min-height:0; }
@@ -910,11 +956,12 @@ export class SaltWatchCard extends HTMLElement {
       .metric { min-width:0; overflow:hidden; text-align:center; }
       .metric-value { font-size:clamp(64px,34cqw,158px); line-height:.78; font-weight:720; letter-spacing:-.08em; font-variant-numeric:tabular-nums; white-space:nowrap; }
       .forecast-value { display:flex; justify-content:center; letter-spacing:-.055em; }
-      .forecast-symbol { display:block; width:clamp(64px,25cqw,112px); height:auto; fill:none; stroke:currentColor; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
+      .forecast-placeholder { display:block; }
       .metric-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,6.5cqw,29px); font-weight:430; letter-spacing:-.02em; }
       .metrics-both .metric-value { display:flex; align-items:center; justify-content:center; height:1em; font-size:clamp(40px,19cqw,94px); line-height:.86; }
-      .metrics-both .forecast-symbol { width:1em; height:1em; }
       .metrics-both .metric-label { margin-top:18px; font-size:clamp(13px,4.6cqw,20px); }
+      .forecast-detail { max-width:30ch; margin:10px auto 0; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(13px,4.8cqw,20px); font-weight:430; line-height:1.25; }
+      .metrics-both .forecast-detail { margin-top:7px; font-size:clamp(11px,3.5cqw,15px); }
       .metric-divider { align-self:center; width:1px; height:clamp(58px,21cqw,108px); background:var(--sw-panel-divider); }
       .forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }
       .state-symbol { display:block; width:clamp(64px,25cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
@@ -975,7 +1022,6 @@ export class SaltWatchCard extends HTMLElement {
         .reading { margin:0; padding:24px 0 26px; text-align:center; }
         .state-reading { display:flex; flex-direction:column; align-items:center; }
         .metric-value { font-size:clamp(54px,24cqw,154px); }
-        .forecast-symbol { margin-inline:auto; }
         .metric-label,.state-reading .level-label { font-size:clamp(16px,4.5cqw,26px); }
         .metrics-both .metric-value { justify-content:center; font-size:clamp(52px,15cqw,100px); }
         .metrics-both .metric-label { font-size:clamp(15px,3.5cqw,20px); }

@@ -1,5 +1,6 @@
 import "../src/index";
 import type {
+  EntityRegistryEntry,
   HomeAssistant,
   HomeAssistantInternationalization,
   SaltWatchCardConfig,
@@ -7,6 +8,8 @@ import type {
 import type { SaltWatchCard } from "../src/saltwatch-card";
 
 const iso = () => new Date().toISOString();
+const DEVICE_ID = "saltwatch-demo-device";
+const LEVEL_ENTITY_ID = "sensor.saltwatch_salt_level";
 const entity = (entityId: string, state: string, unit = "") => ({
   entity_id: entityId,
   state,
@@ -15,28 +18,62 @@ const entity = (entityId: string, state: string, unit = "") => ({
   last_updated: iso(),
 });
 
+const roleEntries: EntityRegistryEntry[] = [
+  ["sensor.saltwatch_salt_level", "Salt Level"],
+  ["sensor.saltwatch_salt_status", "Salt Status"],
+  ["number.saltwatch_low_salt_threshold", "Low Salt Threshold"],
+  ["sensor.saltwatch_estimated_days_until_low_salt", "Estimated Days Until Low Salt"],
+  ["sensor.saltwatch_forecast_status", "Forecast Status"],
+  ["sensor.saltwatch_forecast_details", "Forecast Details"],
+].map(([entityId, originalName]) => ({
+  entity_id: entityId!,
+  device_id: DEVICE_ID,
+  platform: "esphome",
+  id: `registry-${entityId}`,
+  original_name: originalName,
+  unique_id: `demo-${entityId}`,
+  disabled_by: null,
+}));
+
 const hass: HomeAssistant = {
   states: {
     "sensor.saltwatch_salt_level": entity("sensor.saltwatch_salt_level", "62", "%"),
     "sensor.saltwatch_salt_status": entity("sensor.saltwatch_salt_status", "Good"),
     "sensor.saltwatch_estimated_days_until_low_salt": entity("sensor.saltwatch_estimated_days_until_low_salt", "18", "d"),
     "sensor.saltwatch_forecast_status": entity("sensor.saltwatch_forecast_status", "Available"),
+    "sensor.saltwatch_forecast_details": entity("sensor.saltwatch_forecast_details", "Based on 18 days of data"),
     "number.saltwatch_low_salt_threshold": entity("number.saltwatch_low_salt_threshold", "20", "%"),
+  },
+  entities: Object.fromEntries(roleEntries.map((entry) => [entry.entity_id, entry])),
+  devices: {
+    [DEVICE_ID]: { id: DEVICE_ID, name: "SaltWatch Demo" },
+  },
+  callWS: async <T>(message: Record<string, unknown>): Promise<T> => {
+    if (message.type !== "config/entity_registry/get_entries") throw new Error("Unsupported demo request");
+    return Object.fromEntries(roleEntries.map((entry) => [entry.entity_id, entry])) as T;
   },
 };
 
 const config: SaltWatchCardConfig = {
   type: "custom:saltwatch-card",
-  entity: "sensor.saltwatch_salt_level",
+  device_id: DEVICE_ID,
   show_status: true,
   show_low_marker: true,
   display_mode: "both",
   metric_mode: "level",
-  status_entity: "sensor.saltwatch_salt_status",
-  threshold_entity: "number.saltwatch_low_salt_threshold",
-  forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-  forecast_status_entity: "sensor.saltwatch_forecast_status",
 };
+
+const forecastDetailsFor = (state: string, days = "18"): string => ({
+  "Initializing": "Starting forecast",
+  "Sensor Fault": "Waiting for valid readings",
+  "Calibration Required": "Calibration required",
+  "Waiting for Measurement": "Waiting for first reading",
+  "Waiting for Time": "Waiting for date and time",
+  "Learning": "4 of 7 days collected",
+  "Confirming Refill": "Checking possible refill",
+  "Insufficient Change": "Not enough salt usage yet",
+  "Low Salt": "Low threshold reached",
+}[state] ?? `Based on ${days} days of data`);
 
 const card = document.querySelector<SaltWatchCard>("#card");
 if (!card) throw new Error("Demo card not found");
@@ -81,6 +118,7 @@ const notifyInternationalization = () => internationalizationSubscriber?.(
   unsubscribeInternationalization,
 );
 card.setConfig(config);
+card.hass = hass;
 card.remove();
 frame.append(card);
 
@@ -118,6 +156,10 @@ metricModeInput?.addEventListener("change", () => {
 forecastStateInput?.addEventListener("change", () => {
   const state = forecastStateInput.value;
   hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", state);
+  hass.states["sensor.saltwatch_forecast_details"] = entity(
+    "sensor.saltwatch_forecast_details",
+    forecastDetailsFor(state, forecastInput?.value || "18"),
+  );
   hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity(
     "sensor.saltwatch_estimated_days_until_low_salt",
     state === "Available" ? forecastInput?.value || "18" : state === "Low Salt" ? "0" : "unavailable",
@@ -138,7 +180,7 @@ lightThemeInput?.addEventListener("change", () => {
 });
 levelInput?.addEventListener("input", () => {
   const value = levelInput.value;
-  hass.states[config.entity] = entity(config.entity, value, "%");
+  hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, value, "%");
   hass.states["sensor.saltwatch_salt_status"] = entity(
     "sensor.saltwatch_salt_status",
     Number(value) <= 20 ? "Low Salt" : "Good",
@@ -154,6 +196,10 @@ forecastInput?.addEventListener("input", () => {
     "d",
   );
   hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", value === "0" ? "Low Salt" : "Available");
+  hass.states["sensor.saltwatch_forecast_details"] = entity(
+    "sensor.saltwatch_forecast_details",
+    value === "0" ? "Low threshold reached" : `Based on ${value} days of data`,
+  );
   if (forecastStateInput) forecastStateInput.value = "Available";
   if (forecastValue) forecastValue.textContent = `${value} d`;
   notifyStates();
@@ -163,39 +209,45 @@ document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((butt
   button.addEventListener("click", () => {
     const state = button.dataset.state;
     if (state === "initializing") {
-      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "unavailable", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Initializing");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Initializing");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Starting forecast");
     } else if (state === "unavailable") {
-      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "unavailable", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Good");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Waiting for Measurement");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Waiting for first reading");
     } else if (state === "fault") {
-      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "unavailable", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Sensor Fault");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Sensor Fault");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Waiting for valid readings");
     } else if (state === "calibration") {
-      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "unavailable", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Calibration Required");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Calibration Required");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Calibration required");
     } else if (state === "low") {
-      hass.states[config.entity] = entity(config.entity, "14", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "14", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Low Salt");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "0", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Low Salt");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Low threshold reached");
       if (levelInput) levelInput.value = "14";
       if (levelValue) levelValue.textContent = "14%";
       if (forecastInput) forecastInput.value = "0";
       if (forecastValue) forecastValue.textContent = "0 d";
     } else {
-      hass.states[config.entity] = entity(config.entity, levelInput?.value || "62", "%");
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, levelInput?.value || "62", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Good");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", forecastInput?.value || "18", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Available");
+      hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", `Based on ${forecastInput?.value || "18"} days of data`);
     }
     if (forecastStateInput) {
       if (state === "good") forecastStateInput.value = "Available";

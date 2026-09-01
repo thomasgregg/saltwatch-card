@@ -20,7 +20,8 @@ A focused visual gauge with the percentage scale and configurable low marker.
 ![SaltWatch Card details-only display with salt level and refill forecast](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-details.png)
 
 Current salt level, estimated days until low salt, and device health in one
-compact card.
+compact card. While the forecast is still learning or temporarily blocked, the
+card shows a concise reason or progress such as `4 of 7 days collected`.
 
 ## Configure visually
 
@@ -28,10 +29,15 @@ compact card.
   <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview" width="58%">
 </p>
 
-SaltWatch Card detects related entities automatically and keeps layout, value,
-and visibility choices easy to find. Manual entity overrides and the fallback
-threshold are grouped under **Advanced**, while tap, hold, and double-tap
-behavior has its own **Actions** section.
+SaltWatch Card lists complete SaltWatch devices and resolves their entities
+through Home Assistant's device registry. Renaming entities or installing a
+second SaltWatch does not create ambiguous pairings. Layout, value, and
+visibility choices stay easy to find, while tap, hold, and double-tap behavior
+has its own **Actions** section.
+
+The latest official SaltWatch firmware is required. Missing, duplicate, or
+disabled card entities are reported explicitly rather than guessed from entity
+names.
 
 ## Responsive dashboard sizing
 

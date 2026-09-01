@@ -75,9 +75,7 @@ test("scales combined-card typography from the details pane instead of the full 
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
+      device_id: "saltwatch-demo-device",
       display_mode: "both",
       metric_mode: "level",
       show_status: true,
@@ -114,9 +112,7 @@ test("fills the tank pane while keeping the low marker inside the card", async (
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
+      device_id: "saltwatch-demo-device",
       display_mode: "both",
       metric_mode: "level",
       show_status: true,
@@ -150,9 +146,7 @@ test("balances stacked panels when auto height is disabled", async ({ page }) =>
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
+      device_id: "saltwatch-demo-device",
       display_mode: "both",
       metric_mode: "level",
       show_status: true,
@@ -192,9 +186,7 @@ test("keeps short fixed-height combined cards side by side", async ({ page }) =>
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
+      device_id: "saltwatch-demo-device",
       display_mode: "both",
       metric_mode: "both",
       show_status: true,
@@ -252,10 +244,7 @@ test("keeps the percentage visible in a 6 by 4 horizontal details card", async (
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      device_id: "saltwatch-demo-device",
       display_mode: "details",
       metric_mode: "both",
       show_status: true,
@@ -293,10 +282,7 @@ test("keeps the percentage and vertical divider visible in a scaled 6 by 4 previ
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      device_id: "saltwatch-demo-device",
       display_mode: "details",
       metric_mode: "both",
       show_status: true,
@@ -346,11 +332,7 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
     await card.evaluate((element, options) => {
       (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
         type: "custom:saltwatch-card",
-        entity: "sensor.saltwatch_salt_level",
-        status_entity: "sensor.saltwatch_salt_status",
-        threshold_entity: "number.saltwatch_low_salt_threshold",
-        forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-        forecast_status_entity: "sensor.saltwatch_forecast_status",
+        device_id: "saltwatch-demo-device",
         display_mode: options.displayMode,
         metric_mode: "both",
         show_status: true,
@@ -394,10 +376,7 @@ test("keeps the stacked metric divider thin without clipping the forecast label"
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      device_id: "saltwatch-demo-device",
       display_mode: "details",
       metric_mode: "both",
       show_status: true,
@@ -438,11 +417,7 @@ test("enters and exits compact mode as an inferred height constraint changes", a
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      device_id: "saltwatch-demo-device",
       display_mode: "details",
       metric_mode: "both",
       show_status: true,
@@ -495,15 +470,15 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
   await expect(card.locator(".metric-divider")).toBeVisible();
 
   await page.locator("#forecast-state").selectOption("Learning");
-  await expect(card.locator(".forecast-symbol")).toBeVisible();
-  await expect(card.locator(".forecast-value")).not.toContainText("—");
-  await expect(card.locator(".forecast-label")).toHaveText("Forecast learning");
+  await expect(card.locator(".forecast-placeholder")).toHaveText("—");
+  await expect(card.locator(".forecast-label")).toHaveText("Forecast");
+  await expect(card.locator(".forecast-detail")).toHaveText("4 of 7 days collected");
   const levelValue = await card.locator(".level-metric .metric-value").boundingBox();
   const forecastValue = await card.locator(".forecast-metric .metric-value").boundingBox();
   const levelLabel = await card.locator(".level-metric .metric-label").boundingBox();
   const forecastLabel = await card.locator(".forecast-metric .metric-label").boundingBox();
   const forecastMetric = await card.locator(".forecast-metric").boundingBox();
-  const forecastSymbol = await card.locator(".forecast-symbol").boundingBox();
+  const forecastPlaceholder = await card.locator(".forecast-placeholder").boundingBox();
   const reading = await card.locator(".reading").boundingBox();
   const metrics = await card.locator(".metrics").boundingBox();
   expect(levelValue).not.toBeNull();
@@ -511,13 +486,13 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
   expect(levelLabel).not.toBeNull();
   expect(forecastLabel).not.toBeNull();
   expect(forecastMetric).not.toBeNull();
-  expect(forecastSymbol).not.toBeNull();
+  expect(forecastPlaceholder).not.toBeNull();
   expect(reading).not.toBeNull();
   expect(metrics).not.toBeNull();
   expect(Math.abs(levelValue!.height - forecastValue!.height)).toBeLessThanOrEqual(0.5);
   expect(Math.abs(
     forecastMetric!.x + forecastMetric!.width / 2
-      - (forecastSymbol!.x + forecastSymbol!.width / 2),
+      - (forecastPlaceholder!.x + forecastPlaceholder!.width / 2),
   )).toBeLessThanOrEqual(0.5);
   expect(Math.abs(
     reading!.y + reading!.height / 2 - (metrics!.y + metrics!.height / 2),
@@ -528,6 +503,17 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width,
   );
+
+  await page.locator("#language").selectOption("de-DE");
+  await expect(card.locator(".forecast-label")).toHaveText("Prognose");
+  await expect(card.locator(".forecast-detail")).toHaveText("4 von 7 Tagen erfasst");
+  const translatedDetail = await card.locator(".forecast-detail").boundingBox();
+  const translatedMetric = await card.locator(".forecast-metric").boundingBox();
+  expect(translatedDetail).not.toBeNull();
+  expect(translatedMetric).not.toBeNull();
+  expect(translatedDetail!.x).toBeGreaterThanOrEqual(translatedMetric!.x - 1);
+  expect(translatedDetail!.x + translatedDetail!.width)
+    .toBeLessThanOrEqual(translatedMetric!.x + translatedMetric!.width + 1);
 });
 
 test("updates state and theme through the demo host context", async ({ page }) => {
@@ -561,11 +547,7 @@ test("switches the Home Assistant language context without clipping translated c
   await card.evaluate((element) => {
     (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
       type: "custom:saltwatch-card",
-      entity: "sensor.saltwatch_salt_level",
-      status_entity: "sensor.saltwatch_salt_status",
-      threshold_entity: "number.saltwatch_low_salt_threshold",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      device_id: "saltwatch-demo-device",
       display_mode: "details",
       metric_mode: "both",
       show_status: true,

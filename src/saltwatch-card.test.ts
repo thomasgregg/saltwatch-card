@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SaltWatchCard } from "./saltwatch-card";
-import { detectRelatedEntities, SaltWatchCardEditor } from "./saltwatch-card-editor";
-import type { HassEntity, HomeAssistant, SaltWatchCardConfig } from "./types";
+import { SaltWatchCardEditor } from "./saltwatch-card-editor";
+import { resolveSaltWatchDevice } from "./saltwatch-device";
+import type { EntityRegistryEntry, HassEntity, HomeAssistant, SaltWatchCardConfig } from "./types";
+
+const DEVICE_ID = "saltwatch-device";
 
 const makeEntity = (entityId: string, state: string): HassEntity => ({
   entity_id: entityId,
@@ -13,21 +16,46 @@ const makeEntity = (entityId: string, state: string): HassEntity => ({
 
 const config: SaltWatchCardConfig = {
   type: "custom:saltwatch-card",
-  entity: "sensor.saltwatch_salt_level",
-  status_entity: "sensor.saltwatch_salt_status",
-  threshold_entity: "number.saltwatch_low_salt_threshold",
+  device_id: DEVICE_ID,
 };
 
 function makeHass(level = "62", status = "Good"): HomeAssistant {
-  return {
-    states: {
+  const states = {
       "sensor.saltwatch_salt_level": makeEntity("sensor.saltwatch_salt_level", level),
       "sensor.saltwatch_salt_status": makeEntity("sensor.saltwatch_salt_status", status),
       "sensor.saltwatch_estimated_days_until_low_salt": makeEntity("sensor.saltwatch_estimated_days_until_low_salt", "18"),
       "sensor.saltwatch_forecast_status": makeEntity("sensor.saltwatch_forecast_status", "Available"),
+      "sensor.saltwatch_forecast_details": makeEntity("sensor.saltwatch_forecast_details", "Based on 18 days of data"),
       "number.saltwatch_low_salt_threshold": makeEntity("number.saltwatch_low_salt_threshold", "20"),
-    },
   };
+  const roleEntries: EntityRegistryEntry[] = [
+    ["sensor.saltwatch_salt_level", "Salt Level"],
+    ["sensor.saltwatch_salt_status", "Salt Status"],
+    ["number.saltwatch_low_salt_threshold", "Low Salt Threshold"],
+    ["sensor.saltwatch_estimated_days_until_low_salt", "Estimated Days Until Low Salt"],
+    ["sensor.saltwatch_forecast_status", "Forecast Status"],
+    ["sensor.saltwatch_forecast_details", "Forecast Details"],
+  ].map(([entityId, originalName]) => ({
+    entity_id: entityId!,
+    device_id: DEVICE_ID,
+    platform: "esphome",
+    id: `registry-${entityId}`,
+    original_name: originalName,
+    unique_id: `test-${entityId}`,
+    disabled_by: null,
+  }));
+  const hass = {
+    states,
+    entities: Object.fromEntries(roleEntries.map((entry) => [entry.entity_id, entry])),
+    devices: { [DEVICE_ID]: { id: DEVICE_ID, name: "SaltWatch" } },
+    callWS: async <T>(message: Record<string, unknown>): Promise<T> => {
+      const requested = new Set(message.entity_ids as string[] | undefined);
+      return Object.fromEntries(Object.entries(hass.entities).filter(([entityId]) =>
+        requested.size === 0 || requested.has(entityId)
+      )) as T;
+    },
+  } satisfies HomeAssistant;
+  return hass;
 }
 
 describe("SaltWatchCard", () => {
@@ -37,7 +65,7 @@ describe("SaltWatchCard", () => {
   let pushLanguage: (language: string) => void;
   let unsubscribe: ReturnType<typeof vi.fn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     document.documentElement.lang = "en";
     if (!customElements.get("saltwatch-card-test")) {
       customElements.define("saltwatch-card-test", SaltWatchCard);
@@ -80,7 +108,9 @@ describe("SaltWatchCard", () => {
     document.body.replaceChildren(host);
     card = document.createElement("saltwatch-card-test") as SaltWatchCard;
     card.setConfig(config);
+    card.hass = initialHass;
     host.append(card);
+    await vi.waitFor(() => expect(card.shadowRoot?.querySelector(".card-shell")).not.toBeNull());
   });
 
   it("renders a dynamic granular level and configured metadata", () => {
@@ -154,26 +184,23 @@ describe("SaltWatchCard", () => {
     });
   });
 
-  it("uses a validated numeric slider with a 20 percent default", () => {
+  it("requires a SaltWatch device before saving and removes manual entity overrides", () => {
     const form = SaltWatchCard.getConfigForm() as {
-      schema: Array<{ name?: string; selector?: { number?: Record<string, unknown> } }>;
+      schema: Array<{ name?: string; selector?: { device?: Record<string, unknown> }; schema?: Array<{ name: string }> }>;
+      assertConfig: (config: Record<string, unknown>) => void;
     };
-    const threshold = form.schema.find((item) => item.name === "low_threshold");
-    expect(threshold?.selector?.number).toEqual({
-      min: 0,
-      max: 100,
-      step: 1,
-      mode: "slider",
-    });
-    expect(SaltWatchCard.getStubConfig(makeHass()).low_threshold).toBe(20);
-    expect(() => card.setConfig({ ...config, low_threshold: 101 })).toThrow(/between 0 and 100/);
+    expect(form.schema.find((item) => item.name === "device_id")?.selector?.device).toBeDefined();
+    expect(form.schema.some((item) => item.name === "low_threshold")).toBe(false);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name.endsWith("_entity")))).toBe(false);
+    card.setConfig({ ...config, device_id: "" });
+    expect(card.shadowRoot?.textContent).toContain("requires a SaltWatch device");
+    expect(() => form.assertConfig({ device_id: "" })).toThrow(/requires a SaltWatch device/);
   });
 
-  it("discovers forecast entities and exposes all value layouts in the editor", () => {
-    const stub = SaltWatchCard.getStubConfig(makeHass());
+  it("leaves device discovery to the strict editor and exposes all value layouts", () => {
+    const stub = SaltWatchCard.getStubConfig(makeHass(), ["sensor.saltwatch_salt_level"]);
     expect(stub.metric_mode).toBe("level");
-    expect(stub.forecast_entity).toBe("sensor.saltwatch_estimated_days_until_low_salt");
-    expect(stub.forecast_status_entity).toBe("sensor.saltwatch_forecast_status");
+    expect(stub.device_id).toBe("");
 
     const form = SaltWatchCard.getConfigForm() as {
       schema: Array<{
@@ -188,8 +215,7 @@ describe("SaltWatchCard", () => {
       "forecast",
       "both",
     ]);
-    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(true);
-    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_status_entity"))).toBe(true);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(false);
   });
 
   it("exposes native action selectors in the graphical editor", () => {
@@ -217,7 +243,7 @@ describe("SaltWatchCard", () => {
   it("does not rebuild for unrelated Home Assistant state updates", () => {
     const hass = makeHass();
     const initialShell = card.shadowRoot?.querySelector(".card-shell");
-    pushStates({
+    pushStates({ ...hass,
       states: {
         ...hass.states,
         "sensor.unrelated": makeEntity("sensor.unrelated", "changed"),
@@ -244,8 +270,6 @@ describe("SaltWatchCard", () => {
     card.setConfig({
       ...config,
       metric_mode: "forecast",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     expect(card.shadowRoot?.querySelector(".metrics-forecast .forecast-value")?.textContent).toBe("18");
     expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Days until low salt");
@@ -254,8 +278,6 @@ describe("SaltWatchCard", () => {
     card.setConfig({
       ...config,
       metric_mode: "both",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     expect(card.shadowRoot?.querySelector(".metrics-both .level")?.textContent).toBe("62%");
     expect(card.shadowRoot?.querySelector(".metrics-both .forecast-value")?.textContent).toBe("18");
@@ -267,8 +289,6 @@ describe("SaltWatchCard", () => {
     card.setConfig({
       ...config,
       metric_mode: "forecast",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     const hass = makeHass();
     hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
@@ -279,40 +299,46 @@ describe("SaltWatchCard", () => {
       "sensor.saltwatch_forecast_status",
       "Learning",
     );
+    hass.states["sensor.saltwatch_forecast_details"] = makeEntity(
+      "sensor.saltwatch_forecast_details",
+      "4 of 7 days collected",
+    );
     pushStates(hass);
-    expect(card.shadowRoot?.querySelector(".forecast-symbol")).not.toBeNull();
-    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).not.toContain("—");
-    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Forecast learning");
+    expect(card.shadowRoot?.querySelector(".forecast-placeholder")?.textContent).toBe("—");
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Forecast");
+    expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe("4 of 7 days collected");
     expect(card.shadowRoot?.querySelector(".forecast-metric")?.classList).toContain("unavailable");
 
     hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
       "sensor.saltwatch_forecast_status",
       "Insufficient Change",
     );
+    hass.states["sensor.saltwatch_forecast_details"] = makeEntity(
+      "sensor.saltwatch_forecast_details",
+      "Readings are too inconsistent",
+    );
     pushStates(hass);
-    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("No clear usage trend");
+    expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe("Readings are too inconsistent");
   });
 
   it("explains every unavailable forecast state while keeping a valid tank", () => {
     card.setConfig({
       ...config,
       metric_mode: "forecast",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     const cases = [
-      ["Initializing", "Forecast initializing"],
-      ["Sensor Fault", "Sensor fault"],
+      ["Initializing", "Starting forecast"],
+      ["Sensor Fault", "Waiting for valid readings"],
       ["Calibration Required", "Calibration required"],
-      ["Waiting for Measurement", "Forecast waiting for measurement"],
-      ["Waiting for Time", "Forecast waiting for time"],
-      ["Learning", "Forecast learning"],
-      ["Confirming Refill", "Confirming refill"],
-      ["Insufficient Change", "No clear usage trend"],
+      ["Waiting for Measurement", "Waiting for first reading"],
+      ["Waiting for Time", "Waiting for date and time"],
+      ["Learning", "4 of 7 days collected"],
+      ["Confirming Refill", "Checking possible refill"],
+      ["Insufficient Change", "Not enough salt usage yet"],
       ["Available", "Forecast unavailable"],
     ] as const;
 
-    for (const [forecastStatus, expectedLabel] of cases) {
+    for (const [forecastStatus, expectedDetail] of cases) {
       const hass = makeHass();
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
         "sensor.saltwatch_estimated_days_until_low_salt",
@@ -322,19 +348,49 @@ describe("SaltWatchCard", () => {
         "sensor.saltwatch_forecast_status",
         forecastStatus,
       );
+      hass.states["sensor.saltwatch_forecast_details"] = makeEntity(
+        "sensor.saltwatch_forecast_details",
+        expectedDetail,
+      );
       pushStates(hass);
-      expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe(expectedLabel);
-      expect(card.shadowRoot?.querySelector(".forecast-symbol")).not.toBeNull();
+      expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Forecast");
+      expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe(expectedDetail);
+      expect(card.shadowRoot?.querySelector(".forecast-placeholder")?.textContent).toBe("—");
       expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
     }
+  });
+
+  it("translates forecast details without showing them for a valid forecast", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+    });
+    const hass = makeHass();
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector(".forecast-detail")).toBeNull();
+
+    hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
+      "sensor.saltwatch_estimated_days_until_low_salt",
+      "unavailable",
+    );
+    hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+      "sensor.saltwatch_forecast_status",
+      "Learning",
+    );
+    hass.states["sensor.saltwatch_forecast_details"] = makeEntity(
+      "sensor.saltwatch_forecast_details",
+      "4 of 7 days collected",
+    );
+    pushLanguage("de-DE");
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Prognose");
+    expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe("4 von 7 Tagen erfasst");
   });
 
   it("uses the numeric forecast before its explanatory status catches up", () => {
     card.setConfig({
       ...config,
       metric_mode: "forecast",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     const hass = makeHass();
     hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
@@ -368,8 +424,8 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain(".tone-fault .status-dot { background:var(--sw-fault); }");
     expect(styles).toContain(".tone-fault .state-symbol { color:var(--sw-fault); }");
     expect(styles).toContain(".marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning);");
-    expect(styles).toContain(".forecast-symbol { display:block;");
-    expect(styles).toContain("stroke:currentColor;");
+    expect(styles).toContain(".forecast-placeholder { display:block;");
+    expect(styles).toContain(".forecast-detail { max-width:30ch;");
     expect(styles).toContain(".metric-divider { align-self:center;");
     expect(styles).toContain("background:var(--sw-panel-divider);");
     expect(styles).toContain(".forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }");
@@ -412,62 +468,155 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector("ha-card")?.classList).not.toContain("fixed-height");
   });
 
-  it("detects related SaltWatch entities belonging to the selected level sensor", () => {
+  it("resolves renamed entities from their device and immutable original names", async () => {
     const hass = makeHass();
-    hass.states["sensor.guest_saltwatch_salt_level"] = makeEntity("sensor.guest_saltwatch_salt_level", "45");
-    hass.states["sensor.guest_saltwatch_salt_status"] = makeEntity("sensor.guest_saltwatch_salt_status", "Good");
-    hass.states["number.guest_saltwatch_low_salt_threshold"] = makeEntity("number.guest_saltwatch_low_salt_threshold", "18");
-    hass.states["sensor.guest_saltwatch_estimated_days_until_low_salt"] = makeEntity("sensor.guest_saltwatch_estimated_days_until_low_salt", "12");
-    hass.states["sensor.guest_saltwatch_forecast_status"] = makeEntity("sensor.guest_saltwatch_forecast_status", "Available");
+    const renamedEntries = Object.values(hass.entities).map((entry, index) => ({
+      ...entry,
+      entity_id: `${entry.entity_id.split(".")[0]}.user_name_${index}`,
+    } as EntityRegistryEntry));
+    const oldStates = Object.values(hass.states);
+    hass.entities = Object.fromEntries(renamedEntries.map((entry) => [entry.entity_id, entry]));
+    hass.states = Object.fromEntries(renamedEntries.map((entry, index) => [
+      entry.entity_id,
+      { ...oldStates[index]!, entity_id: entry.entity_id },
+    ]));
 
-    expect(detectRelatedEntities(hass, "sensor.guest_saltwatch_salt_level")).toEqual({
-      status_entity: "sensor.guest_saltwatch_salt_status",
-      threshold_entity: "number.guest_saltwatch_low_salt_threshold",
-      forecast_entity: "sensor.guest_saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.guest_saltwatch_forecast_status",
+    const resolution = await resolveSaltWatchDevice(hass, DEVICE_ID);
+    expect(resolution.missing).toEqual([]);
+    expect(resolution.duplicates).toEqual([]);
+    expect(resolution.entities).toEqual({
+      level: "sensor.user_name_0",
+      status: "sensor.user_name_1",
+      threshold: "number.user_name_2",
+      forecast: "sensor.user_name_3",
+      forecastStatus: "sensor.user_name_4",
+      forecastDetails: "sensor.user_name_5",
     });
   });
 
-  it("shows a configure warning when related entities cannot all be detected", () => {
+  it("never mixes entities from two identically named SaltWatch devices", async () => {
+    const hass = makeHass();
+    const secondDeviceId = "second-saltwatch-device";
+    const secondEntries = Object.values(hass.entities).map((entry) => {
+      const entityId = entry.entity_id.replace("saltwatch", "utility_room");
+      return {
+        ...entry,
+        id: `second-${entry.entity_id}`,
+        entity_id: entityId,
+        device_id: secondDeviceId,
+        unique_id: `second-${entry.entity_id}`,
+      } as EntityRegistryEntry;
+    });
+    for (const entry of secondEntries) {
+      hass.entities[entry.entity_id] = entry;
+      const firstId = entry.entity_id.replace("utility_room", "saltwatch");
+      hass.states[entry.entity_id] = { ...hass.states[firstId]!, entity_id: entry.entity_id };
+    }
+    hass.devices[secondDeviceId] = { id: secondDeviceId, name: "SaltWatch" };
+
+    const resolution = await resolveSaltWatchDevice(hass, secondDeviceId);
+    expect(Object.values(resolution.entities ?? {})).toHaveLength(6);
+    expect(Object.values(resolution.entities ?? {}).every((entityId) => entityId.includes("utility_room"))).toBe(true);
+  });
+
+  it("fails closed for duplicate roles and reports disabled required entities", async () => {
+    const hass = makeHass();
+    const duplicate = {
+      ...(hass.entities["sensor.saltwatch_salt_level"] as EntityRegistryEntry),
+      id: "duplicate-level",
+      entity_id: "sensor.duplicate_level",
+      unique_id: "duplicate-level",
+    };
+    hass.entities[duplicate.entity_id] = duplicate;
+    hass.states[duplicate.entity_id] = makeEntity(duplicate.entity_id, "50");
+    const forecastDetails = hass.entities["sensor.saltwatch_forecast_details"] as EntityRegistryEntry;
+    forecastDetails.disabled_by = "user";
+    delete hass.states[forecastDetails.entity_id];
+
+    const resolution = await resolveSaltWatchDevice(hass, DEVICE_ID);
+    expect(resolution.entities).toBeUndefined();
+    expect(resolution.duplicates).toEqual(["level"]);
+    expect(resolution.disabled).toEqual(["forecastDetails"]);
+  });
+
+  it("shows a registry error instead of guessing from entity IDs", async () => {
+    const hass = makeHass();
+    hass.callWS = async () => { throw new Error("Registry unavailable"); };
+    const isolated = document.createElement("saltwatch-card-test") as SaltWatchCard;
+    isolated.setConfig(config);
+    isolated.hass = hass;
+    host.append(isolated);
+    await vi.waitFor(() => expect(isolated.shadowRoot?.querySelector(".configuration-error")?.textContent)
+      .toContain("Registry unavailable"));
+    expect(isolated.shadowRoot?.querySelector(".card-shell")).toBeNull();
+  });
+
+  it("does not invent a fallback threshold while the device threshold is unavailable", async () => {
+    const hass = makeHass();
+    hass.states["number.saltwatch_low_salt_threshold"] = makeEntity(
+      "number.saltwatch_low_salt_threshold",
+      "unavailable",
+    );
+    const isolated = document.createElement("saltwatch-card-test") as SaltWatchCard;
+    isolated.setConfig(config);
+    isolated.hass = hass;
+    host.append(isolated);
+    await vi.waitFor(() => expect(isolated.shadowRoot?.querySelector(".loading")?.textContent)
+      .toContain("No current reading"));
+    expect(isolated.shadowRoot?.textContent).not.toContain("20%");
+  });
+
+  it("auto-selects the only complete SaltWatch device in the editor", async () => {
     if (!customElements.get("saltwatch-card-editor-test")) {
       customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
     }
     const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
-    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
-    editor.hass = {
-      states: {
-        "sensor.saltwatch_salt_level": makeEntity("sensor.saltwatch_salt_level", "50"),
-      },
-    };
-    expect(editor.shadowRoot?.querySelector(".notice.warning")?.textContent).toContain(
-      "Some SaltWatch entities weren’t found",
-    );
-    const configure = editor.shadowRoot?.querySelector<HTMLButtonElement>(".configure");
-    expect(configure).not.toBeNull();
-    configure?.click();
-    expect(editor.shadowRoot?.querySelector<HTMLDetailsElement>("#advanced")?.open).toBe(true);
+    const listener = vi.fn();
+    editor.addEventListener("config-changed", listener);
+    editor.setConfig({ device_id: "" });
+    editor.hass = makeHass();
+    host.append(editor);
+
+    await vi.waitFor(() => expect(listener).toHaveBeenCalled());
+    expect((listener.mock.calls.at(-1)?.[0] as CustomEvent).detail.config.device_id).toBe(DEVICE_ID);
+    expect(editor.shadowRoot?.querySelector(".notice.success")).not.toBeNull();
   });
 
-  it("keeps editor controls mounted across routine Home Assistant state updates", () => {
+  it("shows a warning when a selected SaltWatch device is incomplete", async () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    const hass = makeHass();
+    delete hass.states["sensor.saltwatch_forecast_details"];
+    delete hass.entities["sensor.saltwatch_forecast_details"];
+    editor.setConfig({ device_id: DEVICE_ID });
+    editor.hass = hass;
+    await vi.waitFor(() => expect(editor.shadowRoot?.querySelector(".notice.warning")?.textContent).toContain(
+      "Forecast Details",
+    ));
+    expect(editor.shadowRoot?.querySelector("#advanced")).toBeNull();
+  });
+
+  it("keeps editor controls mounted across routine Home Assistant state updates", async () => {
     if (!customElements.get("saltwatch-card-editor-test")) {
       customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
     }
     const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
     const hass = makeHass();
     editor.hass = hass;
-    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
+    editor.setConfig({ device_id: DEVICE_ID });
+    await vi.waitFor(() => expect(editor.shadowRoot?.querySelector("#device-form ha-form")).not.toBeNull());
     const layoutButton = editor.shadowRoot?.querySelector(".layout-option");
-    const levelForm = editor.shadowRoot?.querySelector("#level-form ha-form");
+    const deviceForm = editor.shadowRoot?.querySelector("#device-form ha-form");
 
-    editor.hass = {
-      states: {
-        ...hass.states,
-        "sensor.unrelated": makeEntity("sensor.unrelated", "updated"),
-      },
-    };
+    editor.hass = { ...hass, states: {
+      ...hass.states,
+      "sensor.unrelated": makeEntity("sensor.unrelated", "updated"),
+    } };
 
     expect(editor.shadowRoot?.querySelector(".layout-option")).toBe(layoutButton);
-    expect(editor.shadowRoot?.querySelector("#level-form ha-form")).toBe(levelForm);
+    expect(editor.shadowRoot?.querySelector("#device-form ha-form")).toBe(deviceForm);
   });
 
   it("removes the salt and shows an explicit unavailable state", () => {
@@ -524,8 +673,6 @@ describe("SaltWatchCard", () => {
     card.setConfig({
       ...config,
       metric_mode: "both",
-      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
-      forecast_status_entity: "sensor.saltwatch_forecast_status",
     });
     const hass = makeHass("22", "Low Salt");
     hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
@@ -573,7 +720,7 @@ describe("SaltWatchCard", () => {
     }
     const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
     editor.hass = makeHass();
-    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
+    editor.setConfig({ device_id: DEVICE_ID });
     host.append(editor);
 
     expect(editor.shadowRoot?.textContent).toContain("Live data");

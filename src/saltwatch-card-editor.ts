@@ -1,61 +1,18 @@
 import { getTranslations, resolveLanguage, resolveLocale } from "./localize";
+import {
+  resolveSaltWatchEntries,
+  saltWatchRoleLabel,
+} from "./saltwatch-device";
+import type { SaltWatchResolution } from "./saltwatch-device";
 import type {
+  EntityRegistryEntry,
   HomeAssistant,
   HomeAssistantInternationalization,
   SaltWatchCardConfig,
 } from "./types";
 
-type RelatedKey = "status_entity" | "threshold_entity" | "forecast_entity" | "forecast_status_entity";
 type EditorConfig = Omit<SaltWatchCardConfig, "type"> & { type?: string };
-
-const RELATED_ENTITIES: Array<{
-  key: RelatedKey;
-  domain: string;
-  suffix: string;
-}> = [
-  { key: "status_entity", domain: "sensor", suffix: "salt_status" },
-  { key: "threshold_entity", domain: "number", suffix: "low_salt_threshold" },
-  { key: "forecast_entity", domain: "sensor", suffix: "estimated_days_until_low_salt" },
-  { key: "forecast_status_entity", domain: "sensor", suffix: "forecast_status" },
-];
 const SUPPORTED_ACTIONS = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-
-function objectId(entityId: string): string {
-  return entityId.slice(entityId.indexOf(".") + 1);
-}
-
-function sharedPrefixScore(left: string, right: string): number {
-  const leftParts = left.split("_");
-  const rightParts = right.split("_");
-  let score = 0;
-  while (score < leftParts.length && leftParts[score] === rightParts[score]) score += 1;
-  return score;
-}
-
-export function detectRelatedEntities(
-  hass: HomeAssistant | undefined,
-  levelEntity: string | undefined,
-): Partial<Record<RelatedKey, string>> {
-  if (!hass || !levelEntity) return {};
-  const levelObjectId = objectId(levelEntity);
-  const base = levelObjectId.endsWith("_salt_level")
-    ? levelObjectId.slice(0, -"salt_level".length)
-    : "";
-  const ids = Object.keys(hass.states);
-
-  return Object.fromEntries(RELATED_ENTITIES.flatMap(({ key, domain, suffix }) => {
-    const exact = base ? `${domain}.${base}${suffix}` : undefined;
-    if (exact && hass.states[exact]) return [[key, exact]];
-    if (base) return [];
-
-    const candidates = ids
-      .filter((id) => id.startsWith(`${domain}.`) && objectId(id).endsWith(suffix))
-      .map((id) => ({ id, score: sharedPrefixScore(levelObjectId, objectId(id)) }))
-      .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
-    const best = candidates[0];
-    return best && best.score > 0 ? [[key, best.id]] : [];
-  })) as Partial<Record<RelatedKey, string>>;
-}
 
 function escapeAttribute(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
@@ -67,8 +24,13 @@ export class SaltWatchCardEditor extends HTMLElement {
   private internationalization?: HomeAssistantInternationalization;
   private unsubscribeInternationalization?: () => void;
   private languageObserver?: MutationObserver;
-  private advancedOpen = false;
   private actionsOpen = false;
+  private registryReference?: HomeAssistant["entities"];
+  private registryEntries: EntityRegistryEntry[] = [];
+  private deviceResolutions = new Map<string, SaltWatchResolution>();
+  private registryLoading = false;
+  private registryError?: string;
+  private registryRequest = 0;
 
   public constructor() {
     super();
@@ -119,11 +81,15 @@ export class SaltWatchCardEditor extends HTMLElement {
 
   public set hass(hass: HomeAssistant) {
     const previousRenderKey = this.hassRenderKey();
+    const registryChanged = this.registryReference !== hass.entities;
     this._hass = hass;
-    const configChanged = this.autoConfigureDetected();
-    const shouldRender = !this.shadowRoot?.querySelector(".editor") ||
-      configChanged ||
-      previousRenderKey !== this.hassRenderKey();
+    this.registryReference = hass.entities;
+    if (registryChanged) {
+      void this.loadSaltWatchDevices();
+      return;
+    }
+    this.refreshResolutions();
+    const shouldRender = !this.shadowRoot?.querySelector(".editor") || previousRenderKey !== this.hassRenderKey();
     if (shouldRender) {
       this.render();
     } else {
@@ -137,30 +103,67 @@ export class SaltWatchCardEditor extends HTMLElement {
 
   public setConfig(config: EditorConfig): void {
     this._config = { ...config };
-    this.autoConfigureDetected();
+    this.render();
+    if (this._hass && this.registryEntries.length === 0) void this.loadSaltWatchDevices();
+  }
+
+  private async loadSaltWatchDevices(): Promise<void> {
+    if (!this._hass) return;
+    const hass = this._hass;
+    const request = ++this.registryRequest;
+    this.registryLoading = true;
+    this.registryError = undefined;
+    this.render();
+    try {
+      const entityIds = Object.values(hass.entities)
+        .filter((entry) => entry.platform === "esphome" && entry.device_id)
+        .map((entry) => entry.entity_id);
+      const entriesById = entityIds.length === 0
+        ? {}
+        : await hass.callWS<Record<string, EntityRegistryEntry>>({
+          type: "config/entity_registry/get_entries",
+          entity_ids: entityIds,
+        });
+      if (request !== this.registryRequest) return;
+      this.registryEntries = Object.values(entriesById);
+      this.refreshResolutions();
+      const completeDevices = [...this.deviceResolutions.values()].filter(
+        (resolution) => resolution.entities && resolution.disabled.length === 0,
+      );
+      if (!this._config?.device_id && completeDevices.length === 1) {
+        this.updateConfig({ device_id: completeDevices[0]!.deviceId }, false);
+      }
+    } catch (error) {
+      if (request !== this.registryRequest) return;
+      this.registryEntries = [];
+      this.deviceResolutions.clear();
+      this.registryError = error instanceof Error ? error.message : String(error);
+    }
+    this.registryLoading = false;
     this.render();
   }
 
-  private autoConfigureDetected(): boolean {
-    if (!this._hass || !this._config?.entity) return false;
-    const detected = detectRelatedEntities(this._hass, this._config.entity);
-    const additions = Object.fromEntries(
-      Object.entries(detected).filter(([key]) => !this._config?.[key as RelatedKey]),
-    );
-    if (Object.keys(additions).length === 0) return false;
-    this.updateConfig(additions, false);
-    return true;
+  private refreshResolutions(): void {
+    if (!this._hass) return;
+    const deviceIds = [...new Set(this.registryEntries.map((entry) => entry.device_id).filter(
+      (deviceId): deviceId is string => Boolean(deviceId),
+    ))];
+    const resolutions: Array<[string, SaltWatchResolution]> = deviceIds.map((deviceId) => [
+      deviceId,
+      resolveSaltWatchEntries(deviceId, this.registryEntries),
+    ]);
+    this.deviceResolutions = new Map(resolutions.filter(([, resolution]) =>
+      // A SaltWatch candidate has at least one exact SaltWatch role.
+      resolution.missing.length < 6 || resolution.duplicates.length > 0
+    ));
   }
 
   private hassRenderKey(): string {
     if (!this._config) return "";
-    return [
-      this._config.entity,
-      ...RELATED_ENTITIES.flatMap(({ key }) => {
-        const entityId = this._config?.[key];
-        return [entityId ?? "", entityId && this._hass?.states[entityId] ? "present" : "missing"];
-      }),
-    ].join("|");
+    const resolution = this._config.device_id
+      ? this.deviceResolutions.get(this._config.device_id)
+      : undefined;
+    return `${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
   }
 
   private updateFormHass(): void {
@@ -179,17 +182,6 @@ export class SaltWatchCardEditor extends HTMLElement {
     if (rerender) this.render();
   }
 
-  private relatedState(): { connected: number; total: number } {
-    if (!this._config || !this._hass) return { connected: 0, total: RELATED_ENTITIES.length };
-    return {
-      connected: RELATED_ENTITIES.filter(({ key }) => {
-        const entityId = this._config?.[key];
-        return Boolean(entityId && this._hass?.states[entityId]);
-      }).length,
-      total: RELATED_ENTITIES.length,
-    };
-  }
-
   private activeLanguage(): string {
     return resolveLanguage(
       this.internationalization?.locale.language ??
@@ -206,20 +198,32 @@ export class SaltWatchCardEditor extends HTMLElement {
     const metricMode = this._config.metric_mode ?? "level";
     const sectionOrder = this._config.section_order ?? "tank-first";
     const showDetailsControls = displayMode !== "tank";
-    const related = this.relatedState();
-    const complete = related.connected === related.total;
     const config = this._config;
+    const resolution = config.device_id ? this.deviceResolutions.get(config.device_id) : undefined;
+    const complete = Boolean(resolution?.entities && resolution.disabled.length === 0);
+    const problems = resolution ? [
+      ...resolution.missing.map(saltWatchRoleLabel),
+      ...resolution.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${copy.duplicate})`),
+      ...resolution.disabled.map((role) => `${saltWatchRoleLabel(role)} (${copy.disabled})`),
+    ] : [];
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
         <section class="section live-data">
           <h3>${copy.liveData}</h3>
-          <div id="level-form"></div>
+          <div id="device-form"></div>
           <div class="notice ${complete ? "success" : "warning"}" role="status">
             <span class="notice-icon">${complete ? "✓" : "!"}</span>
-            <span class="notice-copy"><strong>${complete ? copy.detectedTitle : copy.missingTitle}</strong><small>${complete ? copy.detectedText : copy.missingText}</small></span>
-            ${complete ? "" : `<button class="configure" type="button">${copy.configure}</button>`}
+            <span class="notice-copy"><strong>${complete ? copy.detectedTitle : copy.missingTitle}</strong><small>${complete
+              ? copy.detectedText
+              : this.registryLoading
+                ? copy.loadingDevices
+                : this.registryError
+                  ? `${copy.registryError}: ${escapeAttribute(this.registryError)}`
+                  : problems.length > 0
+                    ? `${copy.incompleteDevice}: ${escapeAttribute(problems.join(", "))}`
+                    : copy.selectSaltWatchDevice}</small></span>
           </div>
         </section>
 
@@ -255,39 +259,24 @@ export class SaltWatchCardEditor extends HTMLElement {
           ${this.toggle("show_low_marker", copy.marker, copy.markerHelp, config.show_low_marker !== false)}
         </section>` : ""}
 
-        <details class="fold" id="advanced" ${this.advancedOpen ? "open" : ""}>
-          <summary><span><strong>${copy.advanced}</strong><small>${copy.advancedHelp}</small></span><span class="chevron">⌄</span></summary>
-          <div class="fold-content" id="advanced-form"></div>
-        </details>
-
         <details class="fold" id="actions" ${this.actionsOpen ? "open" : ""}>
           <summary><span><strong>${copy.actions}</strong><small>${copy.actionsHelp}</small></span><span class="chevron">⌄</span></summary>
           <div class="fold-content" id="actions-form"></div>
         </details>
       </div>`;
 
-    this.setupForm("level-form", [
-      { name: "entity", required: true, selector: { entity: { domain: "sensor" } } },
-    ], { entity: config.entity }, { entity: copy.saltLevel });
-
-    this.setupForm("advanced-form", [
-      { name: "status_entity", selector: { entity: {} } },
-      { name: "threshold_entity", selector: { entity: {} } },
-      { name: "forecast_entity", selector: { entity: { domain: "sensor" } } },
-      { name: "forecast_status_entity", selector: { entity: {} } },
-      { name: "low_threshold", selector: { number: { min: 0, max: 100, step: 1, mode: "slider" } } },
-    ], config, {
-      status_entity: copy.statusEntity,
-      threshold_entity: copy.thresholdEntity,
-      forecast_entity: copy.editorForecastEntity,
-      forecast_status_entity: copy.forecastStatus,
-      low_threshold: copy.fallback,
-    });
+    const deviceOptions = [...this.deviceResolutions.keys()].map((deviceId) => ({
+      value: deviceId,
+      label: this.deviceLabel(deviceId),
+    })).sort((left, right) => left.label.localeCompare(right.label));
+    this.setupForm("device-form", [
+      { name: "device_id", required: true, selector: { select: { mode: "dropdown", options: deviceOptions } } },
+    ], { device_id: config.device_id }, { device_id: copy.saltWatchDevice });
 
     this.setupForm("actions-form", [
-      { name: "tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "more-info" } }, context: { entity_id: "entity" } },
-      { name: "hold_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } }, context: { entity_id: "entity" } },
-      { name: "double_tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } }, context: { entity_id: "entity" } },
+      { name: "tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "more-info" } } },
+      { name: "hold_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } } },
+      { name: "double_tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } } },
     ], config, { tap_action: copy.tap, hold_action: copy.hold, double_tap_action: copy.doubleTap });
 
     this.shadowRoot.querySelectorAll<HTMLButtonElement>("button[data-field]").forEach((button) => {
@@ -298,14 +287,6 @@ export class SaltWatchCardEditor extends HTMLElement {
     });
     this.shadowRoot.querySelectorAll<HTMLInputElement>("input[data-field]").forEach((input) => {
       input.addEventListener("change", () => this.updateConfig({ [input.dataset.field!]: input.checked }));
-    });
-    this.shadowRoot.querySelector<HTMLButtonElement>(".configure")?.addEventListener("click", () => {
-      this.advancedOpen = true;
-      this.render();
-      this.shadowRoot?.querySelector("#advanced")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    });
-    this.shadowRoot.querySelector<HTMLDetailsElement>("#advanced")?.addEventListener("toggle", (event) => {
-      this.advancedOpen = (event.currentTarget as HTMLDetailsElement).open;
     });
     this.shadowRoot.querySelector<HTMLDetailsElement>("#actions")?.addEventListener("toggle", (event) => {
       this.actionsOpen = (event.currentTarget as HTMLDetailsElement).open;
@@ -329,12 +310,18 @@ export class SaltWatchCardEditor extends HTMLElement {
       const value = (event as CustomEvent<{ value?: Partial<EditorConfig> }>).detail?.value;
       if (!value) return;
       this.updateConfig(value);
-      if (hostId === "level-form") {
-        this.autoConfigureDetected();
-        this.render();
-      }
     });
     host.append(form);
+  }
+
+  private deviceLabel(deviceId: string): string {
+    const device = this._hass?.devices[deviceId];
+    const base = device?.name_by_user || device?.name || "SaltWatch";
+    const duplicateName = Object.keys(this._hass?.devices ?? {}).filter((id) => {
+      const candidate = this._hass?.devices[id];
+      return (candidate?.name_by_user || candidate?.name) === base && this.deviceResolutions.has(id);
+    }).length > 1;
+    return duplicateName ? `${base} · ${deviceId.slice(-6)}` : base;
   }
 
   private layoutButton(value: string, label: string, selected: string): string {
@@ -370,7 +357,6 @@ export class SaltWatchCardEditor extends HTMLElement {
       .notice-copy strong { font-size:14px; }
       small { display:block; color:var(--secondary-text-color); font-size:12px; line-height:1.4; font-weight:400; }
       button { font:inherit; }
-      .configure { margin-left:auto; padding:7px 10px; border:0; color:var(--sw-accent); background:transparent; cursor:pointer; font-weight:650; }
       .layout-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
       .layout-option { position:relative; min-width:0; display:grid; justify-items:center; gap:9px; padding:13px 7px 11px; border:1px solid var(--divider-color,#ddd); border-radius:11px; color:var(--primary-text-color); background:transparent; cursor:pointer; font-size:12px; }
       .layout-option.selected { border:2px solid var(--sw-accent); padding:12px 6px 10px; background:color-mix(in srgb,var(--sw-accent) 7%,transparent); }

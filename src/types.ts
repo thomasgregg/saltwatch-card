@@ -18,8 +18,35 @@ export interface HomeAssistantInternationalization {
   };
 }
 
+export interface EntityRegistryDisplayEntry {
+  entity_id: string;
+  device_id?: string;
+  platform?: string;
+  name?: string;
+  area_id?: string;
+  hidden?: boolean;
+}
+
+export interface EntityRegistryEntry extends EntityRegistryDisplayEntry {
+  id: string;
+  original_name?: string;
+  unique_id: string;
+  disabled_by: "user" | "device" | "integration" | "config_entry" | null;
+}
+
+export interface DeviceRegistryEntry {
+  id: string;
+  name: string;
+  name_by_user?: string | null;
+  area_id?: string | null;
+  disabled_by?: string | null;
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
+  entities: Record<string, EntityRegistryDisplayEntry>;
+  devices: Record<string, DeviceRegistryEntry>;
+  callWS<T>(message: Record<string, unknown>): Promise<T>;
   language?: string;
   locale?: HomeAssistantInternationalization["locale"];
 }
@@ -35,7 +62,7 @@ export interface LovelaceActionConfig {
 
 export interface SaltWatchCardConfig {
   type: string;
-  entity: string;
+  device_id: string;
   grid_options?: {
     columns?: number | "full";
     rows?: number | "auto";
@@ -45,11 +72,6 @@ export interface SaltWatchCardConfig {
   display_mode?: SaltWatchDisplayMode;
   metric_mode?: SaltWatchMetricMode;
   section_order?: SaltWatchSectionOrder;
-  status_entity?: string;
-  threshold_entity?: string;
-  forecast_entity?: string;
-  forecast_status_entity?: string;
-  low_threshold?: number;
   tap_action?: LovelaceActionConfig;
   hold_action?: LovelaceActionConfig;
   double_tap_action?: LovelaceActionConfig;
@@ -61,10 +83,6 @@ export interface CustomCardRegistration {
   description: string;
   preview?: boolean;
   documentationURL?: string;
-  getEntitySuggestion?: (
-    hass: HomeAssistant,
-    entityId: string,
-  ) => { config: SaltWatchCardConfig } | null;
 }
 
 declare global {
