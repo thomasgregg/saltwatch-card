@@ -271,6 +271,60 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("No clear usage trend");
   });
 
+  it("explains every unavailable forecast state while keeping a valid tank", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    const cases = [
+      ["Initializing", "Forecast initializing"],
+      ["Sensor Fault", "Sensor fault"],
+      ["Calibration Required", "Calibration required"],
+      ["Waiting for Measurement", "Forecast waiting for measurement"],
+      ["Waiting for Time", "Forecast waiting for time"],
+      ["Learning", "Forecast learning"],
+      ["Confirming Refill", "Confirming refill"],
+      ["Insufficient Change", "No clear usage trend"],
+      ["Available", "Forecast unavailable"],
+    ] as const;
+
+    for (const [forecastStatus, expectedLabel] of cases) {
+      const hass = makeHass();
+      hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
+        "sensor.saltwatch_estimated_days_until_low_salt",
+        "unavailable",
+      );
+      hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+        "sensor.saltwatch_forecast_status",
+        forecastStatus,
+      );
+      pushStates(hass);
+      expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe(expectedLabel);
+      expect(card.shadowRoot?.querySelector(".forecast-symbol")).not.toBeNull();
+      expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
+    }
+  });
+
+  it("uses the numeric forecast before its explanatory status catches up", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    const hass = makeHass();
+    hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+      "sensor.saltwatch_forecast_status",
+      "Learning",
+    );
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).toBe("18");
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Days until low salt");
+    expect(card.shadowRoot?.querySelector(".forecast-symbol")).toBeNull();
+  });
+
   it("uses a centered base aligned with the tank body", () => {
     expect(card.shadowRoot?.querySelector(".tank-base")?.getAttribute("d"))
       .toBe("M112 492H308L302 518H275L267 511H153L145 518H118Z");
@@ -284,6 +338,9 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain(".threshold-label.tone-low rect { fill:var(--sw-low); }");
     expect(styles).toContain(".threshold-label text { fill:var(--text-light-primary-color);");
     expect(styles).toContain(".tone-low .status { color:var(--sw-low); }");
+    expect(styles).toContain(".tone-neutral .status { color:var(--sw-neutral); }");
+    expect(styles).toContain(".tone-neutral .status-dot { background:var(--sw-neutral); }");
+    expect(styles).toContain(".tone-neutral .state-symbol { color:var(--sw-neutral); }");
     expect(styles).toContain(".tone-warning .status-dot { background:var(--sw-warning); }");
     expect(styles).toContain(".tone-warning .state-symbol { color:var(--sw-warning); }");
     expect(styles).toContain(".tone-fault .status-dot { background:var(--sw-fault); }");
@@ -410,6 +467,55 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".fault-symbol")).toBeNull();
     expect(card.shadowRoot?.textContent?.match(/Calibration required/g)).toHaveLength(1);
     expect(card.shadowRoot?.querySelector(".level-label")).toBeNull();
+  });
+
+  it("shows initialization as neutral while preserving the unavailable tank", () => {
+    pushStates(makeHass("unavailable", "Initializing"));
+    expect(card.shadowRoot?.querySelector("ha-card")?.classList).toContain("tone-neutral");
+    expect(card.shadowRoot?.querySelector(".unavailable-hatch")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".initializing-symbol")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".fault-symbol")).toBeNull();
+    expect(card.shadowRoot?.textContent?.match(/Initializing/g)).toHaveLength(1);
+    expect(card.shadowRoot?.querySelector(".threshold")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".threshold-label")).not.toBeNull();
+  });
+
+  it("shows a neutral unknown state when no level exists without a reported fault", () => {
+    pushStates(makeHass("unavailable", "Good"));
+    expect(card.shadowRoot?.querySelector("ha-card")?.classList).toContain("tone-neutral");
+    expect(card.shadowRoot?.querySelector(".unavailable-hatch")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".unavailable-symbol")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".fault-symbol")).toBeNull();
+    expect(card.shadowRoot?.textContent?.match(/No current reading/g)).toHaveLength(1);
+  });
+
+  it("restores a fresh numeric level before a stale fault status catches up", () => {
+    pushStates(makeHass("62", "Sensor Fault"));
+    expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".unavailable-hatch")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".metrics")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".state-symbol")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".status")?.textContent).toContain("Sensor fault");
+  });
+
+  it("preserves the legitimate low-status hysteresis combination", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "both",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+    });
+    const hass = makeHass("22", "Low Salt");
+    hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
+      "sensor.saltwatch_estimated_days_until_low_salt",
+      "2",
+    );
+    pushStates(hass);
+    expect(card.shadowRoot?.querySelector("ha-card")?.classList).toContain("tone-low");
+    expect(card.shadowRoot?.querySelector(".salt-photo")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("22%");
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).toBe("2");
+    expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Days until low salt");
   });
 
   it("keeps the exceptional-state label when the top status is hidden", () => {

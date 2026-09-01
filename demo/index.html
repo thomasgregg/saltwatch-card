@@ -85,13 +85,15 @@
         <label>Forecast <input id="forecast-days" type="range" min="0" max="90" value="18" /><strong id="forecast-value">18 d</strong></label>
         <button data-state="good">Good</button>
         <button data-state="low">Low salt</button>
+        <button data-state="initializing">Initializing</button>
+        <button data-state="unavailable">No current reading</button>
         <button data-state="fault">Sensor fault</button>
         <button data-state="calibration">Calibration required</button>
         <label><input id="show-status" type="checkbox" checked /> Show status</label>
         <label><input id="show-low-marker" type="checkbox" checked /> Show low marker below values</label>
         <label>Content <select id="display-mode"><option value="both">Tank and details</option><option value="tank">Tank only</option><option value="details">Details only</option></select></label>
         <label>Values <select id="metric-mode"><option value="level">Salt level</option><option value="forecast">Forecast</option><option value="both">Both</option></select></label>
-        <label>Forecast state <select id="forecast-state"><option value="Available">Available</option><option value="Learning">Learning</option><option value="Confirming Refill">Confirming refill</option><option value="Insufficient Change">Insufficient change</option></select></label>
+        <label>Forecast state <select id="forecast-state"><option value="Available">Available</option><option value="Low Salt">Low salt</option><option value="Initializing">Initializing</option><option value="Sensor Fault">Sensor fault</option><option value="Calibration Required">Calibration required</option><option value="Waiting for Measurement">Waiting for measurement</option><option value="Waiting for Time">Waiting for time</option><option value="Learning">Learning</option><option value="Confirming Refill">Confirming refill</option><option value="Insufficient Change">Insufficient change</option></select></label>
         <label><input id="light-theme" type="checkbox" role="switch" /><span id="theme-name">Dark theme</span></label>
       </div>
       <div class="demo-frame"><saltwatch-card id="card"></saltwatch-card></div>

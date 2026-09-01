@@ -1,9 +1,10 @@
 import type { HassEntity } from "./types";
 
-export type CardTone = "good" | "low" | "warning" | "fault";
+export type CardTone = "good" | "low" | "neutral" | "warning" | "fault";
 export type StatusTranslationKey =
   | "calibrationRequired"
   | "good"
+  | "initializing"
   | "lowSalt"
   | "noCurrentReading"
   | "sensorFault";
@@ -50,10 +51,17 @@ export function deriveStatus(
       translationKey: "calibrationRequired",
     };
   }
+  if (normalized.includes("initializing")) {
+    return {
+      label: "Initializing",
+      tone: "neutral",
+      translationKey: "initializing",
+    };
+  }
   if (level === undefined) {
     return {
       label: "No current reading",
-      tone: "fault",
+      tone: "neutral",
       translationKey: "noCurrentReading",
     };
   }

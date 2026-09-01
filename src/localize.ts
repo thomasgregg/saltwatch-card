@@ -22,6 +22,7 @@ export type TranslationKey =
   | "forecastWaitingForTime"
   | "good"
   | "holdAction"
+  | "initializing"
   | "levelAndForecast"
   | "lowBadge"
   | "lowMarker"
@@ -66,6 +67,7 @@ const translations: Record<SupportedLocale, Record<TranslationKey, string>> = {
     forecastWaitingForTime: "Forecast waiting for time",
     good: "Good",
     holdAction: "Hold action",
+    initializing: "Initializing",
     levelAndForecast: "Salt level and forecast",
     lowBadge: "LOW",
     lowMarker: "Low marker",
@@ -109,6 +111,7 @@ const translations: Record<SupportedLocale, Record<TranslationKey, string>> = {
     forecastWaitingForTime: "Prognose wartet auf Zeit",
     good: "Gut",
     holdAction: "Halten-Aktion",
+    initializing: "Wird initialisiert",
     levelAndForecast: "Salzstand und Prognose",
     lowBadge: "NIEDRIG",
     lowMarker: "Niedrig-Markierung",

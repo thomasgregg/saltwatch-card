@@ -91,7 +91,7 @@ forecastStateInput?.addEventListener("change", () => {
   hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", state);
   hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity(
     "sensor.saltwatch_estimated_days_until_low_salt",
-    state === "Available" ? forecastInput?.value || "18" : "unavailable",
+    state === "Available" ? forecastInput?.value || "18" : state === "Low Salt" ? "0" : "unavailable",
     "d",
   );
   notifyStates();
@@ -127,7 +127,17 @@ forecastInput?.addEventListener("input", () => {
 document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((button) => {
   button.addEventListener("click", () => {
     const state = button.dataset.state;
-    if (state === "fault") {
+    if (state === "initializing") {
+      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Initializing");
+      hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
+      hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Initializing");
+    } else if (state === "unavailable") {
+      hass.states[config.entity] = entity(config.entity, "unavailable", "%");
+      hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Good");
+      hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
+      hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Waiting for Measurement");
+    } else if (state === "fault") {
       hass.states[config.entity] = entity(config.entity, "unavailable", "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Sensor Fault");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "unavailable", "d");
@@ -152,7 +162,14 @@ document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((butt
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", forecastInput?.value || "18", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Available");
     }
-    if (forecastStateInput) forecastStateInput.value = state === "good" || state === "low" ? "Available" : forecastStateInput.value;
+    if (forecastStateInput) {
+      if (state === "good") forecastStateInput.value = "Available";
+      if (state === "low") forecastStateInput.value = "Low Salt";
+      if (state === "initializing") forecastStateInput.value = "Initializing";
+      if (state === "unavailable") forecastStateInput.value = "Waiting for Measurement";
+      if (state === "fault") forecastStateInput.value = "Sensor Fault";
+      if (state === "calibration") forecastStateInput.value = "Calibration Required";
+    }
     notifyStates();
   });
 });

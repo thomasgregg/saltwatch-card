@@ -87,10 +87,12 @@ estimate. The card can derive a useful state without any of them.
 
 | State | What you see | What it tells you |
 | --- | --- | --- |
+| **Initializing** | Neutral hourglass and a striped `?` tank | SaltWatch is waiting for its first trustworthy level. |
 | **Good** | Green status | The reading is available and above the low threshold. |
 | **Low salt** | Orange warning | The estimated level has reached the refill threshold. |
 | **Calibration required** | Orange calibration symbol | SaltWatch needs calibration before it can provide a trustworthy level. |
 | **Sensor fault** | Red fault symbol | SaltWatch cannot currently provide a valid reading. |
+| **No current reading** | Neutral question-mark symbol and a striped `?` tank | No trustworthy level is currently available, but SaltWatch has not reported a sensor fault. |
 
 When the level is unavailable, the card never leaves an old percentage on
 screen as though it were current. The tank switches to an explicit no-reading
@@ -170,7 +172,7 @@ labels and values legible and prevent clipped or overlapping layouts.
 | Option | What it does | Default |
 | --- | --- | --- |
 | `entity` | Supplies the estimated salt percentage and moves the salt surface. | Required |
-| `status_entity` | Supplies SaltWatch's Good, Low Salt, Calibration Required, or Sensor Fault status. | Derived from the level |
+| `status_entity` | Supplies SaltWatch's Initializing, Good, Low Salt, Calibration Required, or Sensor Fault status. | Derived from the level |
 | `threshold_entity` | Keeps the orange LOW marker synchronized with SaltWatch's adjustable threshold. | Not set |
 | `forecast_entity` | Supplies SaltWatch's estimated days until the low-salt threshold. | Suggested automatically for SaltWatch |
 | `forecast_status_entity` | Explains when the forecast is learning, confirming a refill, or temporarily unavailable. | Suggested automatically for SaltWatch |

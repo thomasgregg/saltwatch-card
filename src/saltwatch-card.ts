@@ -11,6 +11,7 @@ import {
   entityNumber,
   escapeHtml,
 } from "./model";
+import type { CardTone, StatusTranslationKey } from "./model";
 import type {
   HassEntity,
   HomeAssistant,
@@ -496,7 +497,7 @@ export class SaltWatchCard extends HTMLElement {
               <div class="status"><span class="status-dot"></span>${escapeHtml(statusLabel)}</div>
             </header>` : ""}
             <div class="reading metric-mode-${metricMode}${level === undefined ? " state-reading" : ""}">
-              ${level === undefined ? this.stateSymbol(status.tone) : `<div class="metrics metrics-${metricMode}">${metricsMarkup}</div>`}
+              ${level === undefined ? this.stateSymbol(status.translationKey, status.tone) : `<div class="metrics metrics-${metricMode}">${metricsMarkup}</div>`}
               ${level === undefined && this.config.show_status
                 ? ""
                 : level === undefined
@@ -663,18 +664,31 @@ export class SaltWatchCard extends HTMLElement {
     });
   }
 
-  private stateSymbol(tone: string): string {
-    if (tone === "warning") {
+  private stateSymbol(translationKey: StatusTranslationKey | undefined, tone: CardTone): string {
+    if (translationKey === "calibrationRequired") {
       return `<svg class="state-symbol calibration-symbol" viewBox="0 0 96 96" aria-hidden="true">
         <circle cx="48" cy="48" r="31"/>
         <circle cx="48" cy="48" r="12"/>
         <path d="M48 5V18M48 78V91M5 48H18M78 48H91"/>
       </svg>`;
     }
-    return `<svg class="state-symbol fault-symbol" viewBox="0 0 96 96" aria-hidden="true">
+    if (translationKey === "initializing") {
+      return `<svg class="state-symbol initializing-symbol" viewBox="0 0 96 96" aria-hidden="true">
+        <path d="M30 13H66M30 83H66M34 13V26C34 35 42 40 48 48C42 56 34 61 34 70V83M62 13V26C62 35 54 40 48 48C54 56 62 61 62 70V83"/>
+        <path class="symbol-fill" d="M39 27H57C56 34 51 38 48 42C45 38 40 34 39 27ZM38 73C40 64 45 59 48 55C51 59 56 64 58 73Z"/>
+      </svg>`;
+    }
+    if (tone === "fault") {
+      return `<svg class="state-symbol fault-symbol" viewBox="0 0 96 96" aria-hidden="true">
       <circle cx="48" cy="48" r="34"/>
       <path d="M48 27V55"/>
       <circle class="symbol-dot" cx="48" cy="68" r="3.8"/>
+    </svg>`;
+    }
+    return `<svg class="state-symbol unavailable-symbol" viewBox="0 0 96 96" aria-hidden="true">
+      <circle cx="48" cy="48" r="34"/>
+      <path d="M35 37C35 29 40 24 48 24C57 24 62 29 62 37C62 44 58 47 53 51C49 54 48 57 48 61"/>
+      <circle class="symbol-dot" cx="48" cy="71" r="3.8"/>
     </svg>`;
   }
 
@@ -804,7 +818,7 @@ export class SaltWatchCard extends HTMLElement {
 
   private styles(): string {
     return `
-      :host { display:block; width:100%; max-width:100%; min-width:0; height:100%; container-type:inline-size; container-name:saltwatch; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
+      :host { display:block; width:100%; max-width:100%; min-width:0; height:100%; container-type:inline-size; container-name:saltwatch; --sw-card-background:var(--card-background-color,var(--ha-card-background,#181d21)); --sw-panel-divider:color-mix(in srgb,var(--divider-color,#536069) 78%,var(--primary-text-color,#f4f6f7) 22%); --sw-good:var(--success-color); --sw-low:var(--warning-color); --sw-neutral:var(--secondary-text-color,#aeb6bb); --sw-warning:var(--warning-color); --sw-fault:var(--error-color); }
       * { box-sizing:border-box; }
       ha-card { display:block; width:100%; max-width:100%; min-width:0; height:100%; overflow:hidden; color:var(--primary-text-color,#f4f6f7); background:var(--sw-card-background); border-width:var(--ha-card-border-width,1px); border-style:solid; border-color:var(--ha-card-border-color,var(--divider-color,#e0e0e0)); border-radius:var(--ha-card-border-radius,12px); box-shadow:var(--ha-card-box-shadow,none); }
       ha-card.fixed-height { container-type:size; container-name:card; }
@@ -839,7 +853,7 @@ export class SaltWatchCard extends HTMLElement {
       header { min-width:0; display:flex; align-items:center; justify-content:flex-end; }
       .status { flex:0 0 auto; display:flex; align-items:center; gap:13px; margin-left:auto; color:var(--sw-good); font-size:clamp(14px,5.1cqw,23px); font-weight:590; white-space:nowrap; }
       .status-dot { width:17px; height:17px; border-radius:50%; background:var(--sw-good); box-shadow:inset 0 1px 0 rgba(255,255,255,.22); }
-      .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
+      .tone-low .status { color:var(--sw-low); }.tone-low .status-dot { background:var(--sw-low); }.tone-neutral .status { color:var(--sw-neutral); }.tone-neutral .status-dot { background:var(--sw-neutral); }.tone-warning .status { color:var(--sw-warning); }.tone-warning .status-dot { background:var(--sw-warning); }.tone-fault .status { color:var(--sw-fault); }.tone-fault .status-dot { background:var(--sw-fault); }
       .reading { min-height:0; flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; margin:0; padding:36px 0 34px; }
       .without-threshold-summary .reading { padding-bottom:0; }
       .metrics { display:grid; align-items:center; min-width:0; }
@@ -856,10 +870,10 @@ export class SaltWatchCard extends HTMLElement {
       .metric-divider { align-self:center; width:1px; height:clamp(58px,21cqw,108px); background:var(--sw-panel-divider); }
       .forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }
       .state-symbol { display:block; width:clamp(64px,25cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
-      .state-symbol .symbol-dot { fill:currentColor; stroke:none; }
-      .tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
+      .state-symbol .symbol-dot,.state-symbol .symbol-fill { fill:currentColor; stroke:none; }
+      .tone-neutral .state-symbol { color:var(--sw-neutral); }.tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
       .state-reading .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,6.5cqw,29px); font-weight:430; letter-spacing:-.02em; }
-      .tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
+      .tone-neutral .level-label { color:var(--sw-neutral); }.tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(13px,4.6cqw,20px); }
       .threshold-summary strong { margin-left:auto; color:var(--primary-text-color,#f4f6f7); font-weight:650; font-variant-numeric:tabular-nums; }
       .marker-line { width:34px; height:3px; border-radius:3px; background:var(--sw-warning); box-shadow:0 0 5px color-mix(in srgb,var(--sw-warning) 12%,transparent); }

@@ -31,6 +31,16 @@ describe("SaltWatch card model", () => {
     });
   });
 
+  it("keeps initialization neutral whether or not a fresh level has arrived", () => {
+    const expected = {
+      label: "Initializing",
+      tone: "neutral",
+      translationKey: "initializing",
+    };
+    expect(deriveStatus("Initializing", undefined, 20)).toEqual(expected);
+    expect(deriveStatus("Initializing", 62, 20)).toEqual(expected);
+  });
+
   it("derives a low status inclusively at the threshold", () => {
     expect(deriveStatus("Good", 20, 20)).toEqual({ label: "Low salt", tone: "low", translationKey: "lowSalt" });
     expect(deriveStatus("Good", 20.1, 20)).toEqual({ label: "Good", tone: "good", translationKey: "good" });
@@ -44,7 +54,7 @@ describe("SaltWatch card model", () => {
     });
     expect(deriveStatus("unavailable", undefined, 20)).toEqual({
       label: "No current reading",
-      tone: "fault",
+      tone: "neutral",
       translationKey: "noCurrentReading",
     });
   });
