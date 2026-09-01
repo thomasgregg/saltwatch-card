@@ -93,7 +93,7 @@ function B(a) {
 }
 function r(a, t = B(), e = {}) {
   return Object.entries(e).reduce(
-    (o, [i, d]) => o.replaceAll(`{${i}}`, d),
+    (i, [o, d]) => i.replaceAll(`{${o}}`, d),
     rt[t][a]
   );
 }
@@ -122,12 +122,12 @@ function D(a) {
   return st(a?.state);
 }
 function nt(a, t, e) {
-  const o = a?.trim().toLowerCase() ?? "";
-  return o.includes("fault") || o.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : o.includes("calibration") ? {
+  const i = a?.trim().toLowerCase() ?? "";
+  return i.includes("fault") || i.includes("error") ? { label: "Sensor fault", tone: "fault", translationKey: "sensorFault" } : i.includes("calibration") ? {
     label: "Calibration required",
     tone: "warning",
     translationKey: "calibrationRequired"
-  } : o.includes("initializing") ? {
+  } : i.includes("initializing") ? {
     label: "Initializing",
     tone: "neutral",
     translationKey: "initializing"
@@ -135,7 +135,7 @@ function nt(a, t, e) {
     label: "No current reading",
     tone: "neutral",
     translationKey: "noCurrentReading"
-  } : o.includes("low") || t <= e ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : o === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
+  } : i.includes("low") || t <= e ? { label: "Low salt", tone: "low", translationKey: "lowSalt" } : i === "good" ? { label: "Good", tone: "good", translationKey: "good" } : {
     label: _(a) ? "Good" : a?.trim() || "Good",
     tone: "good",
     translationKey: _(a) ? "good" : void 0
@@ -180,7 +180,6 @@ class pt extends HTMLElement {
   languageObserver;
   heightObserver;
   heightFrame;
-  inferredFixedHeight = !1;
   constructor() {
     super(), this.attachShadow({ mode: "open" });
   }
@@ -196,8 +195,8 @@ class pt extends HTMLElement {
         composed: !0,
         cancelable: !0
       });
-      t.context = "states", t.subscribe = !0, t.callback = (e, o) => {
-        this.unsubscribeStates = o, this.updateStates(e);
+      t.context = "states", t.subscribe = !0, t.callback = (e, i) => {
+        this.unsubscribeStates = i, this.updateStates(e);
       }, this.dispatchEvent(t);
     }
     !this.heightObserver && typeof ResizeObserver < "u" && (this.heightObserver = new ResizeObserver(() => this.scheduleHeightModeUpdate()), this.heightObserver.observe(this)), this.scheduleHeightModeUpdate();
@@ -321,8 +320,8 @@ class pt extends HTMLElement {
   static getConfigElement() {
     return document.createElement("saltwatch-card-editor");
   }
-  static getStubConfig(t, e = [], o = []) {
-    const i = [...e, ...o, ...Object.keys(t.states)], d = [...new Set(i)], n = (...m) => d.find((x) => m.every((b) => x.includes(b))), l = {
+  static getStubConfig(t, e = [], i = []) {
+    const o = [...e, ...i, ...Object.keys(t.states)], d = [...new Set(o)], n = (...m) => d.find((x) => m.every((b) => x.includes(b))), l = {
       entity: n("saltwatch", "salt_level") ?? n("salt", "level") ?? "sensor.saltwatch_salt_level",
       low_threshold: Y,
       show_status: !0,
@@ -331,22 +330,22 @@ class pt extends HTMLElement {
       metric_mode: "level",
       section_order: "tank-first",
       tap_action: O
-    }, s = n("saltwatch", "salt_status"), h = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), c = n("saltwatch", "forecast_status");
-    return s && (l.status_entity = s), h && (l.threshold_entity = h), u && (l.forecast_entity = u), c && (l.forecast_status_entity = c), l;
+    }, s = n("saltwatch", "salt_status"), c = n("saltwatch", "low_salt_threshold"), u = n("saltwatch", "estimated_days_until_low_salt"), h = n("saltwatch", "forecast_status");
+    return s && (l.status_entity = s), c && (l.threshold_entity = c), u && (l.forecast_entity = u), h && (l.forecast_status_entity = h), l;
   }
   setConfig(t) {
     if (!t.entity || typeof t.entity != "string")
       throw new Error("SaltWatch Card requires an estimated salt level entity.");
     this.clearInteractionTimers();
-    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", o = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", i = t.section_order === "details-first" ? "details-first" : "tank-first", d = tt(t.low_threshold ?? Y);
-    t.grid_options?.rows === "auto" && (this.inferredFixedHeight = !1), this.config = {
+    const e = t.display_mode === "tank" || t.display_mode === "details" ? t.display_mode : "both", i = t.metric_mode === "forecast" || t.metric_mode === "both" ? t.metric_mode : "level", o = t.section_order === "details-first" ? "details-first" : "tank-first", d = tt(t.low_threshold ?? Y);
+    this.config = {
       ...t,
       low_threshold: d,
       show_status: t.show_status ?? !0,
       show_low_marker: t.show_low_marker ?? !0,
       display_mode: e,
-      metric_mode: o,
-      section_order: i,
+      metric_mode: i,
+      section_order: o,
       tap_action: z(t.tap_action, O),
       hold_action: z(t.hold_action, v),
       double_tap_action: z(t.double_tap_action, v)
@@ -393,13 +392,13 @@ class pt extends HTMLElement {
       this.shadowRoot.innerHTML = `<ha-card><div class="loading">${f(r("noCurrentReading"))}</div></ha-card>`;
       return;
     }
-    const t = B(), e = C(this.states, this.config.entity), o = D(e), i = o === void 0 ? void 0 : $(o), d = D(C(this.states, this.config.threshold_entity)), n = $(d ?? this.config.low_threshold ?? Y), l = C(this.states, this.config.status_entity), s = nt(l?.state, i, n), h = s.translationKey ? r(s.translationKey, t) : s.label, u = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", m = u !== "details", x = u !== "tank", b = this.config.show_low_marker !== !1, N = typeof this.config.grid_options?.rows == "number", R = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), k = "SaltWatch", E = i === void 0 ? "—" : H(i, t), G = i === void 0 ? r("noCurrentReading", t) : E, T = D(C(this.states, this.config.forecast_entity)), g = T === void 0 || T < 0 ? void 0 : Math.round(T), q = g === void 0 ? "—" : ct(g, t), X = C(this.states, this.config.forecast_status_entity)?.state, S = g === void 0 ? ht(X, t) : r(g === 0 ? "lowThresholdReached" : g === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), P = `<div class="metric level-metric">
+    const t = B(), e = C(this.states, this.config.entity), i = D(e), o = i === void 0 ? void 0 : $(i), d = D(C(this.states, this.config.threshold_entity)), n = $(d ?? this.config.low_threshold ?? Y), l = C(this.states, this.config.status_entity), s = nt(l?.state, o, n), c = s.translationKey ? r(s.translationKey, t) : s.label, u = this.config.display_mode ?? "both", h = this.config.metric_mode ?? "level", m = u !== "details", x = u !== "tank", b = this.config.show_low_marker !== !1, N = typeof this.config.grid_options?.rows == "number", R = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), k = "SaltWatch", E = o === void 0 ? "—" : H(o, t), G = o === void 0 ? r("noCurrentReading", t) : E, T = D(C(this.states, this.config.forecast_entity)), g = T === void 0 || T < 0 ? void 0 : Math.round(T), q = g === void 0 ? "—" : ct(g, t), X = C(this.states, this.config.forecast_status_entity)?.state, S = g === void 0 ? ht(X, t) : r(g === 0 ? "lowThresholdReached" : g === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), P = `<div class="metric level-metric">
       <div class="metric-value level">${E}</div>
-      <div class="metric-label level-label">${f(r(c === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
+      <div class="metric-label level-label">${f(r(h === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, K = `<div class="metric forecast-metric${g === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${g === void 0 ? this.forecastSymbol() : q}</div>
       <div class="metric-label forecast-label">${f(S)}</div>
-    </div>`, A = c === "both" ? `${P}<span class="metric-divider" aria-hidden="true"></span>${K}` : c === "forecast" ? K : P, y = g === void 0 ? S : `${q} ${S}`, M = c === "both" ? `${G}, ${y}` : c === "forecast" ? y : G, L = 132, w = 474, j = w - L, p = i === void 0 ? w : w - i / 100 * j, at = w - n / 100 * j, I = [
+    </div>`, A = h === "both" ? `${P}<span class="metric-divider" aria-hidden="true"></span>${K}` : h === "forecast" ? K : P, y = g === void 0 ? S : `${q} ${S}`, M = h === "both" ? `${G}, ${y}` : h === "forecast" ? y : G, L = 132, w = 474, j = w - L, p = o === void 0 ? w : w - o / 100 * j, at = w - n / 100 * j, I = [
       `M96 ${(p + 2).toFixed(1)}`,
       `Q108 ${(p - 2).toFixed(1)} 120 ${(p - 3).toFixed(1)}`,
       `Q132 ${(p - 6).toFixed(1)} 145 ${(p - 4).toFixed(1)}`,
@@ -417,18 +416,18 @@ class pt extends HTMLElement {
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${s.tone}${N ? " fixed-height" : ""}"${R ? ' tabindex="0" role="button"' : ""} aria-label="${k}: ${f(M)}, ${f(h)}">
+      <ha-card class="tone-${s.tone}${N ? " fixed-height" : ""}"${R ? ' tabindex="0" role="button"' : ""} aria-label="${k}: ${f(M)}, ${f(c)}">
         <div class="card-shell mode-${u} order-${this.config.section_order ?? "tank-first"}">
           ${m ? `<section class="tank-panel" aria-label="${f(r("tankLevelVisualization", t))}">
-            ${this.tankSvg(i, it, I, p, at, n, s.tone, t)}
+            ${this.tankSvg(o, it, I, p, at, n, s.tone, t)}
           </section>` : ""}
           ${x ? `<section class="content-panel${b ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
-              <div class="status"><span class="status-dot"></span>${f(h)}</div>
+              <div class="status"><span class="status-dot"></span>${f(c)}</div>
             </header>` : ""}
-            <div class="reading metric-mode-${c}${i === void 0 ? " state-reading" : ""}">
-              ${i === void 0 ? this.stateSymbol(s.translationKey, s.tone) : `<div class="metrics metrics-${c}">${A}</div>`}
-              ${i === void 0 && this.config.show_status ? "" : i === void 0 ? `<div class="level-label">${f(h)}</div>` : ""}
+            <div class="reading metric-mode-${h}${o === void 0 ? " state-reading" : ""}">
+              ${o === void 0 ? this.stateSymbol(s.translationKey, s.tone) : `<div class="metrics metrics-${h}">${A}</div>`}
+              ${o === void 0 && this.config.show_status ? "" : o === void 0 ? `<div class="level-label">${f(c)}</div>` : ""}
             </div>
             ${b ? `<div class="threshold-summary" aria-label="${f(r("lowMarkerAt", t, { value: H(n, t) }))}">
               <span class="marker-line"></span>
@@ -450,28 +449,30 @@ class pt extends HTMLElement {
     if (!this.shadowRoot || !this.config) return;
     const t = this.shadowRoot.querySelector("ha-card");
     if (!t || t.clientHeight === 0) return;
-    const o = typeof this.config.grid_options?.rows == "number", i = t.getBoundingClientRect(), d = [
+    const i = typeof this.config.grid_options?.rows == "number";
+    i || t.classList.remove("fixed-height");
+    const o = t.getBoundingClientRect(), d = [
       ...this.shadowRoot.querySelectorAll(
         ".status,.metric-value,.metric-label,.threshold-summary,.tank"
       )
-    ].some((l) => {
-      const s = l.getBoundingClientRect();
-      return s.height > 0 && (s.top < i.top - 1 || s.bottom > i.bottom + 1);
+    ].some((s) => {
+      const c = s.getBoundingClientRect();
+      return c.height > 0 && (c.top < o.top - 1 || c.bottom > o.bottom + 1);
     }), n = [
       ...this.shadowRoot.querySelectorAll(".card-shell,.tank-panel,.content-panel,.reading")
-    ].some((l) => l.scrollHeight > l.clientHeight + 1);
-    (d || n) && (this.inferredFixedHeight = !0), t.classList.toggle("fixed-height", o || this.inferredFixedHeight), this.updateThresholdMarkerPosition();
+    ].some((s) => s.scrollHeight > s.clientHeight + 1), l = !i && (d || n);
+    t.classList.toggle("fixed-height", i || l), this.updateThresholdMarkerPosition();
   }
   updateThresholdMarkerPosition() {
     if (!this.shadowRoot) return;
-    const t = this.shadowRoot.querySelector("ha-card"), e = this.shadowRoot.querySelector(".tank-panel"), o = this.shadowRoot.querySelector("svg.tank"), i = this.shadowRoot.querySelector(".threshold-label");
-    if (!t || !e || !o || !i) return;
-    const d = Number(i.dataset.preferredX), n = Number(i.dataset.safeX), l = Number(i.dataset.markerY), s = o.getScreenCTM();
+    const t = this.shadowRoot.querySelector("ha-card"), e = this.shadowRoot.querySelector(".tank-panel"), i = this.shadowRoot.querySelector("svg.tank"), o = this.shadowRoot.querySelector(".threshold-label");
+    if (!t || !e || !i || !o) return;
+    const d = Number(o.dataset.preferredX), n = Number(o.dataset.safeX), l = Number(o.dataset.markerY), s = i.getScreenCTM();
     if (![d, n, l].every(Number.isFinite) || !s) return;
-    const h = t.getBoundingClientRect(), u = e.getBoundingClientRect(), c = o.createSVGPoint();
-    c.x = Math.max(h.left, u.left) + 4, c.y = u.top;
-    const m = c.matrixTransform(s.inverse()).x, x = Math.min(n, Math.max(d, m));
-    i.setAttribute("transform", `translate(${x.toFixed(1)} ${l.toFixed(1)})`);
+    const c = t.getBoundingClientRect(), u = e.getBoundingClientRect(), h = i.createSVGPoint();
+    h.x = Math.max(c.left, u.left) + 4, h.y = u.top;
+    const m = h.matrixTransform(s.inverse()).x, x = Math.min(n, Math.max(d, m));
+    o.setAttribute("transform", `translate(${x.toFixed(1)} ${l.toFixed(1)})`);
   }
   actionConfig(t) {
     return this.config ? t === "tap" ? this.config.tap_action ?? O : t === "hold" ? this.config.hold_action ?? v : this.config.double_tap_action ?? v : v;
@@ -541,11 +542,11 @@ class pt extends HTMLElement {
       <path d="M62 52V61L68 65"/>
     </svg>`;
   }
-  tankSvg(t, e, o, i, d, n, l, s) {
-    const h = Array.from({ length: 21 }, (K, A) => {
+  tankSvg(t, e, i, o, d, n, l, s) {
+    const c = Array.from({ length: 21 }, (K, A) => {
       const y = 100 - A * 5, M = 474 - y / 100 * 342, L = y % 25 === 0, w = !L && y % 10 === 0, j = L ? 60 : w ? 67 : 71;
       return `${L ? `<text x="52" y="${M + 5}" text-anchor="end">${y}%</text>` : ""}<path class="${L ? "major" : w ? "medium" : "minor"}" d="M${j} ${M}H78"/>`;
-    }).join(""), u = t === void 0, c = Math.max(134, Math.min(470, d)), m = r("lowBadge", s), x = s === "de" ? 72 : 54, b = 1.18, N = -60, R = 210, k = 296, E = 12, G = 324, T = N + R + (E - R) * b, g = T - x, q = T, S = (k + (c - k) * b - 15).toFixed(1), P = u ? r("noCurrentReading", s) : r("estimatedLevel", s) + `: ${H(t, s)}`;
+    }).join(""), u = t === void 0, h = Math.max(134, Math.min(470, d)), m = r("lowBadge", s), x = s === "de" ? 72 : 54, b = 1.18, N = -60, R = 210, k = 296, E = 12, G = 324, T = N + R + (E - R) * b, g = T - x, q = T, S = (k + (h - k) * b - 15).toFixed(1), P = u ? r("noCurrentReading", s) : r("estimatedLevel", s) + `: ${H(t, s)}`;
     return `
       <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${f(P)}">
         <defs>
@@ -592,7 +593,7 @@ class pt extends HTMLElement {
           </filter>
         </defs>
         <g class="tank-visual" transform="translate(${N} 0) translate(210 ${k}) scale(${b}) translate(-210 -${k})">
-        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${h}</g>
+        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${c}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
             <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
@@ -605,7 +606,7 @@ class pt extends HTMLElement {
         <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
         <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
         <g clip-path="url(#tank-window)">
-          ${u ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${i.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${o}"/>`}
+          ${u ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${t}" data-surface-y="${o.toFixed(1)}" d="${e}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ot}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${e}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
         <path class="threshold tone-${l}" data-threshold="${n}" data-threshold-y="${d.toFixed(1)}" d="M${E} ${d.toFixed(1)}H${G}"/>
@@ -788,19 +789,19 @@ function W(a) {
   return a.slice(a.indexOf(".") + 1);
 }
 function ut(a, t) {
-  const e = a.split("_"), o = t.split("_");
-  let i = 0;
-  for (; i < e.length && e[i] === o[i]; ) i += 1;
-  return i;
+  const e = a.split("_"), i = t.split("_");
+  let o = 0;
+  for (; o < e.length && e[o] === i[o]; ) o += 1;
+  return o;
 }
 function ft(a, t) {
   if (!a || !t) return {};
-  const e = W(t), o = e.endsWith("_salt_level") ? e.slice(0, -10) : "", i = Object.keys(a.states);
+  const e = W(t), i = e.endsWith("_salt_level") ? e.slice(0, -10) : "", o = Object.keys(a.states);
   return Object.fromEntries(F.flatMap(({ key: d, domain: n, suffix: l }) => {
-    const s = o ? `${n}.${o}${l}` : void 0;
+    const s = i ? `${n}.${i}${l}` : void 0;
     if (s && a.states[s]) return [[d, s]];
-    if (o) return [];
-    const u = i.filter((c) => c.startsWith(`${n}.`) && W(c).endsWith(l)).map((c) => ({ id: c, score: ut(e, W(c)) })).sort((c, m) => m.score - c.score || c.id.localeCompare(m.id))[0];
+    if (i) return [];
+    const u = o.filter((h) => h.startsWith(`${n}.`) && W(h).endsWith(l)).map((h) => ({ id: h, score: ut(e, W(h)) })).sort((h, m) => m.score - h.score || h.id.localeCompare(m.id))[0];
     return u && u.score > 0 ? [[d, u.id]] : [];
   }));
 }
@@ -894,8 +895,8 @@ class wt extends HTMLElement {
   set hass(t) {
     const e = this.hassRenderKey();
     this._hass = t;
-    const o = this.autoConfigureDetected();
-    !this.shadowRoot?.querySelector(".editor") || o || e !== this.hassRenderKey() ? this.render() : this.updateFormHass();
+    const i = this.autoConfigureDetected();
+    !this.shadowRoot?.querySelector(".editor") || i || e !== this.hassRenderKey() ? this.render() : this.updateFormHass();
   }
   get hass() {
     return this._hass;
@@ -906,7 +907,7 @@ class wt extends HTMLElement {
   autoConfigureDetected() {
     if (!this._hass || !this._config?.entity) return !1;
     const t = ft(this._hass, this._config.entity), e = Object.fromEntries(
-      Object.entries(t).filter(([o]) => !this._config?.[o])
+      Object.entries(t).filter(([i]) => !this._config?.[i])
     );
     return Object.keys(e).length === 0 ? !1 : (this.updateConfig(e, !1), !0);
   }
@@ -942,7 +943,7 @@ class wt extends HTMLElement {
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const t = xt(), e = this._config.display_mode ?? "both", o = this._config.metric_mode ?? "level", i = this._config.section_order ?? "tank-first", d = e !== "tank", n = this.relatedState(), l = n.connected === n.total, s = this._config;
+    const t = xt(), e = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", d = e !== "tank", n = this.relatedState(), l = n.connected === n.total, s = this._config;
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
@@ -967,8 +968,8 @@ class wt extends HTMLElement {
             <div class="sub-control">
               <label>${t.sectionOrder}</label>
               <div class="segments" role="group" aria-label="${t.sectionOrder}">
-                ${this.segmentButton("section_order", "tank-first", t.tankFirst, i)}
-                ${this.segmentButton("section_order", "details-first", t.detailsFirst, i)}
+                ${this.segmentButton("section_order", "tank-first", t.tankFirst, o)}
+                ${this.segmentButton("section_order", "details-first", t.detailsFirst, o)}
               </div>
             </div>` : ""}
         </section>
@@ -976,9 +977,9 @@ class wt extends HTMLElement {
         ${d ? `<section class="section compact-section">
           <h3>${t.values}</h3>
           <div class="segments three" role="group" aria-label="${t.values}">
-            ${this.segmentButton("metric_mode", "level", t.level, o)}
-            ${this.segmentButton("metric_mode", "forecast", t.forecast, o)}
-            ${this.segmentButton("metric_mode", "both", t.both, o)}
+            ${this.segmentButton("metric_mode", "level", t.level, i)}
+            ${this.segmentButton("metric_mode", "forecast", t.forecast, i)}
+            ${this.segmentButton("metric_mode", "both", t.both, i)}
           </div>
         </section>
 
@@ -1015,44 +1016,44 @@ class wt extends HTMLElement {
       { name: "tap_action", selector: { ui_action: { actions: U, default_action: "more-info" } }, context: { entity_id: "entity" } },
       { name: "hold_action", selector: { ui_action: { actions: U, default_action: "none" } }, context: { entity_id: "entity" } },
       { name: "double_tap_action", selector: { ui_action: { actions: U, default_action: "none" } }, context: { entity_id: "entity" } }
-    ], s, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((h) => {
-      h.addEventListener("click", () => {
-        const u = h.dataset.field;
-        this.updateConfig({ [u]: h.dataset.value });
+    ], s, { tap_action: t.tap, hold_action: t.hold, double_tap_action: t.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
+      c.addEventListener("click", () => {
+        const u = c.dataset.field;
+        this.updateConfig({ [u]: c.dataset.value });
       });
-    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((h) => {
-      h.addEventListener("change", () => this.updateConfig({ [h.dataset.field]: h.checked }));
+    }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
+      c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
     }), this.shadowRoot.querySelector(".configure")?.addEventListener("click", () => {
       this.advancedOpen = !0, this.render(), this.shadowRoot?.querySelector("#advanced")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }), this.shadowRoot.querySelector("#advanced")?.addEventListener("toggle", (h) => {
-      this.advancedOpen = h.currentTarget.open;
-    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (h) => {
-      this.actionsOpen = h.currentTarget.open;
+    }), this.shadowRoot.querySelector("#advanced")?.addEventListener("toggle", (c) => {
+      this.advancedOpen = c.currentTarget.open;
+    }), this.shadowRoot.querySelector("#actions")?.addEventListener("toggle", (c) => {
+      this.actionsOpen = c.currentTarget.open;
     });
   }
-  setupForm(t, e, o, i) {
+  setupForm(t, e, i, o) {
     const d = this.shadowRoot?.querySelector(`#${t}`);
     if (!d) return;
     const n = document.createElement("ha-form");
-    n.hass = this._hass, n.data = o, n.schema = e, n.computeLabel = (l) => i[l.name] ?? l.name, n.addEventListener("value-changed", (l) => {
+    n.hass = this._hass, n.data = i, n.schema = e, n.computeLabel = (l) => o[l.name] ?? l.name, n.addEventListener("value-changed", (l) => {
       const s = l.detail?.value;
       s && (this.updateConfig(s), t === "level-form" && (this.autoConfigureDetected(), this.render()));
     }), d.append(n);
   }
-  layoutButton(t, e, o) {
-    const i = t === o;
-    return `<button type="button" class="layout-option${i ? " selected" : ""}" data-field="display_mode" data-value="${t}" aria-pressed="${i}">
+  layoutButton(t, e, i) {
+    const o = t === i;
+    return `<button type="button" class="layout-option${o ? " selected" : ""}" data-field="display_mode" data-value="${t}" aria-pressed="${o}">
       <span class="layout-preview layout-${t}" aria-hidden="true"><i></i><b></b></span>
       <span>${Z(e)}</span>
-      ${i ? '<span class="selected-mark">✓</span>' : ""}
+      ${o ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
-  segmentButton(t, e, o, i) {
-    const d = e === i;
-    return `<button type="button" class="segment${d ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${d}">${Z(o)}</button>`;
+  segmentButton(t, e, i, o) {
+    const d = e === o;
+    return `<button type="button" class="segment${d ? " selected" : ""}" data-field="${t}" data-value="${e}" aria-pressed="${d}">${Z(i)}</button>`;
   }
-  toggle(t, e, o, i) {
-    return `<label class="toggle-row"><span><strong>${Z(e)}</strong><small>${Z(o)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${i ? "checked" : ""}><i></i></span></label>`;
+  toggle(t, e, i, o) {
+    return `<label class="toggle-row"><span><strong>${Z(e)}</strong><small>${Z(i)}</small></span><span class="switch"><input type="checkbox" data-field="${t}" ${o ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -1110,7 +1111,7 @@ class wt extends HTMLElement {
     `;
   }
 }
-const bt = "0.4.20", yt = {
+const bt = "0.4.21", yt = {
   version: bt
 }, V = "saltwatch-card", vt = yt.version;
 customElements.get(V) || customElements.define(V, pt);

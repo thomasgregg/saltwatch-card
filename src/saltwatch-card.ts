@@ -106,7 +106,6 @@ export class SaltWatchCard extends HTMLElement {
   private languageObserver?: MutationObserver;
   private heightObserver?: ResizeObserver;
   private heightFrame?: number;
-  private inferredFixedHeight = false;
 
   public constructor() {
     super();
@@ -326,7 +325,6 @@ export class SaltWatchCard extends HTMLElement {
       : "level";
     const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
     const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
-    if (config.grid_options?.rows === "auto") this.inferredFixedHeight = false;
     this.config = {
       ...config,
       low_threshold: lowThreshold,
@@ -537,6 +535,7 @@ export class SaltWatchCard extends HTMLElement {
 
     const configuredRows = this.config.grid_options?.rows;
     const explicitlyFixed = typeof configuredRows === "number";
+    if (!explicitlyFixed) card.classList.remove("fixed-height");
     const cardBounds = card.getBoundingClientRect();
     const verticallyClipped = [
       ...this.shadowRoot.querySelectorAll<HTMLElement>(
@@ -551,8 +550,8 @@ export class SaltWatchCard extends HTMLElement {
       ...this.shadowRoot.querySelectorAll<HTMLElement>(".card-shell,.tank-panel,.content-panel,.reading"),
     ].some((element) => element.scrollHeight > element.clientHeight + 1);
 
-    if (verticallyClipped || panelsOverflow) this.inferredFixedHeight = true;
-    card.classList.toggle("fixed-height", explicitlyFixed || this.inferredFixedHeight);
+    const inferredFixed = !explicitlyFixed && (verticallyClipped || panelsOverflow);
+    card.classList.toggle("fixed-height", explicitlyFixed || inferredFixed);
     this.updateThresholdMarkerPosition();
   }
 

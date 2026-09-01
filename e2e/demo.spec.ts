@@ -428,7 +428,7 @@ test("keeps the stacked metric divider thin without clipping the forecast label"
   expect(result.forecastLabelInside).toBe(true);
 });
 
-test("detects a constrained Home Assistant preview without grid options", async ({ page }) => {
+test("enters and exits compact mode as an inferred height constraint changes", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
   await frame.evaluate((element) => {
@@ -464,6 +464,16 @@ test("detects a constrained Home Assistant preview without grid options", async 
     });
   });
   expect(contentInside).toBe(true);
+
+  await frame.evaluate((element) => {
+    element.style.height = "720px";
+  });
+  await expect(card.locator("ha-card")).not.toHaveClass(/fixed-height/);
+
+  await frame.evaluate((element) => {
+    element.style.height = "220px";
+  });
+  await expect(card.locator("ha-card")).toHaveClass(/fixed-height/);
 });
 
 test("keeps natural-height cards out of compact mode", async ({ page }) => {
