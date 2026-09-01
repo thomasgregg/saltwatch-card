@@ -219,7 +219,7 @@ export class SaltWatchCardEditor extends HTMLElement {
           ? {
             tone: "info",
             icon: "i",
-            title: copy.selectDeviceTitle,
+            title: deviceOptions.length === 0 ? copy.noDevicesTitle : copy.selectDeviceTitle,
             text: deviceOptions.length === 0 ? copy.noDevicesFound : copy.selectDeviceHelp,
           }
           : complete

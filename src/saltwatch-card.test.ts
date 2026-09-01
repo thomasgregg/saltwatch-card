@@ -203,7 +203,7 @@ describe("SaltWatchCard", () => {
     expect(form.schema.some((item) => item.schema?.some((field) => field.name.endsWith("_entity")))).toBe(false);
     card.setConfig({ ...config, device_id: "" });
     expect(card.shadowRoot?.querySelector(".configuration-empty")).not.toBeNull();
-    expect(card.shadowRoot?.textContent).toContain("Select a SaltWatch device");
+    expect(card.shadowRoot?.textContent).toContain("SaltWatch device required");
     expect(card.shadowRoot?.querySelector("style")?.textContent).toContain(".configuration-empty");
     expect(() => form.assertConfig({ device_id: "" })).toThrow(/requires a SaltWatch device/);
   });
@@ -620,7 +620,7 @@ describe("SaltWatchCard", () => {
     host.append(editor);
 
     await vi.waitFor(() => expect(editor.shadowRoot?.querySelector(".notice.info")?.textContent).toContain(
-      "Select a SaltWatch device",
+      "No SaltWatch devices found",
     ));
     expect(editor.shadowRoot?.textContent).toContain("SaltWatch device");
     expect(editor.shadowRoot?.textContent).not.toContain("Card layout");

@@ -460,7 +460,7 @@ export class SaltWatchCard extends HTMLElement {
     const language = this.activeLanguage();
     const locale = resolveLocale(language);
     if (!this.config.device_id) {
-      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${escapeHtml(localize("selectDeviceTitle", locale))}</strong><small>${escapeHtml(localize("selectDeviceHelp", locale))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${escapeHtml(localize("deviceRequiredTitle", locale))}</strong><small>${escapeHtml(localize("deviceRequiredHelp", locale))}</small></div></ha-card>`;
       return;
     }
     if (!this.states || !this.hassData || (!this.resolution && !this.resolutionError)) {

@@ -14,7 +14,7 @@ test("presents a centered neutral empty state until a device is selected", async
     });
   });
 
-  await expect(card.locator(".configuration-empty")).toContainText("Select a SaltWatch device");
+  await expect(card.locator(".configuration-empty")).toContainText("SaltWatch device required");
   const alignment = await card.evaluate((element) => {
     const root = element.shadowRoot!;
     const surface = root.querySelector<HTMLElement>("ha-card")!.getBoundingClientRect();

@@ -9,6 +9,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   disabled: "deaktiviert",
   detectedText: "Die benötigten SaltWatch-Entitäten sind mit diesem Gerät verknüpft.",
   detectedTitle: "SaltWatch-Entitäten erkannt",
+  deviceRequiredHelp: "Verbinde ein SaltWatch-Gerät mit Home Assistant und wähle es anschließend im Karteneditor aus.",
+  deviceRequiredTitle: "SaltWatch-Gerät erforderlich",
   deviceUnavailableHelp: "Wähle ein verfügbares SaltWatch-Gerät aus.",
   deviceUnavailableTitle: "SaltWatch-Gerät nicht verfügbar",
   doubleTap: "Doppelt tippen",
@@ -54,7 +56,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   missingDeviceError: "SaltWatch Card benötigt ein SaltWatch-Gerät.",
   missingTitle: "Einige SaltWatch-Entitäten wurden nicht gefunden",
   noCurrentReading: "Kein aktueller Messwert",
-  noDevicesFound: "In Home Assistant wurden keine SaltWatch-Geräte gefunden.",
+  noDevicesFound: "Verbinde ein SaltWatch-Gerät mit Home Assistant und öffne den Karteneditor anschließend erneut.",
+  noDevicesTitle: "Keine SaltWatch-Geräte gefunden",
   registryError: "Home Assistant konnte die Entitätsregistrierung nicht lesen",
   percentageOnly: "Nur Details",
   saltLevel: "Salzstand",
@@ -91,6 +94,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   disabled: "disabled",
   detectedText: "Required SaltWatch entities are linked from this device.",
   detectedTitle: "SaltWatch entities detected",
+  deviceRequiredHelp: "Connect a SaltWatch device to Home Assistant, then select it in the card editor.",
+  deviceRequiredTitle: "SaltWatch device required",
   deviceUnavailableHelp: "Select an available SaltWatch device.",
   deviceUnavailableTitle: "SaltWatch device unavailable",
   doubleTap: "Double-tap action",
@@ -136,7 +141,8 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   missingDeviceError: "SaltWatch Card requires a SaltWatch device.",
   missingTitle: "Some SaltWatch entities weren’t found",
   noCurrentReading: "No current reading",
-  noDevicesFound: "No SaltWatch devices were found in Home Assistant.",
+  noDevicesFound: "Connect a SaltWatch device to Home Assistant, then reopen the card editor.",
+  noDevicesTitle: "No SaltWatch devices found",
   registryError: "Home Assistant could not read the entity registry",
   percentageOnly: "Details only",
   saltLevel: "Salt level",
@@ -163,7 +169,7 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   values: "Values",
   visible: "Visible elements"
 }, oe = { de: fe, en: me };
-function W(a) {
+function G(a) {
   const e = a?.trim() || (typeof document < "u" ? document.documentElement.lang : "") || (typeof navigator < "u" ? navigator.language : "") || "en";
   try {
     return Intl.getCanonicalLocales(e)[0] ?? "en";
@@ -172,10 +178,10 @@ function W(a) {
   }
 }
 function E(a) {
-  const e = W(a).toLowerCase();
+  const e = G(a).toLowerCase();
   return e === "de" || e.startsWith("de-") ? "de" : "en";
 }
-function xe(a = E()) {
+function ve(a = E()) {
   return oe[a];
 }
 function s(a, e = E(), t = {}) {
@@ -184,8 +190,8 @@ function s(a, e = E(), t = {}) {
     oe[e][a]
   );
 }
-function K(a, e = W()) {
-  return new Intl.NumberFormat(W(e), {
+function P(a, e = G()) {
+  return new Intl.NumberFormat(G(e), {
     style: "percent",
     maximumFractionDigits: 0
   }).format(a / 100);
@@ -194,7 +200,7 @@ const se = /* @__PURE__ */ new Set(["", "unknown", "unavailable", "none", "nan"]
 function ae(a) {
   return a === void 0 || se.has(a.trim().toLowerCase());
 }
-function ve(a) {
+function xe(a) {
   if (typeof a == "number")
     return Number.isFinite(a) ? a : void 0;
   if (typeof a != "string" || se.has(a.trim().toLowerCase()))
@@ -206,7 +212,7 @@ function re(a, e = 0, t = 100) {
   return Math.min(t, Math.max(e, a));
 }
 function B(a) {
-  return ve(a?.state);
+  return xe(a?.state);
 }
 function be(a, e, t) {
   const i = a?.trim().toLowerCase() ?? "";
@@ -279,23 +285,23 @@ function le(a, e) {
     disabled: r
   };
 }
-function q(a) {
+function z(a) {
   return J[a].originalName;
 }
-const O = { action: "more-info" }, y = { action: "none" }, ye = 500, ke = 250, Z = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+const O = { action: "more-info" }, y = { action: "none" }, ye = 500, ke = 250, V = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
 function k(a, e) {
   return e ? a?.[e] : void 0;
 }
 function C(a, e, t = E()) {
   if (a === void 0) return e;
-  if (typeof a != "object" || a === null || typeof a.action != "string" || !Z.includes(a.action))
+  if (typeof a != "object" || a === null || typeof a.action != "string" || !V.includes(a.action))
     throw new Error(s("unsupportedActionError", t));
   return a;
 }
 function Se(a, e) {
   return new Intl.NumberFormat(e, { maximumFractionDigits: 0 }).format(a);
 }
-function Le(a, e) {
+function Te(a, e) {
   const t = a?.trim() ?? "", i = t.toLowerCase(), o = i.match(/^(\d+)\s+of\s+(\d+)\s+days?\s+collected$/);
   if (o)
     return s("forecastDetailsLearning", e, {
@@ -314,7 +320,7 @@ function Le(a, e) {
   }[i];
   return r ? s(r, e) : !t || i === "unknown" || i === "unavailable" ? s("forecastUnavailable", e) : t;
 }
-class Te extends HTMLElement {
+class Le extends HTMLElement {
   config;
   hassData;
   states;
@@ -434,15 +440,15 @@ class Te extends HTMLElement {
           schema: [
             {
               name: "tap_action",
-              selector: { ui_action: { actions: Z, default_action: "more-info" } }
+              selector: { ui_action: { actions: V, default_action: "more-info" } }
             },
             {
               name: "hold_action",
-              selector: { ui_action: { actions: Z, default_action: "none" } }
+              selector: { ui_action: { actions: V, default_action: "none" } }
             },
             {
               name: "double_tap_action",
-              selector: { ui_action: { actions: Z, default_action: "none" } }
+              selector: { ui_action: { actions: V, default_action: "none" } }
             }
           ]
         }
@@ -543,7 +549,7 @@ class Te extends HTMLElement {
     this.lastRenderKey = void 0, this.render();
   }
   activeLanguage() {
-    return W(
+    return G(
       this.internationalization?.locale.language ?? this.internationalization?.language
     );
   }
@@ -561,7 +567,7 @@ class Te extends HTMLElement {
     if (!this.shadowRoot || !this.config) return;
     const e = this.activeLanguage(), t = E(e);
     if (!this.config.device_id) {
-      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${h(s("selectDeviceTitle", t))}</strong><small>${h(s("selectDeviceHelp", t))}</small></div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${h(s("deviceRequiredTitle", t))}</strong><small>${h(s("deviceRequiredHelp", t))}</small></div></ha-card>`;
       return;
     }
     if (!this.states || !this.hassData || !this.resolution && !this.resolutionError) {
@@ -574,9 +580,9 @@ class Te extends HTMLElement {
     }
     if (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0) {
       const ue = [
-        ...this.resolution?.missing.map(q) ?? [],
-        ...this.resolution?.duplicates.map((I) => `${q(I)} (${s("duplicate", t)})`) ?? [],
-        ...this.resolution?.disabled.map((I) => `${q(I)} (${s("disabled", t)})`) ?? []
+        ...this.resolution?.missing.map(z) ?? [],
+        ...this.resolution?.duplicates.map((I) => `${z(I)} (${s("duplicate", t)})`) ?? [],
+        ...this.resolution?.disabled.map((I) => `${z(I)} (${s("disabled", t)})`) ?? []
       ];
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${h(s("incompleteDevice", t))}</strong><span>${h(ue.join(", "))}</span><small>${h(s("incompleteDeviceHelp", t))}</small></div></ha-card>`;
       return;
@@ -588,14 +594,14 @@ class Te extends HTMLElement {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${h(s("noCurrentReading", t))}</div></ha-card>`;
       return;
     }
-    const g = k(this.states, i.status), p = be(g?.state, r, d), f = p.translationKey ? s(p.translationKey, t) : p.label, x = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", v = x !== "details", N = x !== "tank", F = this.config.show_low_marker !== !1, H = typeof this.config.grid_options?.rows == "number", S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), M = "SaltWatch", j = r === void 0 ? "—" : K(r, e), R = r === void 0 ? s("noCurrentReading", t) : j, D = B(k(this.states, i.forecast)), m = D === void 0 || D < 0 ? void 0 : Math.round(D), V = m === void 0 ? "—" : Se(m, e), P = k(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = k(this.states, i.forecastDetails)?.state, b = m === void 0 && P !== "available" && P !== "low salt" ? Le(_, t) : m === void 0 ? s("forecastUnavailable", t) : void 0, L = s(m === void 0 ? "forecast" : m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), w = `<div class="metric level-metric">
+    const g = k(this.states, i.status), p = be(g?.state, r, d), f = p.translationKey ? s(p.translationKey, t) : p.label, v = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", x = v !== "details", R = v !== "tank", N = this.config.show_low_marker !== !1, H = typeof this.config.grid_options?.rows == "number", S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), M = "SaltWatch", j = r === void 0 ? "—" : P(r, e), F = r === void 0 ? s("noCurrentReading", t) : j, D = B(k(this.states, i.forecast)), m = D === void 0 || D < 0 ? void 0 : Math.round(D), Q = m === void 0 ? "—" : Se(m, e), K = k(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = k(this.states, i.forecastDetails)?.state, b = m === void 0 && K !== "available" && K !== "low salt" ? Te(_, t) : m === void 0 ? s("forecastUnavailable", t) : void 0, T = s(m === void 0 ? "forecast" : m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), w = `<div class="metric level-metric">
       <div class="metric-value level">${j}</div>
       <div class="metric-label level-label">${h(s(c === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
-    </div>`, G = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
-      <div class="metric-value forecast-value">${m === void 0 ? '<span class="forecast-placeholder">—</span>' : V}</div>
-      <div class="metric-label forecast-label">${h(L)}</div>
+    </div>`, W = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
+      <div class="metric-value forecast-value">${m === void 0 ? '<span class="forecast-placeholder">—</span>' : Q}</div>
+      <div class="metric-label forecast-label">${h(T)}</div>
       ${b ? `<div class="forecast-detail">${h(b)}</div>` : ""}
-    </div>`, U = c === "both" ? `${w}<span class="metric-divider" aria-hidden="true"></span>${G}` : c === "forecast" ? G : w, Y = m === void 0 ? `${L}: ${b}` : `${V} ${L}`, ce = c === "both" ? `${R}, ${Y}` : c === "forecast" ? Y : R, de = 132, T = 474, ee = T - de, u = r === void 0 ? T : T - r / 100 * ee, he = T - d / 100 * ee, te = [
+    </div>`, U = c === "both" ? `${w}<span class="metric-divider" aria-hidden="true"></span>${W}` : c === "forecast" ? W : w, Y = m === void 0 ? `${T}: ${b}` : `${Q} ${T}`, ce = c === "both" ? `${F}, ${Y}` : c === "forecast" ? Y : F, de = 132, L = 474, ee = L - de, u = r === void 0 ? L : L - r / 100 * ee, he = L - d / 100 * ee, te = [
       `M96 ${(u + 2).toFixed(1)}`,
       `Q108 ${(u - 2).toFixed(1)} 120 ${(u - 3).toFixed(1)}`,
       `Q132 ${(u - 6).toFixed(1)} 145 ${(u - 4).toFixed(1)}`,
@@ -607,18 +613,18 @@ class Te extends HTMLElement {
       `Q315 ${(u - 3).toFixed(1)} 324 ${(u + 1).toFixed(1)}`
     ].join(" "), pe = [
       te,
-      `L324 ${T}`,
-      `L96 ${T}`,
+      `L324 ${L}`,
+      `L96 ${L}`,
       "Z"
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <ha-card class="tone-${p.tone}${H ? " fixed-height" : ""}"${S ? ' tabindex="0" role="button"' : ""} aria-label="${M}: ${h(ce)}, ${h(f)}">
-        <div class="card-shell mode-${x} order-${this.config.section_order ?? "tank-first"}">
-          ${v ? `<section class="tank-panel" aria-label="${h(s("tankLevelVisualization", t))}">
+        <div class="card-shell mode-${v} order-${this.config.section_order ?? "tank-first"}">
+          ${x ? `<section class="tank-panel" aria-label="${h(s("tankLevelVisualization", t))}">
             ${this.tankSvg(r, pe, te, u, he, d, p.tone, t, e)}
           </section>` : ""}
-          ${N ? `<section class="content-panel${F ? "" : " without-threshold-summary"}">
+          ${R ? `<section class="content-panel${N ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
               <div class="status"><span class="status-dot"></span>${h(f)}</div>
             </header>` : ""}
@@ -626,10 +632,10 @@ class Te extends HTMLElement {
               ${r === void 0 ? this.stateSymbol(p.translationKey, p.tone) : `<div class="metrics metrics-${c}">${U}</div>`}
               ${r === void 0 && this.config.show_status ? "" : r === void 0 ? `<div class="level-label">${h(f)}</div>` : ""}
             </div>
-            ${F ? `<div class="threshold-summary" aria-label="${h(s("lowMarkerAt", t, { value: K(d, e) }))}">
+            ${N ? `<div class="threshold-summary" aria-label="${h(s("lowMarkerAt", t, { value: P(d, e) }))}">
               <span class="marker-line"></span>
               <span>${h(s("lowMarker", t))}</span>
-              <strong>${K(d, e)}</strong>
+              <strong>${P(d, e)}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
@@ -668,7 +674,7 @@ class Te extends HTMLElement {
     if (![n, r, l].every(Number.isFinite) || !d) return;
     const g = e.getBoundingClientRect(), p = t.getBoundingClientRect(), f = i.createSVGPoint();
     f.x = Math.max(g.left, p.left) + 4, f.y = p.top;
-    const x = f.matrixTransform(d.inverse()).x, c = Math.min(r, Math.max(n, x));
+    const v = f.matrixTransform(d.inverse()).x, c = Math.min(r, Math.max(n, v));
     o.setAttribute("transform", `translate(${c.toFixed(1)} ${l.toFixed(1)})`);
   }
   actionConfig(e) {
@@ -735,11 +741,11 @@ class Te extends HTMLElement {
   }
   tankSvg(e, t, i, o, n, r, l, d, g) {
     const p = Array.from({ length: 21 }, (_, $) => {
-      const b = 100 - $ * 5, L = 474 - b / 100 * 342, w = b % 25 === 0, G = !w && b % 10 === 0, U = w ? 60 : G ? 67 : 71;
-      return `${w ? `<text x="52" y="${L + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${w ? "major" : G ? "medium" : "minor"}" d="M${U} ${L}H78"/>`;
-    }).join(""), f = e === void 0, x = Math.max(134, Math.min(470, n)), c = s("lowBadge", d), v = d === "de" ? 72 : 54, N = 1.18, F = -60, H = 210, S = 296, M = 12, j = 324, R = F + H + (M - H) * N, D = R - v, m = R, A = (S + (x - S) * N - 15).toFixed(1), P = f ? s("noCurrentReading", d) : s("estimatedLevel", d) + `: ${K(e, g)}`;
+      const b = 100 - $ * 5, T = 474 - b / 100 * 342, w = b % 25 === 0, W = !w && b % 10 === 0, U = w ? 60 : W ? 67 : 71;
+      return `${w ? `<text x="52" y="${T + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${w ? "major" : W ? "medium" : "minor"}" d="M${U} ${T}H78"/>`;
+    }).join(""), f = e === void 0, v = Math.max(134, Math.min(470, n)), c = s("lowBadge", d), x = d === "de" ? 72 : 54, R = 1.18, N = -60, H = 210, S = 296, M = 12, j = 324, F = N + H + (M - H) * R, D = F - x, m = F, A = (S + (v - S) * R - 15).toFixed(1), K = f ? s("noCurrentReading", d) : s("estimatedLevel", d) + `: ${P(e, g)}`;
     return `
-      <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${h(P)}">
+      <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${h(K)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -783,7 +789,7 @@ class Te extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="tank-visual" transform="translate(${F} 0) translate(210 ${S}) scale(${N}) translate(-210 -${S})">
+        <g class="tank-visual" transform="translate(${N} 0) translate(210 ${S}) scale(${R}) translate(-210 -${S})">
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${p}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
@@ -803,7 +809,7 @@ class Te extends HTMLElement {
         <path class="threshold tone-${l}" data-threshold="${r}" data-threshold-y="${n.toFixed(1)}" d="M${M} ${n.toFixed(1)}H${j}"/>
         </g>
         <g class="threshold-label tone-${l}" data-preferred-x="${D.toFixed(1)}" data-safe-x="${m.toFixed(1)}" data-marker-y="${A}" transform="translate(${m.toFixed(1)} ${A})">
-          <rect width="${v}" height="30" rx="9"/><text x="${v / 2}" y="20" text-anchor="middle">${h(c)}</text>
+          <rect width="${x}" height="30" rx="9"/><text x="${x / 2}" y="20" text-anchor="middle">${h(c)}</text>
         </g>
       </svg>`;
   }
@@ -979,7 +985,7 @@ class Te extends HTMLElement {
   }
 }
 const X = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function z(a) {
+function q(a) {
   return a.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 class Ce extends HTMLElement {
@@ -1087,20 +1093,20 @@ class Ce extends HTMLElement {
     })), t && this.render());
   }
   activeLanguage() {
-    return W(
+    return G(
       this.internationalization?.locale.language ?? this.internationalization?.language ?? this._hass?.locale?.language ?? this._hass?.language
     );
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const e = xe(E(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", n = t !== "tank", r = this._config, l = r.device_id ? this.deviceResolutions.get(r.device_id) : void 0, d = !!(l?.entities && l.disabled.length === 0), g = l ? [
-      ...l.missing.map(q),
-      ...l.duplicates.map((c) => `${q(c)} (${e.duplicate})`),
-      ...l.disabled.map((c) => `${q(c)} (${e.disabled})`)
+    const e = ve(E(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", n = t !== "tank", r = this._config, l = r.device_id ? this.deviceResolutions.get(r.device_id) : void 0, d = !!(l?.entities && l.disabled.length === 0), g = l ? [
+      ...l.missing.map(z),
+      ...l.duplicates.map((c) => `${z(c)} (${e.duplicate})`),
+      ...l.disabled.map((c) => `${z(c)} (${e.disabled})`)
     ] : [], p = [...this.deviceResolutions.keys()].map((c) => ({
       value: c,
       label: this.deviceLabel(c)
-    })).sort((c, v) => c.label.localeCompare(v.label)), f = !!r.device_id, x = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : f ? d ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : l ? {
+    })).sort((c, x) => c.label.localeCompare(x.label)), f = !!r.device_id, v = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : f ? d ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : l ? {
       tone: "warning",
       icon: "!",
       title: e.incompleteDevice,
@@ -1113,7 +1119,7 @@ class Ce extends HTMLElement {
     } : {
       tone: "info",
       icon: "i",
-      title: e.selectDeviceTitle,
+      title: p.length === 0 ? e.noDevicesTitle : e.selectDeviceTitle,
       text: p.length === 0 ? e.noDevicesFound : e.selectDeviceHelp
     };
     this.shadowRoot.innerHTML = `
@@ -1122,9 +1128,9 @@ class Ce extends HTMLElement {
         <section class="section device-section">
           <h3>${e.saltWatchDevice}</h3>
           <div id="device-form"></div>
-          <div class="notice ${x.tone}" role="status" aria-live="polite">
-            <span class="notice-icon" aria-hidden="true">${x.icon}</span>
-            <span class="notice-copy"><strong>${z(x.title)}</strong><small>${z(x.text)}</small></span>
+          <div class="notice ${v.tone}" role="status" aria-live="polite">
+            <span class="notice-icon" aria-hidden="true">${v.icon}</span>
+            <span class="notice-copy"><strong>${q(v.title)}</strong><small>${q(v.text)}</small></span>
           </div>
         </section>
 
@@ -1172,8 +1178,8 @@ class Ce extends HTMLElement {
       { name: "double_tap_action", selector: { ui_action: { actions: X, default_action: "none" } } }
     ], r, { tap_action: e.tap, hold_action: e.hold, double_tap_action: e.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
       c.addEventListener("click", () => {
-        const v = c.dataset.field;
-        this.updateConfig({ [v]: c.dataset.value });
+        const x = c.dataset.field;
+        this.updateConfig({ [x]: c.dataset.value });
       });
     }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
       c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
@@ -1201,16 +1207,16 @@ class Ce extends HTMLElement {
     const o = e === i;
     return `<button type="button" class="layout-option${o ? " selected" : ""}" data-field="display_mode" data-value="${e}" aria-pressed="${o}">
       <span class="layout-preview layout-${e}" aria-hidden="true"><i></i><b></b></span>
-      <span>${z(t)}</span>
+      <span>${q(t)}</span>
       ${o ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
   segmentButton(e, t, i, o) {
     const n = t === o;
-    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${z(i)}</button>`;
+    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${q(i)}</button>`;
   }
   toggle(e, t, i, o) {
-    return `<label class="toggle-row"><span><strong>${z(t)}</strong><small>${z(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${o ? "checked" : ""}><i></i></span></label>`;
+    return `<label class="toggle-row"><span><strong>${q(t)}</strong><small>${q(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${o ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -1269,14 +1275,14 @@ class Ce extends HTMLElement {
     `;
   }
 }
-const ze = "0.5.2", qe = {
-  version: ze
-}, Q = "saltwatch-card", Ee = qe.version;
-customElements.get(Q) || customElements.define(Q, Te);
+const qe = "0.5.3", ze = {
+  version: qe
+}, Z = "saltwatch-card", Ee = ze.version;
+customElements.get(Z) || customElements.define(Z, Le);
 customElements.get("saltwatch-card-editor") || customElements.define("saltwatch-card-editor", Ce);
 window.customCards = window.customCards || [];
-window.customCards.some((a) => a.type === Q) || window.customCards.push({
-  type: Q,
+window.customCards.some((a) => a.type === Z) || window.customCards.push({
+  type: Z,
   name: "SaltWatch Card",
   description: "Visualize a SaltWatch water-softener monitor as a detailed granular tank.",
   preview: !0,
@@ -1288,6 +1294,6 @@ console.info(
   "color:#f4f6f7;background:#263139;font-weight:700;padding:2px 5px;border-radius:0 3px 3px 0"
 );
 export {
-  Te as SaltWatchCard,
+  Le as SaltWatchCard,
   Ce as SaltWatchCardEditor
 };
