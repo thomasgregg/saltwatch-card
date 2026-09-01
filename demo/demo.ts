@@ -1,5 +1,9 @@
 import "../src/index";
-import type { HomeAssistant, SaltWatchCardConfig } from "../src/types";
+import type {
+  HomeAssistant,
+  HomeAssistantInternationalization,
+  SaltWatchCardConfig,
+} from "../src/types";
 import type { SaltWatchCard } from "../src/saltwatch-card";
 
 const iso = () => new Date().toISOString();
@@ -39,19 +43,43 @@ if (!card) throw new Error("Demo card not found");
 const frame = card.parentElement;
 if (!frame) throw new Error("Demo frame not found");
 let statesSubscriber: ((states: HomeAssistant["states"], unsubscribe: () => void) => void) | undefined;
+let internationalizationSubscriber: ((
+  internationalization: HomeAssistantInternationalization,
+  unsubscribe: () => void,
+) => void) | undefined;
+let internationalization: HomeAssistantInternationalization = {
+  language: "en-GB",
+  locale: { language: "en-GB" },
+};
 const unsubscribeStates = () => {
   statesSubscriber = undefined;
+};
+const unsubscribeInternationalization = () => {
+  internationalizationSubscriber = undefined;
 };
 frame.addEventListener("context-request", (event) => {
   const request = event as CustomEvent & {
     context?: string;
-    callback?: typeof statesSubscriber;
+    callback?: (...args: never[]) => void;
   };
-  if (request.context !== "states" || !request.callback) return;
-  statesSubscriber = request.callback;
-  statesSubscriber(hass.states, unsubscribeStates);
+  if (!request.callback) return;
+  if (request.context === "states") {
+    statesSubscriber = request.callback as typeof statesSubscriber;
+    statesSubscriber?.(hass.states, unsubscribeStates);
+  }
+  if (request.context === "hassInternationalization") {
+    internationalizationSubscriber = request.callback as typeof internationalizationSubscriber;
+    internationalizationSubscriber?.(
+      internationalization,
+      unsubscribeInternationalization,
+    );
+  }
 });
 const notifyStates = () => statesSubscriber?.(hass.states, unsubscribeStates);
+const notifyInternationalization = () => internationalizationSubscriber?.(
+  internationalization,
+  unsubscribeInternationalization,
+);
 card.setConfig(config);
 card.remove();
 frame.append(card);
@@ -65,6 +93,7 @@ const showLowMarkerInput = document.querySelector<HTMLInputElement>("#show-low-m
 const displayModeInput = document.querySelector<HTMLSelectElement>("#display-mode");
 const metricModeInput = document.querySelector<HTMLSelectElement>("#metric-mode");
 const forecastStateInput = document.querySelector<HTMLSelectElement>("#forecast-state");
+const languageInput = document.querySelector<HTMLSelectElement>("#language");
 const lightThemeInput = document.querySelector<HTMLInputElement>("#light-theme");
 const themeName = document.querySelector<HTMLElement>("#theme-name");
 const applyConfig = () => {
@@ -95,6 +124,12 @@ forecastStateInput?.addEventListener("change", () => {
     "d",
   );
   notifyStates();
+});
+languageInput?.addEventListener("change", () => {
+  const language = languageInput.value;
+  document.documentElement.lang = language;
+  internationalization = { language, locale: { language } };
+  notifyInternationalization();
 });
 lightThemeInput?.addEventListener("change", () => {
   const lightTheme = lightThemeInput.checked;

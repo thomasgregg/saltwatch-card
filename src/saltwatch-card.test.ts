@@ -34,6 +34,7 @@ describe("SaltWatchCard", () => {
   let card: SaltWatchCard;
   let host: HTMLElement;
   let pushStates: (hass: HomeAssistant) => void;
+  let pushLanguage: (language: string) => void;
   let unsubscribe: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -44,17 +45,38 @@ describe("SaltWatchCard", () => {
     host = document.createElement("div");
     unsubscribe = vi.fn();
     let callback: ((states: HomeAssistant["states"], unsubscribe: () => void) => void) | undefined;
+    const languageSubscribers = new Set<(
+      internationalization: { language: string; locale: { language: string } },
+      unsubscribe: () => void,
+    ) => void>();
     const initialHass = makeHass();
     host.addEventListener("context-request", (event) => {
       const request = event as CustomEvent & {
         context: string;
-        callback: typeof callback;
+        callback?: (...args: never[]) => void;
       };
-      if (request.context !== "states" || !request.callback) return;
-      callback = request.callback;
-      callback(initialHass.states, unsubscribe);
+      if (!request.callback) return;
+      if (request.context === "states") {
+        callback = request.callback as typeof callback;
+        callback?.(initialHass.states, unsubscribe);
+      }
+      if (request.context === "hassInternationalization") {
+        const subscriber = request.callback as unknown as (
+          internationalization: { language: string; locale: { language: string } },
+          unsubscribe: () => void,
+        ) => void;
+        languageSubscribers.add(subscriber);
+        subscriber({ language: "en", locale: { language: "en" } }, () => {
+          languageSubscribers.delete(subscriber);
+        });
+      }
     });
     pushStates = (hass) => callback?.(hass.states, unsubscribe);
+    pushLanguage = (language) => languageSubscribers.forEach((subscriber) => {
+      subscriber({ language, locale: { language } }, () => {
+        languageSubscribers.delete(subscriber);
+      });
+    });
     document.body.replaceChildren(host);
     card = document.createElement("saltwatch-card-test") as SaltWatchCard;
     card.setConfig(config);
@@ -533,8 +555,8 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.textContent).toContain("30%");
   });
 
-  it("localizes built-in copy and dispatches native Home Assistant actions", () => {
-    document.documentElement.lang = "de";
+  it("localizes built-in copy from the Home Assistant language context", () => {
+    pushLanguage("de-AT");
     card.setConfig({ ...config, tap_action: { action: "navigate", navigation_path: "/test" } });
     expect(card.shadowRoot?.textContent).toContain("Geschätzter Salzstand");
     expect(card.shadowRoot?.textContent).toContain("Niedrig-Markierung");
@@ -543,5 +565,20 @@ describe("SaltWatchCard", () => {
     card.shadowRoot?.querySelector("ha-card")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(listener).toHaveBeenCalledOnce();
     expect((listener.mock.calls[0]?.[0] as CustomEvent).detail).toMatchObject({ action: "tap" });
+  });
+
+  it("updates the graphical editor when the Home Assistant language changes", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    editor.hass = makeHass();
+    editor.setConfig({ entity: "sensor.saltwatch_salt_level" });
+    host.append(editor);
+
+    expect(editor.shadowRoot?.textContent).toContain("Live data");
+    pushLanguage("de-DE");
+    expect(editor.shadowRoot?.textContent).toContain("Live-Daten");
+    expect(editor.shadowRoot?.textContent).toContain("Reihenfolge");
   });
 });

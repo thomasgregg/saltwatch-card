@@ -2,6 +2,7 @@ import saltTextureUrl from "../assets/salt-tablets.webp?inline";
 import {
   formatPercentage,
   localize,
+  resolveLanguage,
   resolveLocale,
 } from "./localize";
 import type { SupportedLocale } from "./localize";
@@ -15,6 +16,7 @@ import type { CardTone, StatusTranslationKey } from "./model";
 import type {
   HassEntity,
   HomeAssistant,
+  HomeAssistantInternationalization,
   LovelaceActionConfig,
   SaltWatchCardConfig,
 } from "./types";
@@ -36,21 +38,34 @@ interface StatesContextRequestEvent extends CustomEvent {
   callback: (states: HassStates, unsubscribe: Unsubscribe) => void;
 }
 
+interface InternationalizationContextRequestEvent extends CustomEvent {
+  context: "hassInternationalization";
+  subscribe: true;
+  callback: (
+    internationalization: HomeAssistantInternationalization,
+    unsubscribe: Unsubscribe,
+  ) => void;
+}
+
 function entity(states: HassStates | undefined, entityId: string | undefined): HassEntity | undefined {
   return entityId ? states?.[entityId] : undefined;
 }
 
-function validatedThreshold(value: unknown): number {
+function validatedThreshold(value: unknown, locale = resolveLocale()): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error("Fallback low threshold must be a number between 0 and 100.");
+    throw new Error(localize("fallbackThresholdNumberError", locale));
   }
   if (value < 0 || value > 100) {
-    throw new Error("Fallback low threshold must be between 0 and 100.");
+    throw new Error(localize("fallbackThresholdRangeError", locale));
   }
   return value;
 }
 
-function validatedAction(value: unknown, fallback: LovelaceActionConfig): LovelaceActionConfig {
+function validatedAction(
+  value: unknown,
+  fallback: LovelaceActionConfig,
+  locale = resolveLocale(),
+): LovelaceActionConfig {
   if (value === undefined) return fallback;
   if (
     typeof value !== "object" ||
@@ -58,13 +73,13 @@ function validatedAction(value: unknown, fallback: LovelaceActionConfig): Lovela
     typeof (value as { action?: unknown }).action !== "string" ||
     !ACTIONS.includes((value as { action: string }).action)
   ) {
-    throw new Error("Card actions must use a supported Home Assistant action.");
+    throw new Error(localize("unsupportedActionError", locale));
   }
   return value as LovelaceActionConfig;
 }
 
-function formatForecastDays(value: number, locale: SupportedLocale): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
+function formatForecastDays(value: number, language: string): string {
+  return new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(value);
 }
 
 function forecastStatusLabel(state: string | undefined, locale: SupportedLocale): string {
@@ -98,6 +113,8 @@ export class SaltWatchCard extends HTMLElement {
   private config?: SaltWatchCardConfig;
   private states?: HassStates;
   private unsubscribeStates?: Unsubscribe;
+  private internationalization?: HomeAssistantInternationalization;
+  private unsubscribeInternationalization?: Unsubscribe;
   private lastRenderKey?: string;
   private holdTimer?: ReturnType<typeof setTimeout>;
   private tapTimer?: ReturnType<typeof setTimeout>;
@@ -115,6 +132,7 @@ export class SaltWatchCard extends HTMLElement {
   public connectedCallback(): void {
     if (!this.languageObserver) {
       this.languageObserver = new MutationObserver(() => {
+        if (this.internationalization) return;
         this.lastRenderKey = undefined;
         this.render();
       });
@@ -137,6 +155,25 @@ export class SaltWatchCard extends HTMLElement {
       };
       this.dispatchEvent(event);
     }
+    if (!this.unsubscribeInternationalization) {
+      const event = new CustomEvent("context-request", {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }) as InternationalizationContextRequestEvent;
+      event.context = "hassInternationalization";
+      event.subscribe = true;
+      event.callback = (internationalization, unsubscribe) => {
+        const previousLanguage = this.activeLanguage();
+        this.internationalization = internationalization;
+        this.unsubscribeInternationalization = unsubscribe;
+        if (this.activeLanguage() !== previousLanguage) {
+          this.lastRenderKey = undefined;
+          this.render();
+        }
+      };
+      this.dispatchEvent(event);
+    }
     if (!this.heightObserver && typeof ResizeObserver !== "undefined") {
       this.heightObserver = new ResizeObserver(() => this.scheduleHeightModeUpdate());
       this.heightObserver.observe(this);
@@ -147,6 +184,8 @@ export class SaltWatchCard extends HTMLElement {
   public disconnectedCallback(): void {
     this.unsubscribeStates?.();
     this.unsubscribeStates = undefined;
+    this.unsubscribeInternationalization?.();
+    this.unsubscribeInternationalization = undefined;
     this.languageObserver?.disconnect();
     this.languageObserver = undefined;
     this.heightObserver?.disconnect();
@@ -198,8 +237,8 @@ export class SaltWatchCard extends HTMLElement {
             select: {
               mode: "dropdown",
               options: [
-                { value: "tank-first", label: "Tank first" },
-                { value: "details-first", label: "Details first" },
+                { value: "tank-first", label: localize("tankFirst") },
+                { value: "details-first", label: localize("detailsFirst") },
               ],
             },
           },
@@ -255,7 +294,7 @@ export class SaltWatchCard extends HTMLElement {
           show_low_marker: localize("showLowMarker"),
           display_mode: localize("cardContent"),
           metric_mode: localize("valueDisplay"),
-          section_order: "Section order",
+          section_order: localize("sectionOrder"),
           status_entity: localize("statusEntity"),
           threshold_entity: localize("thresholdEntity"),
           forecast_entity: localize("forecastEntity"),
@@ -312,8 +351,9 @@ export class SaltWatchCard extends HTMLElement {
   }
 
   public setConfig(config: SaltWatchCardConfig): void {
+    const locale = resolveLocale(this.activeLanguage());
     if (!config.entity || typeof config.entity !== "string") {
-      throw new Error("SaltWatch Card requires an estimated salt level entity.");
+      throw new Error(localize("missingEntityError", locale));
     }
 
     this.clearInteractionTimers();
@@ -324,7 +364,7 @@ export class SaltWatchCard extends HTMLElement {
       ? config.metric_mode
       : "level";
     const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
-    const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD);
+    const lowThreshold = validatedThreshold(config.low_threshold ?? DEFAULT_THRESHOLD, locale);
     this.config = {
       ...config,
       low_threshold: lowThreshold,
@@ -333,9 +373,9 @@ export class SaltWatchCard extends HTMLElement {
       display_mode: displayMode,
       metric_mode: metricMode,
       section_order: sectionOrder,
-      tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION),
-      hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION),
-      double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION),
+      tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION, locale),
+      hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION, locale),
+      double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION, locale),
     };
     this.lastRenderKey = undefined;
     this.render();
@@ -383,6 +423,13 @@ export class SaltWatchCard extends HTMLElement {
     if (this.currentRenderKey() !== this.lastRenderKey) this.render();
   }
 
+  private activeLanguage(): string {
+    return resolveLanguage(
+      this.internationalization?.locale.language ??
+      this.internationalization?.language,
+    );
+  }
+
   private currentRenderKey(): string | undefined {
     if (!this.config || !this.states) return undefined;
     return [
@@ -397,12 +444,13 @@ export class SaltWatchCard extends HTMLElement {
 
   private render(): void {
     if (!this.shadowRoot || !this.config) return;
+    const language = this.activeLanguage();
+    const locale = resolveLocale(language);
     if (!this.states) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading"))}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;
     }
 
-    const locale = resolveLocale();
     const levelEntity = entity(this.states, this.config.entity);
     const rawLevel = entityNumber(levelEntity);
     const level = rawLevel === undefined ? undefined : clamp(rawLevel);
@@ -421,7 +469,7 @@ export class SaltWatchCard extends HTMLElement {
     const fixedHeight = typeof this.config.grid_options?.rows === "number";
     const interactive = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap");
     const title = "SaltWatch";
-    const displayLevel = level === undefined ? "—" : formatPercentage(level, locale);
+    const displayLevel = level === undefined ? "—" : formatPercentage(level, language);
     const accessibleLevel = level === undefined
       ? localize("noCurrentReading", locale)
       : displayLevel;
@@ -431,7 +479,7 @@ export class SaltWatchCard extends HTMLElement {
       : Math.round(rawForecast);
     const forecastDisplay = forecastDays === undefined
       ? "—"
-      : formatForecastDays(forecastDays, locale);
+      : formatForecastDays(forecastDays, language);
     const forecastState = entity(this.states, this.config.forecast_status_entity)?.state;
     const forecastLabel = forecastDays === undefined
       ? forecastStatusLabel(forecastState, locale)
@@ -488,7 +536,7 @@ export class SaltWatchCard extends HTMLElement {
       <ha-card class="tone-${status.tone}${fixedHeight ? " fixed-height" : ""}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
         <div class="card-shell mode-${displayMode} order-${this.config.section_order ?? "tank-first"}">
           ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
-            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale)}
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, thresholdY, threshold, status.tone, locale, language)}
           </section>` : ""}
           ${showDetails ? `<section class="content-panel${showLowMarkerSummary ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
@@ -502,10 +550,10 @@ export class SaltWatchCard extends HTMLElement {
                   ? `<div class="level-label">${escapeHtml(statusLabel)}</div>`
                   : ""}
             </div>
-            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, locale) }))}">
+            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, language) }))}">
               <span class="marker-line"></span>
               <span>${escapeHtml(localize("lowMarker", locale))}</span>
-              <strong>${formatPercentage(threshold, locale)}</strong>
+              <strong>${formatPercentage(threshold, language)}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
@@ -709,6 +757,7 @@ export class SaltWatchCard extends HTMLElement {
     threshold: number,
     tone: string,
     locale: ReturnType<typeof resolveLocale>,
+    language: string,
   ): string {
     const rulerMarks = Array.from({ length: 21 }, (_, index) => {
       const value = 100 - index * 5;
@@ -741,7 +790,7 @@ export class SaltWatchCard extends HTMLElement {
     const lowBadgeY = (scaledLabelY - 15).toFixed(1);
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
-      : localize("estimatedLevel", locale) + `: ${formatPercentage(level, locale)}`;
+      : localize("estimatedLevel", locale) + `: ${formatPercentage(level, language)}`;
 
     return `
       <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${escapeHtml(tankLabel)}">
@@ -871,6 +920,7 @@ export class SaltWatchCard extends HTMLElement {
       .state-symbol { display:block; width:clamp(64px,25cqw,122px); height:auto; overflow:visible; fill:none; stroke:currentColor; stroke-width:5; stroke-linecap:round; stroke-linejoin:round; }
       .state-symbol .symbol-dot,.state-symbol .symbol-fill { fill:currentColor; stroke:none; }
       .tone-neutral .state-symbol { color:var(--sw-neutral); }.tone-warning .state-symbol { color:var(--sw-warning); }.tone-fault .state-symbol { color:var(--sw-fault); }
+      .state-reading { align-items:center; }
       .state-reading .level-label { margin-top:28px; color:var(--secondary-text-color,#aeb6bb); font-size:clamp(16px,6.5cqw,29px); font-weight:430; letter-spacing:-.02em; }
       .tone-neutral .level-label { color:var(--sw-neutral); }.tone-warning .level-label { color:var(--sw-warning); }.tone-fault .level-label { color:var(--sw-fault); }
       .threshold-summary { display:flex; align-items:center; gap:12px; margin-top:auto; padding-top:26px; border-top:1px solid color-mix(in srgb,var(--divider-color,#536069) 48%,transparent); color:var(--secondary-text-color,#aeb6bb); font-size:clamp(13px,4.6cqw,20px); }

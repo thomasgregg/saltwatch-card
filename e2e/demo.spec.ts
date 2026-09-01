@@ -544,6 +544,71 @@ test("updates state and theme through the demo host context", async ({ page }) =
     .not.toBe(darkSurface);
 });
 
+test("switches the Home Assistant language context without clipping translated content", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+
+  await page.locator("#language").selectOption("de-AT");
+  await expect(card.locator(".status")).toHaveText("Gut");
+  await expect(card.locator(".level-label")).toHaveText("Geschätzter Salzstand");
+  await expect(card.locator(".threshold-summary")).toContainText("Niedrig-Markierung");
+
+  await frame.evaluate((element) => {
+    element.style.width = "360px";
+    element.style.height = "420px";
+  });
+  await page.locator("#metric-mode").selectOption("both");
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      entity: "sensor.saltwatch_salt_level",
+      status_entity: "sensor.saltwatch_salt_status",
+      threshold_entity: "number.saltwatch_low_salt_threshold",
+      forecast_entity: "sensor.saltwatch_estimated_days_until_low_salt",
+      forecast_status_entity: "sensor.saltwatch_forecast_status",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 6, rows: 4 },
+    });
+  });
+
+  const translatedContentInside = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card")!.getBoundingClientRect();
+    return [...root.querySelectorAll<HTMLElement>(
+      ".status,.metric-value,.metric-label,.threshold-summary",
+    )].every((item) => {
+      const bounds = item.getBoundingClientRect();
+      return bounds.left >= surface.left - 1 && bounds.right <= surface.right + 1 &&
+        bounds.top >= surface.top - 1 && bounds.bottom <= surface.bottom + 1;
+    });
+  });
+  expect(translatedContentInside).toBe(true);
+
+  await page.locator("#language").selectOption("en-GB");
+  await expect(card.locator(".status")).toHaveText("Good");
+  await expect(card.locator(".level-label")).toHaveText("Salt level");
+});
+
+test("centers every exceptional-state icon in the details panel", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+
+  for (const state of ["initializing", "unavailable", "fault", "calibration"]) {
+    await page.locator(`button[data-state="${state}"]`).click();
+    const offset = await card.evaluate((element) => {
+      const root = element.shadowRoot!;
+      const reading = root.querySelector<HTMLElement>(".reading")!.getBoundingClientRect();
+      const icon = root.querySelector<SVGGraphicsElement>(".state-symbol")!.getBoundingClientRect();
+      return Math.abs(
+        (icon.left + icon.width / 2) - (reading.left + reading.width / 2),
+      );
+    });
+    expect(offset).toBeLessThanOrEqual(1);
+  }
+});
+
 test("keeps every low-state accent on the same HA warning color", async ({ page }) => {
   const readAccents = () => page.locator("saltwatch-card").evaluate((card) => {
     const root = card.shadowRoot;

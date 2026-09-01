@@ -6,8 +6,22 @@ export interface HassEntity {
   last_updated: string;
 }
 
+export interface HomeAssistantInternationalization {
+  language: string;
+  locale: {
+    language: string;
+    number_format?: string;
+    time_format?: string;
+    date_format?: string;
+    first_weekday?: string;
+    time_zone?: string;
+  };
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
+  language?: string;
+  locale?: HomeAssistantInternationalization["locale"];
 }
 
 export type SaltWatchDisplayMode = "both" | "tank" | "details";

@@ -37,6 +37,7 @@ percentage from 0 to 100.
   - [Dashboard sizing](#dashboard-sizing)
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
+- [Languages](#languages)
 - [Using another percentage sensor](#using-another-percentage-sensor)
 
 ## Why use it?
@@ -211,8 +212,17 @@ display_mode: details
 SaltWatch Card uses Home Assistant's native success, warning, and error theme
 colors. Low salt and calibration are orange warnings; red is reserved for an
 actual sensor fault. The card also supports Home Assistant's graphical card
-editor, keyboard interaction, configurable tap/hold actions, English and German
-labels, and responsive Sections dashboards.
+editor, keyboard interaction, configurable tap/hold actions, multiple languages,
+and responsive Sections dashboards.
+
+## Languages
+
+SaltWatch Card currently supports **English and German**. The card and its
+graphical editor automatically follow the language selected in each Home
+Assistant user profile and update immediately when that language changes.
+German regional variants such as `de-DE` and `de-AT` share the German
+translation while keeping their regional number formatting. Unsupported
+languages fall back safely to English.
 
 The card deliberately stays focused on the tank and its refill timing. Pair it
 with Home Assistant's native Tile and Statistics Graph cards when you also want

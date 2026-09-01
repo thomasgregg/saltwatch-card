@@ -1,4 +1,9 @@
-import type { HomeAssistant, SaltWatchCardConfig } from "./types";
+import { getTranslations, resolveLanguage, resolveLocale } from "./localize";
+import type {
+  HomeAssistant,
+  HomeAssistantInternationalization,
+  SaltWatchCardConfig,
+} from "./types";
 
 type RelatedKey = "status_entity" | "threshold_entity" | "forecast_entity" | "forecast_status_entity";
 type EditorConfig = Omit<SaltWatchCardConfig, "type"> & { type?: string };
@@ -52,90 +57,6 @@ export function detectRelatedEntities(
   })) as Partial<Record<RelatedKey, string>>;
 }
 
-const ENGLISH_COPY = {
-  liveData: "Live data",
-  saltLevel: "Salt level",
-  detectedTitle: "SaltWatch entities detected",
-  detectedText: "Status, threshold and forecast are connected automatically.",
-  missingTitle: "Some SaltWatch entities weren’t found",
-  missingText: "Salt level is connected. Choose the missing status, threshold, or forecast entities manually.",
-  configure: "Configure",
-  cardLayout: "Card layout",
-  tankDetails: "Tank + details",
-  tankOnly: "Tank only",
-  detailsOnly: "Details only",
-  sectionOrder: "Section order",
-  tankFirst: "Tank first",
-  detailsFirst: "Details first",
-  values: "Values",
-  level: "Salt level",
-  forecast: "Forecast",
-  both: "Both",
-  visible: "Visible elements",
-  status: "Status",
-  statusHelp: "Show sensor health above the values",
-  marker: "Low marker summary",
-  markerHelp: "Show the threshold below the values",
-  advanced: "Advanced",
-  advancedHelp: "Entity overrides and fallback threshold",
-  actions: "Actions",
-  actionsHelp: "Tap, hold and double-tap",
-  statusEntity: "Salt status",
-  thresholdEntity: "Low threshold",
-  forecastEntity: "Days until low salt",
-  forecastStatusEntity: "Forecast status",
-  fallback: "Fallback low threshold",
-  tap: "Tap action",
-  hold: "Hold action",
-  doubleTap: "Double-tap action",
-} as const;
-
-type EditorCopy = { [Key in keyof typeof ENGLISH_COPY]: string };
-
-const GERMAN_COPY: EditorCopy = {
-    liveData: "Live-Daten",
-    saltLevel: "Salzstand",
-    detectedTitle: "SaltWatch-Entitäten erkannt",
-    detectedText: "Status, Grenzwert und Prognose wurden automatisch verbunden.",
-    missingTitle: "Einige SaltWatch-Entitäten wurden nicht gefunden",
-    missingText: "Der Salzstand ist verbunden. Wähle fehlende Status-, Grenzwert- oder Prognose-Entitäten manuell aus.",
-    configure: "Konfigurieren",
-    cardLayout: "Kartenlayout",
-    tankDetails: "Tank + Details",
-    tankOnly: "Nur Tank",
-    detailsOnly: "Nur Details",
-    sectionOrder: "Reihenfolge",
-    tankFirst: "Tank zuerst",
-    detailsFirst: "Details zuerst",
-    values: "Werte",
-    level: "Salzstand",
-    forecast: "Prognose",
-    both: "Beide",
-    visible: "Sichtbare Elemente",
-    status: "Status",
-    statusHelp: "Sensorzustand über den Werten anzeigen",
-    marker: "Niedrig-Markierung",
-    markerHelp: "Grenzwert unter den Werten anzeigen",
-    advanced: "Erweitert",
-    advancedHelp: "Entitäten überschreiben und Ersatz-Grenzwert",
-    actions: "Aktionen",
-    actionsHelp: "Tippen, halten und doppelt tippen",
-    statusEntity: "Salzstatus",
-    thresholdEntity: "Niedrig-Grenzwert",
-    forecastEntity: "Tage bis Salz niedrig",
-    forecastStatusEntity: "Prognosestatus",
-    fallback: "Ersatz-Grenzwert",
-    tap: "Tippen",
-    hold: "Halten",
-    doubleTap: "Doppelt tippen",
-};
-
-function editorCopy(): EditorCopy {
-  return document.documentElement.lang.toLowerCase().startsWith("de")
-    ? GERMAN_COPY
-    : ENGLISH_COPY;
-}
-
 function escapeAttribute(value: string): string {
   return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
@@ -143,12 +64,57 @@ function escapeAttribute(value: string): string {
 export class SaltWatchCardEditor extends HTMLElement {
   private _hass?: HomeAssistant;
   private _config?: EditorConfig;
+  private internationalization?: HomeAssistantInternationalization;
+  private unsubscribeInternationalization?: () => void;
+  private languageObserver?: MutationObserver;
   private advancedOpen = false;
   private actionsOpen = false;
 
   public constructor() {
     super();
     this.attachShadow({ mode: "open" });
+  }
+
+  public connectedCallback(): void {
+    if (!this.languageObserver) {
+      this.languageObserver = new MutationObserver(() => {
+        if (!this.internationalization) this.render();
+      });
+      this.languageObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["lang"],
+      });
+    }
+    if (!this.unsubscribeInternationalization) {
+      const event = new CustomEvent("context-request", {
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }) as CustomEvent & {
+        context: string;
+        subscribe: true;
+        callback: (
+          value: HomeAssistantInternationalization,
+          unsubscribe: () => void,
+        ) => void;
+      };
+      event.context = "hassInternationalization";
+      event.subscribe = true;
+      event.callback = (value, unsubscribe) => {
+        const previousLanguage = this.activeLanguage();
+        this.internationalization = value;
+        this.unsubscribeInternationalization = unsubscribe;
+        if (this.activeLanguage() !== previousLanguage) this.render();
+      };
+      this.dispatchEvent(event);
+    }
+  }
+
+  public disconnectedCallback(): void {
+    this.unsubscribeInternationalization?.();
+    this.unsubscribeInternationalization = undefined;
+    this.languageObserver?.disconnect();
+    this.languageObserver = undefined;
   }
 
   public set hass(hass: HomeAssistant) {
@@ -224,9 +190,18 @@ export class SaltWatchCardEditor extends HTMLElement {
     };
   }
 
+  private activeLanguage(): string {
+    return resolveLanguage(
+      this.internationalization?.locale.language ??
+      this.internationalization?.language ??
+      this._hass?.locale?.language ??
+      this._hass?.language,
+    );
+  }
+
   private render(): void {
     if (!this.shadowRoot || !this._config) return;
-    const copy = editorCopy();
+    const copy = getTranslations(resolveLocale(this.activeLanguage()));
     const displayMode = this._config.display_mode ?? "both";
     const metricMode = this._config.metric_mode ?? "level";
     const sectionOrder = this._config.section_order ?? "tank-first";
@@ -253,7 +228,7 @@ export class SaltWatchCardEditor extends HTMLElement {
           <div class="layout-options" role="group" aria-label="${copy.cardLayout}">
             ${this.layoutButton("both", copy.tankDetails, displayMode)}
             ${this.layoutButton("tank", copy.tankOnly, displayMode)}
-            ${this.layoutButton("details", copy.detailsOnly, displayMode)}
+            ${this.layoutButton("details", copy.percentageOnly, displayMode)}
           </div>
           ${displayMode === "both" ? `
             <div class="sub-control">
@@ -304,8 +279,8 @@ export class SaltWatchCardEditor extends HTMLElement {
     ], config, {
       status_entity: copy.statusEntity,
       threshold_entity: copy.thresholdEntity,
-      forecast_entity: copy.forecastEntity,
-      forecast_status_entity: copy.forecastStatusEntity,
+      forecast_entity: copy.editorForecastEntity,
+      forecast_status_entity: copy.forecastStatus,
       low_threshold: copy.fallback,
     });
 
