@@ -535,6 +535,45 @@ test("keeps the stacked metric divider thin without clipping the forecast label"
   expect(result.forecastLabelInside).toBe(true);
 });
 
+test("keeps the divider horizontal when a natural-height details card stacks its metrics", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "360px";
+    element.style.height = "auto";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      device_id: "saltwatch-demo-device",
+      display_mode: "details",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 9, rows: "auto" },
+    });
+  });
+
+  await expect(card.locator("ha-card")).not.toHaveClass(/fixed-height/);
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
+    const level = root.querySelector<HTMLElement>(".level-metric")!.getBoundingClientRect();
+    const forecast = root.querySelector<HTMLElement>(".forecast-metric")!.getBoundingClientRect();
+    return {
+      dividerHeight: divider.height,
+      dividerWidth: divider.width,
+      metricsAreStacked: forecast.top > level.bottom,
+      dividerBetweenMetrics: divider.top >= level.bottom && divider.bottom <= forecast.top,
+    };
+  });
+
+  expect(result.dividerHeight).toBeCloseTo(1, 0);
+  expect(result.dividerWidth).toBeGreaterThan(100);
+  expect(result.metricsAreStacked).toBe(true);
+  expect(result.dividerBetweenMetrics).toBe(true);
+});
+
 test("enters and exits compact mode as an inferred height constraint changes", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");

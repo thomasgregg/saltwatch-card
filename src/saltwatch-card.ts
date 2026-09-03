@@ -1069,7 +1069,7 @@ export class SaltWatchCard extends HTMLElement {
         .metrics-both { grid-template-columns:1fr; gap:clamp(12px,5cqw,18px); }
         .metrics-both .metric-value { font-size:clamp(40px,25cqw,100px); }
         .metrics-both .metric-label { font-size:clamp(12px,5cqw,17px); }
-        .fixed-height .metric-divider { width:100%; height:1px; }
+        .metric-divider,.fixed-height .metric-divider { width:100%; height:1px; }
         .threshold-summary { gap:clamp(6px,3cqw,12px); font-size:clamp(11px,4cqw,14px); }
         .marker-line { width:clamp(18px,9cqw,34px); }
       }
