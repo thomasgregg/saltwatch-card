@@ -662,18 +662,41 @@ export class SaltWatchCard extends HTMLElement {
     if (!card || !panel || !svg || !label) return;
 
     const preferredX = Number(label.dataset.preferredX);
-    const safeX = Number(label.dataset.safeX);
     const markerY = Number(label.dataset.markerY);
     const matrix = svg.getScreenCTM();
-    if (![preferredX, safeX, markerY].every(Number.isFinite) || !matrix) return;
+    if (![preferredX, markerY].every(Number.isFinite) || !matrix) return;
 
     const cardBounds = card.getBoundingClientRect();
     const panelBounds = panel.getBoundingClientRect();
-    const leftEdge = svg.createSVGPoint();
-    leftEdge.x = Math.max(cardBounds.left, panelBounds.left) + 4;
-    leftEdge.y = panelBounds.top;
-    const minimumX = leftEdge.matrixTransform(matrix.inverse()).x;
-    const markerX = Math.min(safeX, Math.max(preferredX, minimumX));
+    const markerBounds = label.getBoundingClientRect();
+    const glassBounds = this.shadowRoot.querySelector<SVGGraphicsElement>(".tank-glass")
+      ?.getBoundingClientRect();
+    const matchingEdgeInset = Number.parseFloat(getComputedStyle(panel).paddingRight);
+    const edgeInset = Number.isFinite(matchingEdgeInset) ? matchingEdgeInset : 18;
+
+    const preferredPoint = svg.createSVGPoint();
+    preferredPoint.x = preferredX;
+    preferredPoint.y = markerY;
+    const preferredScreenX = preferredPoint.matrixTransform(matrix).x;
+
+    // Keep the badge as far left as its preferred marker alignment allows,
+    // while preserving the same breathing room used on the panel's right edge.
+    // The tank-side cap keeps the pill in the ruler gutter when space permits.
+    const minimumScreenX = Math.max(cardBounds.left, panelBounds.left) + edgeInset;
+    const panelMaximumScreenX = Math.min(cardBounds.right, panelBounds.right) -
+      edgeInset - markerBounds.width;
+    const tankMaximumScreenX = glassBounds
+      ? glassBounds.left - markerBounds.width - 8
+      : panelMaximumScreenX;
+    const maximumScreenX = Math.min(panelMaximumScreenX, tankMaximumScreenX);
+    const markerScreenX = maximumScreenX >= minimumScreenX
+      ? Math.min(maximumScreenX, Math.max(preferredScreenX, minimumScreenX))
+      : minimumScreenX;
+
+    const markerPoint = svg.createSVGPoint();
+    markerPoint.x = markerScreenX;
+    markerPoint.y = panelBounds.top;
+    const markerX = markerPoint.matrixTransform(matrix.inverse()).x;
     label.setAttribute("transform", `translate(${markerX.toFixed(1)} ${markerY.toFixed(1)})`);
   }
 
@@ -902,7 +925,7 @@ export class SaltWatchCard extends HTMLElement {
         </g>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX} ${thresholdY.toFixed(1)}H${thresholdEndX}"/>
         </g>
-        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-safe-x="${safeLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${safeLowBadgeX.toFixed(1)} ${lowBadgeY})">
+        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${safeLowBadgeX.toFixed(1)} ${lowBadgeY})">
           <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
         </g>
       </svg>`;

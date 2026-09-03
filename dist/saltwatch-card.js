@@ -169,7 +169,7 @@ const ge = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   values: "Values",
   visible: "Visible elements"
 }, oe = { de: fe, en: me };
-function G(a) {
+function j(a) {
   const e = a?.trim() || (typeof document < "u" ? document.documentElement.lang : "") || (typeof navigator < "u" ? navigator.language : "") || "en";
   try {
     return Intl.getCanonicalLocales(e)[0] ?? "en";
@@ -177,21 +177,21 @@ function G(a) {
     return "en";
   }
 }
-function E(a) {
-  const e = G(a).toLowerCase();
+function H(a) {
+  const e = j(a).toLowerCase();
   return e === "de" || e.startsWith("de-") ? "de" : "en";
 }
-function ve(a = E()) {
+function ve(a = H()) {
   return oe[a];
 }
-function s(a, e = E(), t = {}) {
+function s(a, e = H(), t = {}) {
   return Object.entries(t).reduce(
     (i, [o, n]) => i.replaceAll(`{${o}}`, n),
     oe[e][a]
   );
 }
-function P(a, e = G()) {
-  return new Intl.NumberFormat(G(e), {
+function K(a, e = j()) {
+  return new Intl.NumberFormat(j(e), {
     style: "percent",
     maximumFractionDigits: 0
   }).format(a / 100);
@@ -211,7 +211,7 @@ function xe(a) {
 function re(a, e = 0, t = 100) {
   return Math.min(t, Math.max(e, a));
 }
-function B(a) {
+function I(a) {
   return xe(a?.state);
 }
 function be(a, e, t) {
@@ -263,18 +263,18 @@ function le(a, e) {
     (l) => l.device_id === a && l.platform === "esphome"
   ), i = {}, o = [], n = [], r = [];
   for (const [l, d] of Object.entries(J)) {
-    const g = t.filter(
+    const u = t.filter(
       (f) => f.entity_id.startsWith(`${d.domain}.`) && f.original_name === d.originalName
     );
-    if (g.length === 0) {
+    if (u.length === 0) {
       o.push(l);
       continue;
     }
-    if (g.length > 1) {
+    if (u.length > 1) {
       n.push(l);
       continue;
     }
-    const p = g[0];
+    const p = u[0];
     i[l] = p.entity_id, p.disabled_by !== null && r.push(l);
   }
   return {
@@ -285,14 +285,14 @@ function le(a, e) {
     disabled: r
   };
 }
-function z(a) {
+function G(a) {
   return J[a].originalName;
 }
-const O = { action: "more-info" }, y = { action: "none" }, ye = 500, ke = 250, V = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function k(a, e) {
+const O = { action: "more-info" }, z = { action: "none" }, ye = 500, ke = 250, V = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
+function E(a, e) {
   return e ? a?.[e] : void 0;
 }
-function C(a, e, t = E()) {
+function D(a, e, t = H()) {
   if (a === void 0) return e;
   if (typeof a != "object" || a === null || typeof a.action != "string" || !V.includes(a.action))
     throw new Error(s("unsupportedActionError", t));
@@ -467,7 +467,7 @@ class Le extends HTMLElement {
       assertConfig: (e) => {
         if (!e.device_id || typeof e.device_id != "string")
           throw new Error(s("missingDeviceError"));
-        C(e.tap_action, O), C(e.hold_action, y), C(e.double_tap_action, y);
+        D(e.tap_action, O), D(e.hold_action, z), D(e.double_tap_action, z);
       }
     };
   }
@@ -488,7 +488,7 @@ class Le extends HTMLElement {
     };
   }
   setConfig(e) {
-    const t = E(this.activeLanguage()), i = e.device_id !== this.config?.device_id;
+    const t = H(this.activeLanguage()), i = e.device_id !== this.config?.device_id;
     this.clearInteractionTimers();
     const o = e.display_mode === "tank" || e.display_mode === "details" ? e.display_mode : "both", n = e.metric_mode === "forecast" || e.metric_mode === "both" ? e.metric_mode : "level", r = e.section_order === "details-first" ? "details-first" : "tank-first";
     this.config = {
@@ -498,9 +498,9 @@ class Le extends HTMLElement {
       display_mode: o,
       metric_mode: n,
       section_order: r,
-      tap_action: C(e.tap_action, O, t),
-      hold_action: C(e.hold_action, y, t),
-      double_tap_action: C(e.double_tap_action, y, t)
+      tap_action: D(e.tap_action, O, t),
+      hold_action: D(e.hold_action, z, t),
+      double_tap_action: D(e.double_tap_action, z, t)
     }, i && (this.lastThreshold = void 0, this.resolvedEntities = void 0, this.resolution = void 0, this.resolutionError = void 0, this.resolutionKey = void 0), this.lastRenderKey = void 0, this.render(), i && this.resolveConfiguredDevice();
   }
   getCardSize() {
@@ -549,7 +549,7 @@ class Le extends HTMLElement {
     this.lastRenderKey = void 0, this.render();
   }
   activeLanguage() {
-    return G(
+    return j(
       this.internationalization?.locale.language ?? this.internationalization?.language
     );
   }
@@ -561,11 +561,11 @@ class Le extends HTMLElement {
       e.status,
       e.threshold,
       ...this.config.metric_mode === "level" ? [] : [e.forecast, e.forecastStatus, e.forecastDetails]
-    ].map((t) => `${t ?? ""}:${k(this.states, t)?.state ?? "missing"}`).join("|") : `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
+    ].map((t) => `${t ?? ""}:${E(this.states, t)?.state ?? "missing"}`).join("|") : `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
   }
   render() {
     if (!this.shadowRoot || !this.config) return;
-    const e = this.activeLanguage(), t = E(e);
+    const e = this.activeLanguage(), t = H(e);
     if (!this.config.device_id) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${h(s("deviceRequiredTitle", t))}</strong><small>${h(s("deviceRequiredHelp", t))}</small></div></ha-card>`;
       return;
@@ -580,51 +580,51 @@ class Le extends HTMLElement {
     }
     if (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0) {
       const ue = [
-        ...this.resolution?.missing.map(z) ?? [],
-        ...this.resolution?.duplicates.map((I) => `${z(I)} (${s("duplicate", t)})`) ?? [],
-        ...this.resolution?.disabled.map((I) => `${z(I)} (${s("disabled", t)})`) ?? []
+        ...this.resolution?.missing.map(G) ?? [],
+        ...this.resolution?.duplicates.map((B) => `${G(B)} (${s("duplicate", t)})`) ?? [],
+        ...this.resolution?.disabled.map((B) => `${G(B)} (${s("disabled", t)})`) ?? []
       ];
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${h(s("incompleteDevice", t))}</strong><span>${h(ue.join(", "))}</span><small>${h(s("incompleteDeviceHelp", t))}</small></div></ha-card>`;
       return;
     }
-    const i = this.resolvedEntities, o = k(this.states, i.level), n = B(o), r = n === void 0 ? void 0 : re(n), l = B(k(this.states, i.threshold));
+    const i = this.resolvedEntities, o = E(this.states, i.level), n = I(o), r = n === void 0 ? void 0 : re(n), l = I(E(this.states, i.threshold));
     l !== void 0 && (this.lastThreshold = re(l));
     const d = this.lastThreshold;
     if (d === void 0) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${h(s("noCurrentReading", t))}</div></ha-card>`;
       return;
     }
-    const g = k(this.states, i.status), p = be(g?.state, r, d), f = p.translationKey ? s(p.translationKey, t) : p.label, v = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", x = v !== "details", R = v !== "tank", N = this.config.show_low_marker !== !1, H = typeof this.config.grid_options?.rows == "number", S = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), M = "SaltWatch", j = r === void 0 ? "—" : P(r, e), F = r === void 0 ? s("noCurrentReading", t) : j, D = B(k(this.states, i.forecast)), m = D === void 0 || D < 0 ? void 0 : Math.round(D), Q = m === void 0 ? "—" : Se(m, e), K = k(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = k(this.states, i.forecastDetails)?.state, b = m === void 0 && K !== "available" && K !== "low salt" ? Te(_, t) : m === void 0 ? s("forecastUnavailable", t) : void 0, T = s(m === void 0 ? "forecast" : m === 0 ? "lowThresholdReached" : m === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), w = `<div class="metric level-metric">
-      <div class="metric-value level">${j}</div>
+    const u = E(this.states, i.status), p = be(u?.state, r, d), f = p.translationKey ? s(p.translationKey, t) : p.label, m = this.config.display_mode ?? "both", c = this.config.metric_mode ?? "level", v = m !== "details", S = m !== "tank", b = this.config.show_low_marker !== !1, T = typeof this.config.grid_options?.rows == "number", y = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), L = "SaltWatch", R = r === void 0 ? "—" : K(r, e), w = r === void 0 ? s("noCurrentReading", t) : R, C = I(E(this.states, i.forecast)), x = C === void 0 || C < 0 ? void 0 : Math.round(C), Q = x === void 0 ? "—" : Se(x, e), P = E(this.states, i.forecastStatus)?.state?.trim().toLowerCase() ?? "", _ = E(this.states, i.forecastDetails)?.state, k = x === void 0 && P !== "available" && P !== "low salt" ? Te(_, t) : x === void 0 ? s("forecastUnavailable", t) : void 0, N = s(x === void 0 ? "forecast" : x === 0 ? "lowThresholdReached" : x === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), q = `<div class="metric level-metric">
+      <div class="metric-value level">${R}</div>
       <div class="metric-label level-label">${h(s(c === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
-    </div>`, W = `<div class="metric forecast-metric${m === void 0 ? " unavailable" : ""}">
-      <div class="metric-value forecast-value">${m === void 0 ? '<span class="forecast-placeholder">—</span>' : Q}</div>
-      <div class="metric-label forecast-label">${h(T)}</div>
-      ${b ? `<div class="forecast-detail">${h(b)}</div>` : ""}
-    </div>`, U = c === "both" ? `${w}<span class="metric-divider" aria-hidden="true"></span>${W}` : c === "forecast" ? W : w, Y = m === void 0 ? `${T}: ${b}` : `${Q} ${T}`, ce = c === "both" ? `${F}, ${Y}` : c === "forecast" ? Y : F, de = 132, L = 474, ee = L - de, u = r === void 0 ? L : L - r / 100 * ee, he = L - d / 100 * ee, te = [
-      `M96 ${(u + 2).toFixed(1)}`,
-      `Q108 ${(u - 2).toFixed(1)} 120 ${(u - 3).toFixed(1)}`,
-      `Q132 ${(u - 6).toFixed(1)} 145 ${(u - 4).toFixed(1)}`,
-      `Q159 ${(u - 1).toFixed(1)} 174 ${(u - 2).toFixed(1)}`,
-      `Q189 ${(u - 4).toFixed(1)} 204 ${(u - 3).toFixed(1)}`,
-      `Q220 ${(u + 1).toFixed(1)} 236 ${(u - 1).toFixed(1)}`,
-      `Q253 ${(u - 4).toFixed(1)} 270 ${(u - 2).toFixed(1)}`,
-      `Q288 ${(u + 1).toFixed(1)} 305 ${(u - 1).toFixed(1)}`,
-      `Q315 ${(u - 3).toFixed(1)} 324 ${(u + 1).toFixed(1)}`
+    </div>`, M = `<div class="metric forecast-metric${x === void 0 ? " unavailable" : ""}">
+      <div class="metric-value forecast-value">${x === void 0 ? '<span class="forecast-placeholder">—</span>' : Q}</div>
+      <div class="metric-label forecast-label">${h(N)}</div>
+      ${k ? `<div class="forecast-detail">${h(k)}</div>` : ""}
+    </div>`, U = c === "both" ? `${q}<span class="metric-divider" aria-hidden="true"></span>${M}` : c === "forecast" ? M : q, Y = x === void 0 ? `${N}: ${k}` : `${Q} ${N}`, ce = c === "both" ? `${w}, ${Y}` : c === "forecast" ? Y : w, de = 132, F = 474, ee = F - de, g = r === void 0 ? F : F - r / 100 * ee, he = F - d / 100 * ee, te = [
+      `M96 ${(g + 2).toFixed(1)}`,
+      `Q108 ${(g - 2).toFixed(1)} 120 ${(g - 3).toFixed(1)}`,
+      `Q132 ${(g - 6).toFixed(1)} 145 ${(g - 4).toFixed(1)}`,
+      `Q159 ${(g - 1).toFixed(1)} 174 ${(g - 2).toFixed(1)}`,
+      `Q189 ${(g - 4).toFixed(1)} 204 ${(g - 3).toFixed(1)}`,
+      `Q220 ${(g + 1).toFixed(1)} 236 ${(g - 1).toFixed(1)}`,
+      `Q253 ${(g - 4).toFixed(1)} 270 ${(g - 2).toFixed(1)}`,
+      `Q288 ${(g + 1).toFixed(1)} 305 ${(g - 1).toFixed(1)}`,
+      `Q315 ${(g - 3).toFixed(1)} 324 ${(g + 1).toFixed(1)}`
     ].join(" "), pe = [
       te,
-      `L324 ${L}`,
-      `L96 ${L}`,
+      `L324 ${F}`,
+      `L96 ${F}`,
       "Z"
     ].join(" ");
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
-      <ha-card class="tone-${p.tone}${H ? " fixed-height" : ""}"${S ? ' tabindex="0" role="button"' : ""} aria-label="${M}: ${h(ce)}, ${h(f)}">
-        <div class="card-shell mode-${v} order-${this.config.section_order ?? "tank-first"}">
-          ${x ? `<section class="tank-panel" aria-label="${h(s("tankLevelVisualization", t))}">
-            ${this.tankSvg(r, pe, te, u, he, d, p.tone, t, e)}
+      <ha-card class="tone-${p.tone}${T ? " fixed-height" : ""}"${y ? ' tabindex="0" role="button"' : ""} aria-label="${L}: ${h(ce)}, ${h(f)}">
+        <div class="card-shell mode-${m} order-${this.config.section_order ?? "tank-first"}">
+          ${v ? `<section class="tank-panel" aria-label="${h(s("tankLevelVisualization", t))}">
+            ${this.tankSvg(r, pe, te, g, he, d, p.tone, t, e)}
           </section>` : ""}
-          ${R ? `<section class="content-panel${N ? "" : " without-threshold-summary"}">
+          ${S ? `<section class="content-panel${b ? "" : " without-threshold-summary"}">
             ${this.config.show_status ? `<header>
               <div class="status"><span class="status-dot"></span>${h(f)}</div>
             </header>` : ""}
@@ -632,10 +632,10 @@ class Le extends HTMLElement {
               ${r === void 0 ? this.stateSymbol(p.translationKey, p.tone) : `<div class="metrics metrics-${c}">${U}</div>`}
               ${r === void 0 && this.config.show_status ? "" : r === void 0 ? `<div class="level-label">${h(f)}</div>` : ""}
             </div>
-            ${N ? `<div class="threshold-summary" aria-label="${h(s("lowMarkerAt", t, { value: P(d, e) }))}">
+            ${b ? `<div class="threshold-summary" aria-label="${h(s("lowMarkerAt", t, { value: K(d, e) }))}">
               <span class="marker-line"></span>
               <span>${h(s("lowMarker", t))}</span>
-              <strong>${P(d, e)}</strong>
+              <strong>${K(d, e)}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
@@ -659,8 +659,8 @@ class Le extends HTMLElement {
         ".status,.metric-value,.metric-label,.threshold-summary,.tank"
       )
     ].some((d) => {
-      const g = d.getBoundingClientRect();
-      return g.height > 0 && (g.top < o.top - 1 || g.bottom > o.bottom + 1);
+      const u = d.getBoundingClientRect();
+      return u.height > 0 && (u.top < o.top - 1 || u.bottom > o.bottom + 1);
     }), r = [
       ...this.shadowRoot.querySelectorAll(".card-shell,.tank-panel,.content-panel,.reading")
     ].some((d) => d.scrollHeight > d.clientHeight + 1), l = !i && (n || r);
@@ -670,15 +670,17 @@ class Le extends HTMLElement {
     if (!this.shadowRoot) return;
     const e = this.shadowRoot.querySelector("ha-card"), t = this.shadowRoot.querySelector(".tank-panel"), i = this.shadowRoot.querySelector("svg.tank"), o = this.shadowRoot.querySelector(".threshold-label");
     if (!e || !t || !i || !o) return;
-    const n = Number(o.dataset.preferredX), r = Number(o.dataset.safeX), l = Number(o.dataset.markerY), d = i.getScreenCTM();
-    if (![n, r, l].every(Number.isFinite) || !d) return;
-    const g = e.getBoundingClientRect(), p = t.getBoundingClientRect(), f = i.createSVGPoint();
-    f.x = Math.max(g.left, p.left) + 4, f.y = p.top;
-    const v = f.matrixTransform(d.inverse()).x, c = Math.min(r, Math.max(n, v));
-    o.setAttribute("transform", `translate(${c.toFixed(1)} ${l.toFixed(1)})`);
+    const n = Number(o.dataset.preferredX), r = Number(o.dataset.markerY), l = i.getScreenCTM();
+    if (![n, r].every(Number.isFinite) || !l) return;
+    const d = e.getBoundingClientRect(), u = t.getBoundingClientRect(), p = o.getBoundingClientRect(), f = this.shadowRoot.querySelector(".tank-glass")?.getBoundingClientRect(), m = Number.parseFloat(getComputedStyle(t).paddingRight), c = Number.isFinite(m) ? m : 18, v = i.createSVGPoint();
+    v.x = n, v.y = r;
+    const S = v.matrixTransform(l).x, b = Math.max(d.left, u.left) + c, T = Math.min(d.right, u.right) - c - p.width, y = f ? f.left - p.width - 8 : T, L = Math.min(T, y), R = L >= b ? Math.min(L, Math.max(S, b)) : b, w = i.createSVGPoint();
+    w.x = R, w.y = u.top;
+    const C = w.matrixTransform(l.inverse()).x;
+    o.setAttribute("transform", `translate(${C.toFixed(1)} ${r.toFixed(1)})`);
   }
   actionConfig(e) {
-    return this.config ? e === "tap" ? this.config.tap_action ?? O : e === "hold" ? this.config.hold_action ?? y : this.config.double_tap_action ?? y : y;
+    return this.config ? e === "tap" ? this.config.tap_action ?? O : e === "hold" ? this.config.hold_action ?? z : this.config.double_tap_action ?? z : z;
   }
   hasAction(e) {
     return this.actionConfig(e).action !== "none";
@@ -739,13 +741,13 @@ class Le extends HTMLElement {
       <circle class="symbol-dot" cx="48" cy="71" r="3.8"/>
     </svg>`;
   }
-  tankSvg(e, t, i, o, n, r, l, d, g) {
+  tankSvg(e, t, i, o, n, r, l, d, u) {
     const p = Array.from({ length: 21 }, (_, $) => {
-      const b = 100 - $ * 5, T = 474 - b / 100 * 342, w = b % 25 === 0, W = !w && b % 10 === 0, U = w ? 60 : W ? 67 : 71;
-      return `${w ? `<text x="52" y="${T + 5}" text-anchor="end">${b}%</text>` : ""}<path class="${w ? "major" : W ? "medium" : "minor"}" d="M${U} ${T}H78"/>`;
-    }).join(""), f = e === void 0, v = Math.max(134, Math.min(470, n)), c = s("lowBadge", d), x = d === "de" ? 72 : 54, R = 1.18, N = -60, H = 210, S = 296, M = 12, j = 324, F = N + H + (M - H) * R, D = F - x, m = F, A = (S + (v - S) * R - 15).toFixed(1), K = f ? s("noCurrentReading", d) : s("estimatedLevel", d) + `: ${P(e, g)}`;
+      const k = 100 - $ * 5, N = 474 - k / 100 * 342, q = k % 25 === 0, M = !q && k % 10 === 0, U = q ? 60 : M ? 67 : 71;
+      return `${q ? `<text x="52" y="${N + 5}" text-anchor="end">${k}%</text>` : ""}<path class="${q ? "major" : M ? "medium" : "minor"}" d="M${U} ${N}H78"/>`;
+    }).join(""), f = e === void 0, m = Math.max(134, Math.min(470, n)), c = s("lowBadge", d), v = d === "de" ? 72 : 54, S = 1.18, b = -60, T = 210, y = 296, L = 12, R = 324, w = b + T + (L - T) * S, C = w - v, x = w, A = (y + (m - y) * S - 15).toFixed(1), P = f ? s("noCurrentReading", d) : s("estimatedLevel", d) + `: ${K(e, u)}`;
     return `
-      <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${h(K)}">
+      <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${h(P)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -789,7 +791,7 @@ class Le extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="tank-visual" transform="translate(${N} 0) translate(210 ${S}) scale(${R}) translate(-210 -${S})">
+        <g class="tank-visual" transform="translate(${b} 0) translate(210 ${y}) scale(${S}) translate(-210 -${y})">
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${p}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
@@ -806,10 +808,10 @@ class Le extends HTMLElement {
           ${f ? '<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>' : `<path class="salt-fill" data-level="${e}" data-surface-y="${o.toFixed(1)}" d="${t}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${ge}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${t}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${i}"/>`}
           <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
         </g>
-        <path class="threshold tone-${l}" data-threshold="${r}" data-threshold-y="${n.toFixed(1)}" d="M${M} ${n.toFixed(1)}H${j}"/>
+        <path class="threshold tone-${l}" data-threshold="${r}" data-threshold-y="${n.toFixed(1)}" d="M${L} ${n.toFixed(1)}H${R}"/>
         </g>
-        <g class="threshold-label tone-${l}" data-preferred-x="${D.toFixed(1)}" data-safe-x="${m.toFixed(1)}" data-marker-y="${A}" transform="translate(${m.toFixed(1)} ${A})">
-          <rect width="${x}" height="30" rx="9"/><text x="${x / 2}" y="20" text-anchor="middle">${h(c)}</text>
+        <g class="threshold-label tone-${l}" data-preferred-x="${C.toFixed(1)}" data-marker-y="${A}" transform="translate(${x.toFixed(1)} ${A})">
+          <rect width="${v}" height="30" rx="9"/><text x="${v / 2}" y="20" text-anchor="middle">${h(c)}</text>
         </g>
       </svg>`;
   }
@@ -985,7 +987,7 @@ class Le extends HTMLElement {
   }
 }
 const X = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
-function q(a) {
+function W(a) {
   return a.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 class Ce extends HTMLElement {
@@ -1093,24 +1095,24 @@ class Ce extends HTMLElement {
     })), t && this.render());
   }
   activeLanguage() {
-    return G(
+    return j(
       this.internationalization?.locale.language ?? this.internationalization?.language ?? this._hass?.locale?.language ?? this._hass?.language
     );
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const e = ve(E(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", n = t !== "tank", r = this._config, l = r.device_id ? this.deviceResolutions.get(r.device_id) : void 0, d = !!(l?.entities && l.disabled.length === 0), g = l ? [
-      ...l.missing.map(z),
-      ...l.duplicates.map((c) => `${z(c)} (${e.duplicate})`),
-      ...l.disabled.map((c) => `${z(c)} (${e.disabled})`)
+    const e = ve(H(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", o = this._config.section_order ?? "tank-first", n = t !== "tank", r = this._config, l = r.device_id ? this.deviceResolutions.get(r.device_id) : void 0, d = !!(l?.entities && l.disabled.length === 0), u = l ? [
+      ...l.missing.map(G),
+      ...l.duplicates.map((c) => `${G(c)} (${e.duplicate})`),
+      ...l.disabled.map((c) => `${G(c)} (${e.disabled})`)
     ] : [], p = [...this.deviceResolutions.keys()].map((c) => ({
       value: c,
       label: this.deviceLabel(c)
-    })).sort((c, x) => c.label.localeCompare(x.label)), f = !!r.device_id, v = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : f ? d ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : l ? {
+    })).sort((c, v) => c.label.localeCompare(v.label)), f = !!r.device_id, m = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : f ? d ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : l ? {
       tone: "warning",
       icon: "!",
       title: e.incompleteDevice,
-      text: g.length > 0 ? g.join(", ") : e.incompleteDeviceHelp
+      text: u.length > 0 ? u.join(", ") : e.incompleteDeviceHelp
     } : {
       tone: "error",
       icon: "!",
@@ -1128,9 +1130,9 @@ class Ce extends HTMLElement {
         <section class="section device-section">
           <h3>${e.saltWatchDevice}</h3>
           <div id="device-form"></div>
-          <div class="notice ${v.tone}" role="status" aria-live="polite">
-            <span class="notice-icon" aria-hidden="true">${v.icon}</span>
-            <span class="notice-copy"><strong>${q(v.title)}</strong><small>${q(v.text)}</small></span>
+          <div class="notice ${m.tone}" role="status" aria-live="polite">
+            <span class="notice-icon" aria-hidden="true">${m.icon}</span>
+            <span class="notice-copy"><strong>${W(m.title)}</strong><small>${W(m.text)}</small></span>
           </div>
         </section>
 
@@ -1178,8 +1180,8 @@ class Ce extends HTMLElement {
       { name: "double_tap_action", selector: { ui_action: { actions: X, default_action: "none" } } }
     ], r, { tap_action: e.tap, hold_action: e.hold, double_tap_action: e.doubleTap }), this.shadowRoot.querySelectorAll("button[data-field]").forEach((c) => {
       c.addEventListener("click", () => {
-        const x = c.dataset.field;
-        this.updateConfig({ [x]: c.dataset.value });
+        const v = c.dataset.field;
+        this.updateConfig({ [v]: c.dataset.value });
       });
     }), this.shadowRoot.querySelectorAll("input[data-field]").forEach((c) => {
       c.addEventListener("change", () => this.updateConfig({ [c.dataset.field]: c.checked }));
@@ -1207,16 +1209,16 @@ class Ce extends HTMLElement {
     const o = e === i;
     return `<button type="button" class="layout-option${o ? " selected" : ""}" data-field="display_mode" data-value="${e}" aria-pressed="${o}">
       <span class="layout-preview layout-${e}" aria-hidden="true"><i></i><b></b></span>
-      <span>${q(t)}</span>
+      <span>${W(t)}</span>
       ${o ? '<span class="selected-mark">✓</span>' : ""}
     </button>`;
   }
   segmentButton(e, t, i, o) {
     const n = t === o;
-    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${q(i)}</button>`;
+    return `<button type="button" class="segment${n ? " selected" : ""}" data-field="${e}" data-value="${t}" aria-pressed="${n}">${W(i)}</button>`;
   }
   toggle(e, t, i, o) {
-    return `<label class="toggle-row"><span><strong>${q(t)}</strong><small>${q(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${o ? "checked" : ""}><i></i></span></label>`;
+    return `<label class="toggle-row"><span><strong>${W(t)}</strong><small>${W(i)}</small></span><span class="switch"><input type="checkbox" data-field="${e}" ${o ? "checked" : ""}><i></i></span></label>`;
   }
   styles() {
     return `
@@ -1275,7 +1277,7 @@ class Ce extends HTMLElement {
     `;
   }
 }
-const qe = "0.5.3", ze = {
+const qe = "0.5.4", ze = {
   version: qe
 }, Z = "saltwatch-card", Ee = ze.version;
 customElements.get(Z) || customElements.define(Z, Le);
