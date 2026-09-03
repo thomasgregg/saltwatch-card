@@ -129,7 +129,7 @@ test("scales combined-card typography from the details pane instead of the full 
   expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
 });
 
-test("fills the tank pane while keeping the low marker inside the card", async ({ page }) => {
+test("keeps the intended tank scale and separates the low marker from the tank", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
   await frame.evaluate((element) => {
@@ -159,14 +159,15 @@ test("fills the tank pane while keeping the low marker inside the card", async (
       markerInside: marker.left >= panel.left - 1 && marker.right <= panel.right + 1,
       markerLeftInset: marker.left - panel.left,
       matchingRightInset: Number.parseFloat(getComputedStyle(panelElement).paddingRight),
-      markerLeftOfTank: marker.right < glass.left,
+      markerGapBeforeTank: glass.left - marker.right,
     };
   });
 
-  expect(result.glassWidthShare).toBeGreaterThan(0.5);
+  expect(result.glassWidthShare).toBeGreaterThan(0.35);
+  expect(result.glassWidthShare).toBeLessThan(0.52);
   expect(result.markerInside).toBe(true);
   expect(result.markerLeftInset).toBeGreaterThanOrEqual(result.matchingRightInset - 1);
-  expect(result.markerLeftOfTank).toBe(true);
+  expect(result.markerGapBeforeTank).toBeGreaterThanOrEqual(24);
 });
 
 test("preserves low-marker edge padding in a narrow tank card", async ({ page }) => {
@@ -193,15 +194,57 @@ test("preserves low-marker edge padding in a narrow tank card", async ({ page })
     const panelElement = root.querySelector<HTMLElement>(".tank-panel")!;
     const panel = panelElement.getBoundingClientRect();
     const marker = root.querySelector<SVGGraphicsElement>(".threshold-label")!.getBoundingClientRect();
+    const glass = root.querySelector<SVGGraphicsElement>(".tank-glass")!.getBoundingClientRect();
     return {
       markerLeftInset: marker.left - panel.left,
       markerRightInside: marker.right <= panel.right + 1,
       matchingRightInset: Number.parseFloat(getComputedStyle(panelElement).paddingRight),
+      markerGapBeforeTank: glass.left - marker.right,
     };
   });
 
   expect(result.markerLeftInset).toBeGreaterThanOrEqual(result.matchingRightInset - 1);
   expect(result.markerRightInside).toBe(true);
+  expect(result.markerGapBeforeTank).toBeGreaterThanOrEqual(24);
+});
+
+test("matches the balanced tank-only reference layout", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "644px";
+    element.style.height = "auto";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      device_id: "saltwatch-demo-device",
+      display_mode: "tank",
+      metric_mode: "level",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 12, rows: "auto" },
+    });
+  });
+
+  const result = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const panel = root.querySelector<HTMLElement>(".tank-panel")!.getBoundingClientRect();
+    const marker = root.querySelector<SVGGraphicsElement>(".threshold-label")!.getBoundingClientRect();
+    const glass = root.querySelector<SVGGraphicsElement>(".tank-glass")!.getBoundingClientRect();
+    return {
+      glassWidthShare: glass.width / panel.width,
+      markerLeftInset: marker.left - panel.left,
+      markerGapBeforeTank: glass.left - marker.right,
+      markerInside: marker.left >= panel.left - 1 && marker.right <= panel.right + 1,
+    };
+  });
+
+  expect(result.glassWidthShare).toBeGreaterThan(0.35);
+  expect(result.glassWidthShare).toBeLessThan(0.5);
+  expect(result.markerLeftInset).toBeGreaterThanOrEqual(40);
+  expect(result.markerGapBeforeTank).toBeGreaterThanOrEqual(50);
+  expect(result.markerInside).toBe(true);
 });
 
 test("balances stacked panels when auto height is disabled", async ({ page }) => {

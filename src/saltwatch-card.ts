@@ -841,18 +841,11 @@ export class SaltWatchCard extends HTMLElement {
     const labelY = Math.max(134, Math.min(470, thresholdY));
     const lowBadge = localize("lowBadge", locale);
     const lowBadgeWidth = locale === "de" ? 72 : 54;
+    const preferredLowBadgeX = 12 - lowBadgeWidth;
     const tankVisualScale = 1.18;
-    const tankVisualOffsetX = -60;
-    const tankVisualCenterX = 210;
     const tankVisualCenterY = 296;
     const thresholdStartX = 12;
-    const thresholdEndX = 324;
-    const thresholdVisualStartX =
-      tankVisualOffsetX +
-      tankVisualCenterX +
-      (thresholdStartX - tankVisualCenterX) * tankVisualScale;
-    const preferredLowBadgeX = thresholdVisualStartX - lowBadgeWidth;
-    const safeLowBadgeX = thresholdVisualStartX;
+    const thresholdEndX = 326;
     const scaledLabelY = tankVisualCenterY + (labelY - tankVisualCenterY) * tankVisualScale;
     const lowBadgeY = (scaledLabelY - 15).toFixed(1);
     const tankLabel = unavailable
@@ -860,7 +853,7 @@ export class SaltWatchCard extends HTMLElement {
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, language)}`;
 
     return `
-      <svg class="tank" viewBox="-72 30 444 534" role="img" aria-label="${escapeHtml(tankLabel)}">
+      <svg class="tank" viewBox="-64 30 548 534" role="img" aria-label="${escapeHtml(tankLabel)}">
         <defs>
           <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
@@ -904,7 +897,7 @@ export class SaltWatchCard extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="tank-visual" transform="translate(${tankVisualOffsetX} 0) translate(210 ${tankVisualCenterY}) scale(${tankVisualScale}) translate(-210 -${tankVisualCenterY})">
+        <g class="tank-visual" transform="translate(210 ${tankVisualCenterY}) scale(${tankVisualScale}) translate(-210 -${tankVisualCenterY})">
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
@@ -925,7 +918,7 @@ export class SaltWatchCard extends HTMLElement {
         </g>
         <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX} ${thresholdY.toFixed(1)}H${thresholdEndX}"/>
         </g>
-        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${safeLowBadgeX.toFixed(1)} ${lowBadgeY})">
+        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${preferredLowBadgeX.toFixed(1)} ${lowBadgeY})">
           <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
         </g>
       </svg>`;
