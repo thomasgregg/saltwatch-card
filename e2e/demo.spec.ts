@@ -154,12 +154,17 @@ test("keeps the intended tank scale and separates the low marker from the tank",
     const panel = panelElement.getBoundingClientRect();
     const glass = root.querySelector<SVGGraphicsElement>(".tank-glass")!.getBoundingClientRect();
     const marker = root.querySelector<SVGGraphicsElement>(".threshold-label")!.getBoundingClientRect();
+    const rulerLabels = [...root.querySelectorAll<SVGTextElement>(".ruler text")]
+      .map((label) => label.getBoundingClientRect());
     return {
       glassWidthShare: glass.width / panel.width,
       markerInside: marker.left >= panel.left - 1 && marker.right <= panel.right + 1,
       markerLeftInset: marker.left - panel.left,
       matchingRightInset: Number.parseFloat(getComputedStyle(panelElement).paddingRight),
       markerGapBeforeTank: glass.left - marker.right,
+      markerOverlapsRulerLabel: rulerLabels.some((label) =>
+        marker.left < label.right && marker.right > label.left &&
+        marker.top < label.bottom && marker.bottom > label.top),
     };
   });
 
@@ -168,6 +173,7 @@ test("keeps the intended tank scale and separates the low marker from the tank",
   expect(result.markerInside).toBe(true);
   expect(result.markerLeftInset).toBeGreaterThanOrEqual(result.matchingRightInset - 1);
   expect(result.markerGapBeforeTank).toBeGreaterThanOrEqual(24);
+  expect(result.markerOverlapsRulerLabel).toBe(false);
 });
 
 test("preserves low-marker edge padding in a narrow tank card", async ({ page }) => {
@@ -232,11 +238,19 @@ test("matches the balanced tank-only reference layout", async ({ page }) => {
     const panel = root.querySelector<HTMLElement>(".tank-panel")!.getBoundingClientRect();
     const marker = root.querySelector<SVGGraphicsElement>(".threshold-label")!.getBoundingClientRect();
     const glass = root.querySelector<SVGGraphicsElement>(".tank-glass")!.getBoundingClientRect();
+    const thresholdLine = root.querySelector<SVGGraphicsElement>(".threshold")!.getBoundingClientRect();
+    const rulerLabels = [...root.querySelectorAll<SVGTextElement>(".ruler text")]
+      .map((label) => label.getBoundingClientRect());
     return {
       glassWidthShare: glass.width / panel.width,
       markerLeftInset: marker.left - panel.left,
       markerGapBeforeTank: glass.left - marker.right,
       markerInside: marker.left >= panel.left - 1 && marker.right <= panel.right + 1,
+      thresholdStopsAtWindow: thresholdLine.right <= glass.right + 1,
+      markerRulerHorizontalGap: Math.min(...rulerLabels.map((label) => label.left - marker.right)),
+      markerOverlapsRulerLabel: rulerLabels.some((label) =>
+        marker.left < label.right && marker.right > label.left &&
+        marker.top < label.bottom && marker.bottom > label.top),
     };
   });
 
@@ -245,6 +259,9 @@ test("matches the balanced tank-only reference layout", async ({ page }) => {
   expect(result.markerLeftInset).toBeGreaterThanOrEqual(40);
   expect(result.markerGapBeforeTank).toBeGreaterThanOrEqual(50);
   expect(result.markerInside).toBe(true);
+  expect(result.thresholdStopsAtWindow).toBe(true);
+  expect(result.markerRulerHorizontalGap).toBeGreaterThanOrEqual(6);
+  expect(result.markerOverlapsRulerLabel).toBe(false);
 });
 
 test("balances stacked panels when auto height is disabled", async ({ page }) => {
@@ -630,6 +647,13 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
 test("updates state and theme through the demo host context", async ({ page }) => {
   const cardSurface = page.locator("saltwatch-card ha-card");
   const darkSurface = await cardSurface.evaluate((element) => getComputedStyle(element).backgroundColor);
+  await page.locator("#low-threshold").evaluate((element) => {
+    const input = element as HTMLInputElement;
+    input.value = "30";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.locator("#low-threshold-value")).toHaveText("30%");
+  await expect(page.locator("saltwatch-card .threshold")).toHaveAttribute("data-threshold", "30");
   await page.getByRole("button", { name: "Sensor fault" }).click();
   await expect(page.locator("saltwatch-card .status")).toContainText("Sensor fault");
   await expect(page.locator("saltwatch-card .fault-symbol")).toBeVisible();

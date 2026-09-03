@@ -10,6 +10,7 @@ import type { SaltWatchCard } from "../src/saltwatch-card";
 const iso = () => new Date().toISOString();
 const DEVICE_ID = "saltwatch-demo-device";
 const LEVEL_ENTITY_ID = "sensor.saltwatch_salt_level";
+const LOW_THRESHOLD_ENTITY_ID = "number.saltwatch_low_salt_threshold";
 const entity = (entityId: string, state: string, unit = "") => ({
   entity_id: entityId,
   state,
@@ -21,7 +22,7 @@ const entity = (entityId: string, state: string, unit = "") => ({
 const roleEntries: EntityRegistryEntry[] = [
   ["sensor.saltwatch_salt_level", "Salt Level"],
   ["sensor.saltwatch_salt_status", "Salt Status"],
-  ["number.saltwatch_low_salt_threshold", "Low Salt Threshold"],
+  [LOW_THRESHOLD_ENTITY_ID, "Low Salt Threshold"],
   ["sensor.saltwatch_estimated_days_until_low_salt", "Estimated Days Until Low Salt"],
   ["sensor.saltwatch_forecast_status", "Forecast Status"],
   ["sensor.saltwatch_forecast_details", "Forecast Details"],
@@ -42,7 +43,7 @@ const hass: HomeAssistant = {
     "sensor.saltwatch_estimated_days_until_low_salt": entity("sensor.saltwatch_estimated_days_until_low_salt", "18", "d"),
     "sensor.saltwatch_forecast_status": entity("sensor.saltwatch_forecast_status", "Available"),
     "sensor.saltwatch_forecast_details": entity("sensor.saltwatch_forecast_details", "Based on 18 days of data"),
-    "number.saltwatch_low_salt_threshold": entity("number.saltwatch_low_salt_threshold", "20", "%"),
+    [LOW_THRESHOLD_ENTITY_ID]: entity(LOW_THRESHOLD_ENTITY_ID, "20", "%"),
   },
   entities: Object.fromEntries(roleEntries.map((entry) => [entry.entity_id, entry])),
   devices: {
@@ -124,6 +125,8 @@ frame.append(card);
 
 const levelInput = document.querySelector<HTMLInputElement>("#level");
 const levelValue = document.querySelector<HTMLElement>("#level-value");
+const lowThresholdInput = document.querySelector<HTMLInputElement>("#low-threshold");
+const lowThresholdValue = document.querySelector<HTMLElement>("#low-threshold-value");
 const forecastInput = document.querySelector<HTMLInputElement>("#forecast-days");
 const forecastValue = document.querySelector<HTMLElement>("#forecast-value");
 const showStatusInput = document.querySelector<HTMLInputElement>("#show-status");
@@ -180,12 +183,26 @@ lightThemeInput?.addEventListener("change", () => {
 });
 levelInput?.addEventListener("input", () => {
   const value = levelInput.value;
+  const threshold = Number(hass.states[LOW_THRESHOLD_ENTITY_ID]?.state ?? "20");
   hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, value, "%");
   hass.states["sensor.saltwatch_salt_status"] = entity(
     "sensor.saltwatch_salt_status",
-    Number(value) <= 20 ? "Low Salt" : "Good",
+    Number(value) <= threshold ? "Low Salt" : "Good",
   );
   if (levelValue) levelValue.textContent = `${value}%`;
+  notifyStates();
+});
+lowThresholdInput?.addEventListener("input", () => {
+  const value = lowThresholdInput.value;
+  const level = Number(hass.states[LEVEL_ENTITY_ID]?.state);
+  hass.states[LOW_THRESHOLD_ENTITY_ID] = entity(LOW_THRESHOLD_ENTITY_ID, value, "%");
+  if (Number.isFinite(level)) {
+    hass.states["sensor.saltwatch_salt_status"] = entity(
+      "sensor.saltwatch_salt_status",
+      level <= Number(value) ? "Low Salt" : "Good",
+    );
+  }
+  if (lowThresholdValue) lowThresholdValue.textContent = `${value}%`;
   notifyStates();
 });
 forecastInput?.addEventListener("input", () => {
@@ -233,13 +250,15 @@ document.querySelectorAll<HTMLButtonElement>("button[data-state]").forEach((butt
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Calibration Required");
       hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Calibration required");
     } else if (state === "low") {
-      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, "14", "%");
+      const threshold = Number(lowThresholdInput?.value ?? "20");
+      const lowLevel = String(Math.max(0, threshold - 6));
+      hass.states[LEVEL_ENTITY_ID] = entity(LEVEL_ENTITY_ID, lowLevel, "%");
       hass.states["sensor.saltwatch_salt_status"] = entity("sensor.saltwatch_salt_status", "Low Salt");
       hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = entity("sensor.saltwatch_estimated_days_until_low_salt", "0", "d");
       hass.states["sensor.saltwatch_forecast_status"] = entity("sensor.saltwatch_forecast_status", "Low Salt");
       hass.states["sensor.saltwatch_forecast_details"] = entity("sensor.saltwatch_forecast_details", "Low threshold reached");
-      if (levelInput) levelInput.value = "14";
-      if (levelValue) levelValue.textContent = "14%";
+      if (levelInput) levelInput.value = lowLevel;
+      if (levelValue) levelValue.textContent = `${lowLevel}%`;
       if (forecastInput) forecastInput.value = "0";
       if (forecastValue) forecastValue.textContent = "0 d";
     } else {

@@ -841,13 +841,10 @@ export class SaltWatchCard extends HTMLElement {
     const labelY = Math.max(134, Math.min(470, thresholdY));
     const lowBadge = localize("lowBadge", locale);
     const lowBadgeWidth = locale === "de" ? 72 : 54;
-    const preferredLowBadgeX = 12 - lowBadgeWidth;
-    const tankVisualScale = 1.18;
-    const tankVisualCenterY = 296;
-    const thresholdStartX = 12;
-    const thresholdEndX = 326;
-    const scaledLabelY = tankVisualCenterY + (labelY - tankVisualCenterY) * tankVisualScale;
-    const lowBadgeY = (scaledLabelY - 15).toFixed(1);
+    const thresholdStartX = 7;
+    const preferredLowBadgeX = thresholdStartX - lowBadgeWidth;
+    const thresholdEndX = 324;
+    const lowBadgeY = (labelY - 15).toFixed(1);
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, language)}`;
@@ -897,7 +894,7 @@ export class SaltWatchCard extends HTMLElement {
             <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
           </filter>
         </defs>
-        <g class="tank-visual" transform="translate(210 ${tankVisualCenterY}) scale(${tankVisualScale}) translate(-210 -${tankVisualCenterY})">
+        <g class="tank-visual">
         <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
         <g filter="url(#frame-shadow)">
           <g filter="url(#polymer)">
