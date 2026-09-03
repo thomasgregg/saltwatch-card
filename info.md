@@ -11,13 +11,9 @@ theme and adapts to desktop and mobile dashboards.
 
 ### Tank only
 
-![SaltWatch Card tank-only display](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-tank.png)
-
 A focused visual gauge with the percentage scale and configurable low marker.
 
 ### Details only
-
-![SaltWatch Card details-only display with salt level and refill forecast](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-details.png)
 
 Current salt level, estimated days until low salt, and device health in one
 compact card. While the forecast is still learning or temporarily blocked, the

@@ -16,11 +16,6 @@ threshold is likely to be reached.
 
 ![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](images/saltwatch-card-complete.png)
 
-| Tank only | Details only |
-| :---: | :---: |
-| ![SaltWatch Card tank-only display](images/saltwatch-card-tank.png) | ![SaltWatch Card details-only display with salt level and refill forecast](images/saltwatch-card-details.png) |
-| A focused visual gauge | Level, forecast, and status at a glance |
-
 SaltWatch Card is designed specifically for devices running the official
 SaltWatch firmware. It uses Home Assistant's device and entity registries so
 renamed entities and multiple SaltWatch devices remain unambiguous.
