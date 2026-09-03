@@ -5,7 +5,7 @@ switch to a compact view of the current level, refill forecast, and health
 status. SaltWatch Card follows your active Home Assistant light, dark, or custom
 theme and adapts to desktop and mobile dashboards.
 
-![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-complete.png)
+![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-overview-light.png)
 
 ## Choose the view that fits your dashboard
 

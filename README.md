@@ -14,7 +14,7 @@ from across the room—no interpreting raw percentages. It can also show
 SaltWatch's refill forecast, so you know how much salt remains and when the low
 threshold is likely to be reached.
 
-![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](images/saltwatch-card-complete.png)
+![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](images/saltwatch-card-overview-light.png)
 
 SaltWatch Card is designed specifically for devices running the official
 SaltWatch firmware. It uses Home Assistant's device and entity registries so
