@@ -868,10 +868,10 @@ export class SaltWatchCard extends HTMLElement {
             <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
           </linearGradient>
           <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#fff" stop-opacity=".12"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".04"/><stop offset="1" stop-color="#625744" stop-opacity=".24"/>
+            <stop offset="0" stop-color="#fff" stop-opacity=".08"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".02"/><stop offset="1" stop-color="#625744" stop-opacity=".1"/>
           </linearGradient>
           <radialGradient id="window-vignette" cx="50%" cy="46%" r="72%">
-            <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".09"/><stop offset="100%" stop-color="#000" stop-opacity=".3"/>
+            <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".05"/><stop offset="100%" stop-color="#000" stop-opacity=".18"/>
           </radialGradient>
           <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="13" height="13" fill="transparent"/><rect width="3" height="13" fill="#d6dde0" fill-opacity=".14"/>
@@ -953,7 +953,7 @@ export class SaltWatchCard extends HTMLElement {
       .ruler .minor { stroke-width:1; opacity:.72; }
       .salt-photo { opacity:.98; filter:contrast(1.04) saturate(.15) brightness(1.04); }
       .tank-base { stroke:color-mix(in srgb,var(--primary-text-color,#f4f6f7) 24%,#111619); }
-      .salt-depth { opacity:.9; mix-blend-mode:multiply; }
+      .salt-depth { opacity:.65; mix-blend-mode:multiply; }
       .salt-highlight { fill:none; stroke:#fff; stroke-width:.8; opacity:.28; }
       .no-reading { fill:#8b969c; font:700 98px system-ui,sans-serif; filter:drop-shadow(0 4px 8px rgba(0,0,0,.4)); }
       .threshold { color:var(--sw-warning); fill:none; stroke:currentColor; stroke-width:3; filter:drop-shadow(0 0 5px color-mix(in srgb,currentColor 35%,transparent)); }
