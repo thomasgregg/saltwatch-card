@@ -5,6 +5,20 @@ switch to a compact view of the current level, refill forecast, and health
 status. SaltWatch Card follows your active Home Assistant light, dark, or custom
 theme and adapts to desktop and mobile dashboards.
 
+## The SaltWatch installation
+
+The distance sensor sits beneath the tank lid, while the controller and power
+cable remain outside. This example routes the thin Grove cable through the
+existing hinge clearance, so no hole needs to be drilled.
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-installation-overview.jpg"><img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-installation-overview.jpg" alt="Complete SaltWatch installation with the external controller and cables labelled" width="30%"></a>
+  <a href="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-lid-sensor.jpg"><img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-lid-sensor.jpg" alt="SaltWatch distance sensor mounted beneath the tank lid" width="30%"></a>
+  <a href="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-tank-interior.jpg"><img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-tank-interior.jpg" alt="Salt pellets, brine well, and sensor measurement area inside the tank" width="30%"></a>
+</p>
+
+<p align="center"><sub>Select any photo to enlarge it.</sub></p>
+
 ![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-overview-light.png)
 
 ## Choose the view that fits your dashboard
