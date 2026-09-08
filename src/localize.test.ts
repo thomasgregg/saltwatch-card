@@ -7,7 +7,9 @@ import {
 } from "./localize";
 
 describe("localization", () => {
-  it("maps German regional variants and falls back to English", () => {
+  it("maps Danish and German regional variants and falls back to English", () => {
+    expect(resolveLocale("da")).toBe("da");
+    expect(resolveLocale("da-DK")).toBe("da");
     expect(resolveLocale("de")).toBe("de");
     expect(resolveLocale("de-AT")).toBe("de");
     expect(resolveLocale("de-DE")).toBe("de");
@@ -19,7 +21,10 @@ describe("localization", () => {
     expect(resolveLocale("not_a_language")).toBe("en");
   });
 
-  it("keeps the English and German catalogs in sync", () => {
+  it("keeps all translation catalogs in sync", () => {
+    expect(Object.keys(getTranslations("da")).sort()).toEqual(
+      Object.keys(getTranslations("en")).sort(),
+    );
     expect(Object.keys(getTranslations("de")).sort()).toEqual(
       Object.keys(getTranslations("en")).sort(),
     );
@@ -27,6 +32,7 @@ describe("localization", () => {
 
   it("formats percentages using the full Home Assistant language tag", () => {
     expect(formatPercentage(62, "en-GB")).toBe("62%");
+    expect(formatPercentage(62, "da-DK").replace(/\s/g, "")).toBe("62%");
     expect(formatPercentage(62, "de-DE").replace(/\s/g, "")).toBe("62%");
   });
 });

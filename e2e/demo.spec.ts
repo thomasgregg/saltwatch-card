@@ -708,10 +708,10 @@ test("switches the Home Assistant language context without clipping translated c
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
 
-  await page.locator("#language").selectOption("de-AT");
-  await expect(card.locator(".status")).toHaveText("Gut");
-  await expect(card.locator(".level-label")).toHaveText("Geschätzter Salzstand");
-  await expect(card.locator(".threshold-summary")).toContainText("Niedrig-Markierung");
+  await page.locator("#language").selectOption("da-DK");
+  await expect(card.locator(".status")).toHaveText("God");
+  await expect(card.locator(".level-label")).toHaveText("Estimeret saltniveau");
+  await expect(card.locator(".threshold-summary")).toContainText("Lavgrænse");
 
   await frame.evaluate((element) => {
     element.style.width = "360px";

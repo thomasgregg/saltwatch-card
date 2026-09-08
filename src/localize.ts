@@ -1,11 +1,12 @@
+import { da } from "./locales/da";
 import { de } from "./locales/de";
 import { en } from "./locales/en";
 import type { TranslationCatalog, TranslationKey } from "./locales/en";
 
-export type SupportedLocale = "de" | "en";
+export type SupportedLocale = "da" | "de" | "en";
 export type { TranslationCatalog, TranslationKey };
 
-const translations: Record<SupportedLocale, TranslationCatalog> = { de, en };
+const translations: Record<SupportedLocale, TranslationCatalog> = { da, de, en };
 
 export function resolveLanguage(language?: string): string {
   const detected = language?.trim() ||
@@ -21,6 +22,7 @@ export function resolveLanguage(language?: string): string {
 
 export function resolveLocale(language?: string): SupportedLocale {
   const detected = resolveLanguage(language).toLowerCase();
+  if (detected === "da" || detected.startsWith("da-")) return "da";
   return detected === "de" || detected.startsWith("de-") ? "de" : "en";
 }
 

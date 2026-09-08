@@ -876,6 +876,14 @@ describe("SaltWatchCard", () => {
     expect((listener.mock.calls[0]?.[0] as CustomEvent).detail).toMatchObject({ action: "tap" });
   });
 
+  it("localizes the card in Danish from the Home Assistant language context", () => {
+    pushLanguage("da-DK");
+    card.setConfig(config);
+    expect(card.shadowRoot?.textContent).toContain("Estimeret saltniveau");
+    expect(card.shadowRoot?.textContent).toContain("Lavgrænse");
+    expect(card.shadowRoot?.textContent).toContain("God");
+  });
+
   it("updates the graphical editor when the Home Assistant language changes", async () => {
     if (!customElements.get("saltwatch-card-editor-test")) {
       customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);

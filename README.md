@@ -258,12 +258,12 @@ and responsive Sections dashboards.
 
 ## Languages
 
-SaltWatch Card currently supports **English and German**. The card and its
+SaltWatch Card currently supports **Danish, English, and German**. The card and its
 graphical editor automatically follow the language selected in each Home
 Assistant user profile and update immediately when that language changes.
-German regional variants such as `de-DE` and `de-AT` share the German
-translation while keeping their regional number formatting. Unsupported
-languages fall back safely to English.
+Danish and German regional variants such as `da-DK`, `de-DE`, and `de-AT`
+share their respective translations while keeping their regional number
+formatting. Unsupported languages fall back safely to English.
 
 The card deliberately stays focused on the tank level and refill timing. Pair
 it with Home Assistant's native Tile and Statistics Graph cards when you also
