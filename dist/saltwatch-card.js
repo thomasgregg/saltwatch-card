@@ -1500,7 +1500,7 @@ class Fe extends HTMLElement {
     `;
   }
 }
-const Ne = "0.6.0-beta.1", De = {
+const Ne = "0.6.0", De = {
   version: Ne
 }, A = "saltwatch-card", He = De.version;
 customElements.get(A) || customElements.define(A, Re);
