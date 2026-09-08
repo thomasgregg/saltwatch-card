@@ -183,7 +183,7 @@ or disabled, the editor lists them explicitly instead of guessing or pairing
 another device. For another device, the salt-level entity is required while
 threshold, status, and forecast mappings are optional.
 
-![SaltWatch Card graphical editor showing automatic entity detection and organized settings](images/saltwatch-card-editor.png)
+![SaltWatch Card graphical editor showing the Other device entity-mapping workflow](images/saltwatch-card-editor.png)
 
 Choose the complete, tank-only, or details-only layout visually. In the
 complete layout, you can place the tank or the details first. The editor also

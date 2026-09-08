@@ -32,7 +32,7 @@ card shows a concise reason or progress such as `4 of 7 days collected`.
 ## Configure visually
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview" width="58%">
+  <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor showing the Other device entity-mapping workflow" width="58%">
 </p>
 
 Choose **SaltWatch device** for automatic, rename-safe discovery through Home
