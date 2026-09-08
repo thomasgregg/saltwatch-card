@@ -67,6 +67,19 @@ function makeEmptyHass(): HomeAssistant {
   };
 }
 
+function makeCustomHass(level = "54"): HomeAssistant {
+  const hass = makeEmptyHass();
+  hass.states = {
+    "sensor.greenline_salt_level": makeEntity("sensor.greenline_salt_level", level),
+    "number.greenline_low_salt_threshold": makeEntity("number.greenline_low_salt_threshold", "30"),
+    "sensor.greenline_status": makeEntity("sensor.greenline_status", "Healthy"),
+    "sensor.greenline_days_until_low": makeEntity("sensor.greenline_days_until_low", "12"),
+    "sensor.greenline_forecast_status": makeEntity("sensor.greenline_forecast_status", "Available"),
+    "sensor.greenline_forecast_details": makeEntity("sensor.greenline_forecast_details", "Based on recent usage"),
+  };
+  return hass;
+}
+
 describe("SaltWatchCard", () => {
   let card: SaltWatchCard;
   let host: HTMLElement;
@@ -193,19 +206,100 @@ describe("SaltWatchCard", () => {
     });
   });
 
-  it("requires a SaltWatch device before saving and removes manual entity overrides", () => {
+  it("supports automatic discovery and manual entity mapping in the config contract", () => {
     const form = SaltWatchCard.getConfigForm() as {
-      schema: Array<{ name?: string; selector?: { device?: Record<string, unknown> }; schema?: Array<{ name: string }> }>;
+      schema: Array<{
+        name?: string;
+        selector?: {
+          device?: Record<string, unknown>;
+          select?: { options?: Array<{ value: string }> };
+        };
+        schema?: Array<{ name: string }>;
+      }>;
       assertConfig: (config: Record<string, unknown>) => void;
     };
+    expect(form.schema.find((item) => item.name === "source")?.selector?.select?.options)
+      .toEqual(expect.arrayContaining([
+        expect.objectContaining({ value: "device" }),
+        expect.objectContaining({ value: "entities" }),
+      ]));
     expect(form.schema.find((item) => item.name === "device_id")?.selector?.device).toBeDefined();
-    expect(form.schema.some((item) => item.name === "low_threshold")).toBe(false);
-    expect(form.schema.some((item) => item.schema?.some((field) => field.name.endsWith("_entity")))).toBe(false);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "level_entity"))).toBe(true);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(true);
     card.setConfig({ ...config, device_id: "" });
     expect(card.shadowRoot?.querySelector(".configuration-empty")).not.toBeNull();
     expect(card.shadowRoot?.textContent).toContain("SaltWatch device required");
     expect(card.shadowRoot?.querySelector("style")?.textContent).toContain(".configuration-empty");
     expect(() => form.assertConfig({ device_id: "" })).toThrow(/requires a SaltWatch device/);
+    expect(() => form.assertConfig({ source: "entities" })).toThrow(/requires a salt-level entity/);
+    expect(() => form.assertConfig({
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+      low_threshold: 101,
+    })).toThrow(/between 0 and 100/);
+    expect(() => form.assertConfig({
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+    })).not.toThrow();
+  });
+
+  it("renders another water softener from its mapped entities", () => {
+    const hass = makeCustomHass();
+    card.setConfig({
+      type: "custom:saltwatch-card",
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+      threshold_entity: "number.greenline_low_salt_threshold",
+      status_entity: "sensor.greenline_status",
+      forecast_entity: "sensor.greenline_days_until_low",
+      forecast_status_entity: "sensor.greenline_forecast_status",
+      forecast_details_entity: "sensor.greenline_forecast_details",
+      metric_mode: "both",
+    });
+    card.hass = hass;
+
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("54%");
+    expect(card.shadowRoot?.querySelector(".status")?.textContent).toContain("Healthy");
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).toBe("12");
+    expect(card.shadowRoot?.querySelector(".threshold-summary")?.textContent).toContain("30%");
+  });
+
+  it("needs only a level entity and derives status from the fixed threshold", () => {
+    const hass = makeCustomHass("19");
+    card.setConfig({
+      type: "custom:saltwatch-card",
+      level_entity: "sensor.greenline_salt_level",
+      metric_mode: "forecast",
+    });
+    card.hass = hass;
+
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("19%");
+    expect(card.shadowRoot?.querySelector(".status")?.textContent).toContain("Low salt");
+    expect(card.shadowRoot?.querySelector(".threshold-summary")?.textContent).toContain("20%");
+    expect(card.shadowRoot?.querySelector(".forecast-metric")).toBeNull();
+  });
+
+  it("reports a missing mapped level entity and targets it for card actions", () => {
+    const hass = makeCustomHass();
+    card.setConfig({
+      type: "custom:saltwatch-card",
+      source: "entities",
+      level_entity: "sensor.missing_salt_level",
+    });
+    card.hass = hass;
+    expect(card.shadowRoot?.querySelector(".configuration-error")?.textContent)
+      .toContain("sensor.missing_salt_level");
+
+    card.setConfig({
+      type: "custom:saltwatch-card",
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+    });
+    const listener = vi.fn();
+    card.addEventListener("hass-action", listener);
+    card.shadowRoot?.querySelector("ha-card")?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect((listener.mock.calls[0]?.[0] as CustomEvent).detail.config.entity)
+      .toBe("sensor.greenline_salt_level");
   });
 
   it("leaves device discovery to the strict editor and exposes all value layouts", () => {
@@ -226,7 +320,7 @@ describe("SaltWatchCard", () => {
       "forecast",
       "both",
     ]);
-    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(false);
+    expect(form.schema.some((item) => item.schema?.some((field) => field.name === "forecast_entity"))).toBe(true);
   });
 
   it("exposes native action selectors in the graphical editor", () => {
@@ -236,7 +330,9 @@ describe("SaltWatchCard", () => {
         schema?: Array<{ name: string; selector?: { ui_action?: Record<string, unknown> } }>;
       }>;
     };
-    const actions = form.schema.find((item) => item.type === "expandable");
+    const actions = form.schema.find((item) => item.type === "expandable" && item.schema?.some(
+      (field) => field.name === "tap_action",
+    ));
     expect(actions?.schema?.map((item) => item.name)).toEqual([
       "tap_action",
       "hold_action",
@@ -591,6 +687,43 @@ describe("SaltWatchCard", () => {
     await vi.waitFor(() => expect(listener).toHaveBeenCalled());
     expect((listener.mock.calls.at(-1)?.[0] as CustomEvent).detail.config.device_id).toBe(DEVICE_ID);
     expect(editor.shadowRoot?.querySelector(".notice.success")).not.toBeNull();
+  });
+
+  it("configures another device without SaltWatch discovery", async () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    const listener = vi.fn();
+    editor.addEventListener("config-changed", listener);
+    editor.setConfig({ device_id: "" });
+    editor.hass = makeCustomHass();
+    host.append(editor);
+
+    (editor.shadowRoot?.querySelector('button[data-value="entities"]') as HTMLButtonElement).click();
+    expect((listener.mock.calls.at(-1)?.[0] as CustomEvent).detail.config.source).toBe("entities");
+    expect(editor.shadowRoot?.querySelector('button[data-value="entities"]')?.classList)
+      .toContain("selected");
+    expect(editor.shadowRoot?.querySelector("#entity-form ha-form")).not.toBeNull();
+    expect(editor.shadowRoot?.querySelector("#device-form")).toBeNull();
+    expect(editor.shadowRoot?.textContent).not.toContain("Card layout");
+
+    editor.shadowRoot?.querySelector("#entity-form ha-form")?.dispatchEvent(new CustomEvent(
+      "value-changed",
+      { detail: { value: { level_entity: "sensor.greenline_salt_level" } } },
+    ));
+    expect((listener.mock.calls.at(-1)?.[0] as CustomEvent).detail.config.level_entity)
+      .toBe("sensor.greenline_salt_level");
+    expect(editor.shadowRoot?.querySelector(".notice.success")).not.toBeNull();
+    expect(editor.shadowRoot?.textContent).toContain("Card layout");
+    expect(editor.shadowRoot?.textContent).not.toContain("Values");
+
+    editor.shadowRoot?.querySelector("#entity-form ha-form")?.dispatchEvent(new CustomEvent(
+      "value-changed",
+      { detail: { value: { forecast_entity: "sensor.greenline_days_until_low" } } },
+    ));
+    expect(editor.shadowRoot?.textContent).toContain("Values");
+    expect(editor.shadowRoot?.querySelector("#forecast-mapping")).not.toBeNull();
   });
 
   it("shows a warning when a selected SaltWatch device is incomplete", async () => {

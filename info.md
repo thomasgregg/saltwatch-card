@@ -35,15 +35,19 @@ card shows a concise reason or progress such as `4 of 7 days collected`.
   <img src="https://raw.githubusercontent.com/thomasgregg/saltwatch-card/main/images/saltwatch-card-editor.png" alt="SaltWatch Card graphical editor with automatic entity detection, organized settings, and live preview" width="58%">
 </p>
 
-SaltWatch Card lists complete SaltWatch devices and resolves their entities
-through Home Assistant's device registry. Renaming entities or installing a
-second SaltWatch does not create ambiguous pairings. Layout, value, and
-visibility choices stay easy to find, while tap, hold, and double-tap behavior
-has its own **Actions** section.
+Choose **SaltWatch device** for automatic, rename-safe discovery through Home
+Assistant's device registry. Renaming entities or installing a second
+SaltWatch does not create ambiguous pairings. Choose **Other device** to use an
+existing water-softener integration by mapping its salt-level entity and, when
+available, threshold, status, and forecast entities.
 
-The latest official SaltWatch firmware is required. Missing, duplicate, or
-disabled card entities are reported explicitly rather than guessed from entity
-names.
+Layout, value, and visibility choices stay easy to find for either data source,
+while tap, hold, and double-tap behavior has its own **Actions** section.
+
+Automatic discovery requires the latest official SaltWatch firmware. Missing,
+duplicate, or disabled card entities are reported explicitly rather than
+guessed from entity names. Other devices need only a numeric salt-level entity;
+all other mappings are optional.
 
 ## Responsive dashboard sizing
 

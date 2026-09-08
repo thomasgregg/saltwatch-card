@@ -1,6 +1,7 @@
 import { getTranslations, resolveLanguage, resolveLocale } from "./localize";
 import {
   resolveSaltWatchEntries,
+  saltWatchDataSource,
   saltWatchRoleLabel,
 } from "./saltwatch-device";
 import type { SaltWatchResolution } from "./saltwatch-device";
@@ -9,6 +10,7 @@ import type {
   HomeAssistant,
   HomeAssistantInternationalization,
   SaltWatchCardConfig,
+  SaltWatchDataSource,
 } from "./types";
 
 type EditorConfig = Omit<SaltWatchCardConfig, "type"> & { type?: string };
@@ -25,6 +27,7 @@ export class SaltWatchCardEditor extends HTMLElement {
   private unsubscribeInternationalization?: () => void;
   private languageObserver?: MutationObserver;
   private actionsOpen = false;
+  private forecastMappingOpen = false;
   private registryReference?: HomeAssistant["entities"];
   private registryEntries: EntityRegistryEntry[] = [];
   private deviceResolutions = new Map<string, SaltWatchResolution>();
@@ -130,7 +133,12 @@ export class SaltWatchCardEditor extends HTMLElement {
       const completeDevices = [...this.deviceResolutions.values()].filter(
         (resolution) => resolution.entities && resolution.disabled.length === 0,
       );
-      if (!this._config?.device_id && completeDevices.length === 1) {
+      if (
+        this._config &&
+        saltWatchDataSource(this._config as SaltWatchCardConfig) === "device" &&
+        !this._config.device_id &&
+        completeDevices.length === 1
+      ) {
         this.updateConfig({ device_id: completeDevices[0]!.deviceId }, false);
       }
     } catch (error) {
@@ -160,10 +168,25 @@ export class SaltWatchCardEditor extends HTMLElement {
 
   private hassRenderKey(): string {
     if (!this._config) return "";
+    const source = saltWatchDataSource(this._config as SaltWatchCardConfig);
+    if (source === "entities") {
+      const configuredIds = [
+        this._config.level_entity,
+        this._config.threshold_entity,
+        this._config.status_entity,
+        this._config.forecast_entity,
+        this._config.forecast_status_entity,
+        this._config.forecast_details_entity,
+      ];
+      return [
+        source,
+        ...configuredIds.map((entityId) => `${entityId ?? ""}:${Boolean(entityId && this._hass?.states[entityId])}`),
+      ].join("|");
+    }
     const resolution = this._config.device_id
       ? this.deviceResolutions.get(this._config.device_id)
       : undefined;
-    return `${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
+    return `${source}|${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
   }
 
   private updateFormHass(): void {
@@ -199,8 +222,19 @@ export class SaltWatchCardEditor extends HTMLElement {
     const sectionOrder = this._config.section_order ?? "tank-first";
     const showDetailsControls = displayMode !== "tank";
     const config = this._config;
-    const resolution = config.device_id ? this.deviceResolutions.get(config.device_id) : undefined;
-    const complete = Boolean(resolution?.entities && resolution.disabled.length === 0);
+    const source = saltWatchDataSource(config as SaltWatchCardConfig);
+    const automaticSource = source === "device";
+    const resolution = automaticSource && config.device_id
+      ? this.deviceResolutions.get(config.device_id)
+      : undefined;
+    const automaticComplete = Boolean(resolution?.entities && resolution.disabled.length === 0);
+    const levelEntityId = config.level_entity?.trim();
+    const customComplete = Boolean(levelEntityId);
+    const customLevelMissing = Boolean(
+      levelEntityId && this._hass && !this._hass.states[levelEntityId],
+    );
+    const complete = automaticSource ? automaticComplete : customComplete && !customLevelMissing;
+    const hasForecast = automaticSource || Boolean(config.forecast_entity?.trim());
     const problems = resolution ? [
       ...resolution.missing.map(saltWatchRoleLabel),
       ...resolution.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${copy.duplicate})`),
@@ -211,39 +245,85 @@ export class SaltWatchCardEditor extends HTMLElement {
       label: this.deviceLabel(deviceId),
     })).sort((left, right) => left.label.localeCompare(right.label));
     const hasSelection = Boolean(config.device_id);
-    const notice = this.registryLoading
+    const automaticNotice = this.registryLoading
       ? { tone: "info", icon: "i", title: copy.selectDeviceTitle, text: copy.loadingDevices }
       : this.registryError
         ? { tone: "error", icon: "!", title: copy.registryError, text: this.registryError }
         : !hasSelection
           ? {
-            tone: "info",
-            icon: "i",
-            title: deviceOptions.length === 0 ? copy.noDevicesTitle : copy.selectDeviceTitle,
-            text: deviceOptions.length === 0 ? copy.noDevicesFound : copy.selectDeviceHelp,
-          }
-          : complete
+              tone: "info",
+              icon: "i",
+              title: deviceOptions.length === 0 ? copy.noDevicesTitle : copy.selectDeviceTitle,
+              text: deviceOptions.length === 0 ? copy.noDevicesFound : copy.selectDeviceHelp,
+            }
+          : automaticComplete
             ? { tone: "success", icon: "✓", title: copy.detectedTitle, text: copy.detectedText }
             : resolution
               ? {
-                tone: "warning",
-                icon: "!",
-                title: copy.incompleteDevice,
-                text: problems.length > 0 ? problems.join(", ") : copy.incompleteDeviceHelp,
-              }
+                  tone: "warning",
+                  icon: "!",
+                  title: copy.incompleteDevice,
+                  text: problems.length > 0 ? problems.join(", ") : copy.incompleteDeviceHelp,
+                }
               : {
-                tone: "error",
-                icon: "!",
-                title: copy.deviceUnavailableTitle,
-                text: copy.deviceUnavailableHelp,
-              };
+                  tone: "error",
+                  icon: "!",
+                  title: copy.deviceUnavailableTitle,
+                  text: copy.deviceUnavailableHelp,
+                };
+    const customNotice = !levelEntityId
+      ? {
+          tone: "info",
+          icon: "i",
+          title: copy.levelEntityRequiredTitle,
+          text: copy.levelEntityRequiredHelp,
+        }
+      : customLevelMissing
+        ? {
+            tone: "error",
+            icon: "!",
+            title: copy.entityNotFound,
+            text: levelEntityId,
+          }
+        : {
+            tone: "success",
+            icon: "✓",
+            title: copy.customEntityReadyTitle,
+            text: copy.customEntityReadyText,
+          };
+    const notice = automaticSource ? automaticNotice : customNotice;
+    const entitySchema: Array<Record<string, unknown>> = [
+      { name: "level_entity", required: true, selector: { entity: {} } },
+      { name: "threshold_entity", selector: { entity: {} } },
+      ...(!config.threshold_entity?.trim() ? [{
+        name: "low_threshold",
+        selector: {
+          number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" },
+        },
+      }] : []),
+      { name: "status_entity", selector: { entity: {} } },
+      { name: "forecast_entity", selector: { entity: {} } },
+    ];
 
     this.shadowRoot.innerHTML = `
       <style>${this.styles()}</style>
       <div class="editor">
         <section class="section device-section">
-          <h3>${copy.saltWatchDevice}</h3>
-          <div id="device-form"></div>
+          <h3>${copy.dataSource}</h3>
+          <div class="segments source-segments" role="group" aria-label="${copy.dataSource}">
+            ${this.segmentButton("source", "device", copy.saltWatchDevice, source)}
+            ${this.segmentButton("source", "entities", copy.otherDevice, source)}
+          </div>
+          ${automaticSource ? `
+            <div class="source-fields" id="device-form"></div>
+          ` : `
+            <small class="source-copy">${escapeAttribute(copy.customEntityHelp)}</small>
+            <div class="source-fields" id="entity-form"></div>
+            ${hasForecast ? `<details class="mapping-fold" id="forecast-mapping" ${this.forecastMappingOpen ? "open" : ""}>
+              <summary><span><strong>${copy.forecastMapping}</strong><small>${copy.forecastMappingHelp}</small></span><span class="chevron">⌄</span></summary>
+              <div class="mapping-content" id="forecast-form"></div>
+            </details>` : ""}
+          `}
           <div class="notice ${notice.tone}" role="status" aria-live="polite">
             <span class="notice-icon" aria-hidden="true">${notice.icon}</span>
             <span class="notice-copy"><strong>${escapeAttribute(notice.title)}</strong><small>${escapeAttribute(notice.text)}</small></span>
@@ -267,16 +347,16 @@ export class SaltWatchCardEditor extends HTMLElement {
             </div>` : ""}
         </section>
 
-        ${showDetailsControls ? `<section class="section compact-section">
+        ${showDetailsControls && hasForecast ? `<section class="section compact-section">
           <h3>${copy.values}</h3>
           <div class="segments three" role="group" aria-label="${copy.values}">
             ${this.segmentButton("metric_mode", "level", copy.level, metricMode)}
             ${this.segmentButton("metric_mode", "forecast", copy.forecast, metricMode)}
             ${this.segmentButton("metric_mode", "both", copy.both, metricMode)}
           </div>
-        </section>
+        </section>` : ""}
 
-        <section class="section compact-section">
+        ${showDetailsControls ? `<section class="section compact-section">
           <h3>${copy.visible}</h3>
           ${this.toggle("show_status", copy.status, copy.statusHelp, config.show_status !== false)}
           ${this.toggle("show_low_marker", copy.marker, copy.markerHelp, config.show_low_marker !== false)}
@@ -288,9 +368,32 @@ export class SaltWatchCardEditor extends HTMLElement {
         </details>` : ""}
       </div>`;
 
-    this.setupForm("device-form", [
-      { name: "device_id", required: true, selector: { select: { mode: "dropdown", options: deviceOptions } } },
-    ], { device_id: config.device_id }, { device_id: copy.saltWatchDevice });
+    if (automaticSource) {
+      this.setupForm("device-form", [
+        { name: "device_id", required: true, selector: { select: { mode: "dropdown", options: deviceOptions } } },
+      ], { device_id: config.device_id }, { device_id: copy.saltWatchDevice });
+    } else {
+      this.setupForm("entity-form", entitySchema, {
+        level_entity: config.level_entity,
+        threshold_entity: config.threshold_entity,
+        low_threshold: config.low_threshold ?? 20,
+        status_entity: config.status_entity,
+        forecast_entity: config.forecast_entity,
+      }, {
+        level_entity: copy.levelEntity,
+        threshold_entity: `${copy.thresholdEntity} (${copy.optional})`,
+        low_threshold: copy.fixedLowThreshold,
+        status_entity: `${copy.statusEntity} (${copy.optional})`,
+        forecast_entity: `${copy.forecastEntity} (${copy.optional})`,
+      });
+      this.setupForm("forecast-form", [
+        { name: "forecast_status_entity", selector: { entity: {} } },
+        { name: "forecast_details_entity", selector: { entity: {} } },
+      ], config, {
+        forecast_status_entity: `${copy.forecastStatusEntity} (${copy.optional})`,
+        forecast_details_entity: `${copy.forecastDetailsEntity} (${copy.optional})`,
+      });
+    }
 
     this.setupForm("actions-form", [
       { name: "tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "more-info" } } },
@@ -300,8 +403,15 @@ export class SaltWatchCardEditor extends HTMLElement {
 
     this.shadowRoot.querySelectorAll<HTMLButtonElement>("button[data-field]").forEach((button) => {
       button.addEventListener("click", () => {
-        const field = button.dataset.field as "display_mode" | "metric_mode" | "section_order";
-        this.updateConfig({ [field]: button.dataset.value } as Partial<EditorConfig>);
+        const field = button.dataset.field as
+          | "display_mode"
+          | "metric_mode"
+          | "section_order"
+          | "source";
+        const value = field === "source"
+          ? button.dataset.value as SaltWatchDataSource
+          : button.dataset.value;
+        this.updateConfig({ [field]: value } as Partial<EditorConfig>);
       });
     });
     this.shadowRoot.querySelectorAll<HTMLInputElement>("input[data-field]").forEach((input) => {
@@ -309,6 +419,9 @@ export class SaltWatchCardEditor extends HTMLElement {
     });
     this.shadowRoot.querySelector<HTMLDetailsElement>("#actions")?.addEventListener("toggle", (event) => {
       this.actionsOpen = (event.currentTarget as HTMLDetailsElement).open;
+    });
+    this.shadowRoot.querySelector<HTMLDetailsElement>("#forecast-mapping")?.addEventListener("toggle", (event) => {
+      this.forecastMappingOpen = (event.currentTarget as HTMLDetailsElement).open;
     });
   }
 
@@ -393,6 +506,9 @@ export class SaltWatchCardEditor extends HTMLElement {
       .sub-control>label { color:var(--secondary-text-color); font-size:13px; }
       .segments { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding:3px; border-radius:10px; background:var(--secondary-background-color,#eee); }
       .segments.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .source-segments { margin-bottom:12px; }
+      .source-copy { margin:0 2px 12px; }
+      .source-fields { min-width:0; }
       .segment { min-height:38px; padding:7px; border:0; border-radius:8px; color:var(--secondary-text-color); background:transparent; cursor:pointer; font-size:13px; }
       .segment.selected { color:var(--primary-text-color); background:var(--card-background-color,#fff); box-shadow:0 1px 3px rgba(0,0,0,.16); font-weight:600; }
       .compact-section h3 { margin-bottom:12px; }
@@ -413,6 +529,9 @@ export class SaltWatchCardEditor extends HTMLElement {
       .chevron { font-size:20px; transform:rotate(0); transition:.15s; }
       details[open] .chevron { transform:rotate(180deg); }
       .fold-content { padding:2px 16px 16px; border-top:1px solid var(--divider-color,#ddd); }
+      .mapping-fold { margin-top:10px; border-top:1px solid var(--divider-color,#ddd); }
+      .mapping-fold summary { min-height:54px; padding:11px 2px; }
+      .mapping-content { padding:2px 0 0; }
       ha-form { display:block; }
       @media (max-width:520px) { .layout-options { grid-template-columns:1fr; }.layout-option { grid-template-columns:82px 1fr; align-items:center; justify-items:start; text-align:left; }.selected-mark { top:50%; transform:translateY(-50%); } }
     `;

@@ -1,6 +1,8 @@
 import type {
   EntityRegistryEntry,
   HomeAssistant,
+  SaltWatchCardConfig,
+  SaltWatchDataSource,
 } from "./types";
 
 export type SaltWatchRole =
@@ -12,6 +14,15 @@ export type SaltWatchRole =
   | "forecastDetails";
 
 export type SaltWatchEntities = Record<SaltWatchRole, string>;
+
+export interface SaltWatchEntityMap {
+  level: string;
+  status?: string;
+  threshold?: string;
+  forecast?: string;
+  forecastStatus?: string;
+  forecastDetails?: string;
+}
 
 interface RoleDefinition {
   domain: "sensor" | "number";
@@ -33,6 +44,46 @@ export interface SaltWatchResolution {
   missing: SaltWatchRole[];
   duplicates: SaltWatchRole[];
   disabled: SaltWatchRole[];
+}
+
+function configuredEntityId(value: string | undefined): string | undefined {
+  const entityId = value?.trim();
+  return entityId || undefined;
+}
+
+export function saltWatchDataSource(config: SaltWatchCardConfig): SaltWatchDataSource {
+  if (config.source === "device" || config.source === "entities") return config.source;
+  return configuredEntityId(config.level_entity) ? "entities" : "device";
+}
+
+export function configuredSaltWatchEntities(
+  config: SaltWatchCardConfig,
+): SaltWatchEntityMap | undefined {
+  const level = configuredEntityId(config.level_entity);
+  if (!level) return undefined;
+  return {
+    level,
+    threshold: configuredEntityId(config.threshold_entity),
+    status: configuredEntityId(config.status_entity),
+    forecast: configuredEntityId(config.forecast_entity),
+    forecastStatus: configuredEntityId(config.forecast_status_entity),
+    forecastDetails: configuredEntityId(config.forecast_details_entity),
+  };
+}
+
+export function saltWatchConfigResolutionKey(config: SaltWatchCardConfig): string {
+  const source = saltWatchDataSource(config);
+  if (source === "device") return `device|${config.device_id?.trim() ?? ""}`;
+  const entities = configuredSaltWatchEntities(config);
+  return [
+    "entities",
+    entities?.level,
+    entities?.threshold,
+    entities?.status,
+    entities?.forecast,
+    entities?.forecastStatus,
+    entities?.forecastDetails,
+  ].map((value) => value ?? "").join("|");
 }
 
 export function saltWatchDeviceEntityIds(hass: HomeAssistant, deviceId: string): string[] {

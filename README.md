@@ -16,14 +16,16 @@ threshold is likely to be reached.
 
 ![SaltWatch Card complete view showing salt level, refill forecast, status, and low marker](images/saltwatch-card-overview-light.png)
 
-SaltWatch Card is designed specifically for devices running the official
-SaltWatch firmware. It uses Home Assistant's device and entity registries so
-renamed entities and multiple SaltWatch devices remain unambiguous.
+SaltWatch Card is optimized for devices running the official SaltWatch
+firmware, with automatic and rename-safe entity discovery. Other water
+softener integrations can use the same card by mapping their existing Home
+Assistant entities in the graphical editor.
 
 ## Contents
 
 - [Why use it?](#why-use-it)
 - [Made for SaltWatch](#made-for-saltwatch)
+- [Other water softeners](#other-water-softeners)
 - [What the states mean](#what-the-states-mean)
 - [Installation](#installation)
   - [HACS](#hacs)
@@ -85,6 +87,38 @@ all six card entities: **Salt Level**, **Salt Status**, **Low Salt Threshold**,
 Details**. The editor reports missing, duplicate, or disabled entries instead
 of silently substituting another entity.
 
+## Other water softeners
+
+Choose **Other device** under **Data source** to use the card with another
+Home Assistant water-softener integration. Select the entity that reports the
+current salt level as a number from 0 to 100. That is the only required
+mapping; the card can derive a Good or Low salt status from the level and a
+fixed threshold.
+
+You can optionally map:
+
+- a low-salt threshold entity;
+- a status entity;
+- an estimated days-until-low entity;
+- SaltWatch-style forecast status and detail entities for learning or
+  unavailable explanations.
+
+For example:
+
+```yaml
+type: custom:saltwatch-card
+source: entities
+level_entity: sensor.greenline_40_salt_level
+threshold_entity: number.greenline_40_low_salt_threshold
+status_entity: sensor.greenline_40_status
+forecast_entity: sensor.greenline_40_days_until_low
+```
+
+When `threshold_entity` is omitted, `low_threshold` sets the marker and status
+boundary and defaults to `20`. When `forecast_entity` is omitted, forecast
+display choices are hidden and the card shows the current level. Tapping the
+card opens the mapped salt-level entity by default.
+
 ## What the states mean
 
 | State | What you see | What it tells you |
@@ -138,11 +172,16 @@ URL path, which is why the filesystem and resource paths are different.
 
 ## Graphical editor
 
-The visual editor keeps the most useful settings easy to find and shows every
-change immediately in the live preview. Choose a SaltWatch device once; the
-card then follows its Home Assistant device relationship instead of relying on
-entity names. If required firmware entities are missing or disabled, the editor
-lists them explicitly instead of guessing or pairing another device.
+The visual editor starts with a **Data source** choice. Keep **SaltWatch
+device** for automatic discovery, or select **Other device** to map the
+entities supplied by another integration. The live preview and the rest of the
+layout controls work the same for both paths.
+
+For SaltWatch devices, the card follows the Home Assistant device relationship
+instead of relying on entity names. If required firmware entities are missing
+or disabled, the editor lists them explicitly instead of guessing or pairing
+another device. For another device, the salt-level entity is required while
+threshold, status, and forecast mappings are optional.
 
 ![SaltWatch Card graphical editor showing automatic entity detection and organized settings](images/saltwatch-card-editor.png)
 
@@ -173,7 +212,15 @@ labels and values legible and prevent clipped or overlapping layouts.
 
 | Option | What it does | Default |
 | --- | --- | --- |
-| `device_id` | Selects the SaltWatch device. All required entities are resolved from its Home Assistant registry relationship. | Required |
+| `source` | Uses automatic SaltWatch discovery (`device`) or individually mapped entities (`entities`). Existing configurations without this option remain compatible. | Inferred from `level_entity`; otherwise `device` |
+| `device_id` | Selects the SaltWatch device for automatic discovery. All six entities are resolved from its Home Assistant registry relationship. | Required for `device` source |
+| `level_entity` | Maps a numeric salt-level percentage from another integration. | Required for `entities` source |
+| `threshold_entity` | Maps the low-salt threshold from another integration. | Optional |
+| `low_threshold` | Sets a fixed low-salt threshold when no threshold entity is mapped. | `20` for `entities` source |
+| `status_entity` | Maps a device status. Without it, the card derives Good or Low salt from the level and threshold. | Optional |
+| `forecast_entity` | Maps a numeric estimate of days until low salt. Forecast controls are hidden when omitted. | Optional |
+| `forecast_status_entity` | Maps a SaltWatch-style forecast status for unavailable-state explanations. | Optional |
+| `forecast_details_entity` | Maps SaltWatch-style forecast learning progress or details. | Optional |
 | `show_status` | Shows or hides the status label in the upper-right corner. | `true` |
 | `show_low_marker` | Shows or hides the low-marker summary below the values. The marker on the tank remains visible. | `true` |
 | `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
@@ -218,9 +265,9 @@ German regional variants such as `de-DE` and `de-AT` share the German
 translation while keeping their regional number formatting. Unsupported
 languages fall back safely to English.
 
-The card deliberately stays focused on SaltWatch, its tank, and its refill timing. Pair it
-with Home Assistant's native Tile and Statistics Graph cards when you also want
-threshold controls, measurement history, or distance details.
+The card deliberately stays focused on the tank level and refill timing. Pair
+it with Home Assistant's native Tile and Statistics Graph cards when you also
+want threshold controls, measurement history, or distance details.
 
 ## License
 

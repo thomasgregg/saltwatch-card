@@ -14,11 +14,14 @@ import {
 } from "./model";
 import type { CardTone, StatusTranslationKey } from "./model";
 import {
+  configuredSaltWatchEntities,
   resolveSaltWatchDevice,
+  saltWatchConfigResolutionKey,
+  saltWatchDataSource,
   saltWatchDeviceEntityIds,
   saltWatchRoleLabel,
 } from "./saltwatch-device";
-import type { SaltWatchEntities, SaltWatchResolution } from "./saltwatch-device";
+import type { SaltWatchEntityMap, SaltWatchResolution } from "./saltwatch-device";
 import type {
   HassEntity,
   HomeAssistant,
@@ -73,6 +76,17 @@ function validatedAction(
   return value as LovelaceActionConfig;
 }
 
+function validatedLowThreshold(
+  value: unknown,
+  locale = resolveLocale(),
+): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 100) {
+    throw new Error(localize("invalidLowThresholdError", locale));
+  }
+  return value;
+}
+
 function formatForecastDays(value: number, language: string): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(value);
 }
@@ -109,7 +123,7 @@ export class SaltWatchCard extends HTMLElement {
   private config?: SaltWatchCardConfig;
   private hassData?: HomeAssistant;
   private states?: HassStates;
-  private resolvedEntities?: SaltWatchEntities;
+  private resolvedEntities?: SaltWatchEntityMap;
   private resolution?: SaltWatchResolution;
   private resolutionError?: string;
   private resolutionKey?: string;
@@ -190,7 +204,9 @@ export class SaltWatchCard extends HTMLElement {
     this.hassData = hass;
     this.registryReference = hass.entities;
     this.updateStates(hass.states);
-    if (registryChanged) void this.resolveConfiguredDevice();
+    if (registryChanged && this.config && saltWatchDataSource(this.config) === "device") {
+      void this.resolveConfiguredDevice();
+    }
   }
 
   public get hass(): HomeAssistant | undefined {
@@ -215,9 +231,38 @@ export class SaltWatchCard extends HTMLElement {
     return {
       schema: [
         {
+          name: "source",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "device", label: localize("saltWatchDevice") },
+                { value: "entities", label: localize("otherDevice") },
+              ],
+            },
+          },
+        },
+        {
           name: "device_id",
-          required: true,
           selector: { device: { filter: { integration: "esphome" } } },
+        },
+        {
+          type: "expandable",
+          name: "entity_mapping",
+          title: localize("entityMapping"),
+          flatten: true,
+          schema: [
+            { name: "level_entity", selector: { entity: {} } },
+            { name: "threshold_entity", selector: { entity: {} } },
+            {
+              name: "low_threshold",
+              selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } },
+            },
+            { name: "status_entity", selector: { entity: {} } },
+            { name: "forecast_entity", selector: { entity: {} } },
+            { name: "forecast_status_entity", selector: { entity: {} } },
+            { name: "forecast_details_entity", selector: { entity: {} } },
+          ],
         },
         { name: "show_status", selector: { boolean: {} } },
         { name: "show_low_marker", selector: { boolean: {} } },
@@ -282,7 +327,16 @@ export class SaltWatchCard extends HTMLElement {
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
+          source: localize("dataSource"),
           device_id: localize("saltWatchDevice"),
+          entity_mapping: localize("entityMapping"),
+          level_entity: localize("levelEntity"),
+          threshold_entity: localize("thresholdEntity"),
+          low_threshold: localize("fixedLowThreshold"),
+          status_entity: localize("statusEntity"),
+          forecast_entity: localize("forecastEntity"),
+          forecast_status_entity: localize("forecastStatusEntity"),
+          forecast_details_entity: localize("forecastDetailsEntity"),
           show_status: localize("showStatus"),
           show_low_marker: localize("showLowMarker"),
           display_mode: localize("cardContent"),
@@ -295,9 +349,15 @@ export class SaltWatchCard extends HTMLElement {
         return labels[schema.name] ?? schema.name;
       },
       assertConfig: (config: Record<string, unknown>) => {
-        if (!config.device_id || typeof config.device_id !== "string") {
-          throw new Error(localize("missingDeviceError"));
+        const typedConfig = config as unknown as SaltWatchCardConfig;
+        if (saltWatchDataSource(typedConfig) === "device") {
+          if (!config.device_id || typeof config.device_id !== "string") {
+            throw new Error(localize("missingDeviceError"));
+          }
+        } else if (!config.level_entity || typeof config.level_entity !== "string") {
+          throw new Error(localize("missingLevelEntityError"));
         }
+        validatedLowThreshold(config.low_threshold);
         validatedAction(config.tap_action, DEFAULT_TAP_ACTION);
         validatedAction(config.hold_action, DEFAULT_NO_ACTION);
         validatedAction(config.double_tap_action, DEFAULT_NO_ACTION);
@@ -317,6 +377,7 @@ export class SaltWatchCard extends HTMLElement {
     const config: Omit<SaltWatchCardConfig, "type"> = {
       // The editor performs strict asynchronous registry validation and will
       // auto-select only when exactly one complete SaltWatch device exists.
+      source: "device",
       device_id: "",
       show_status: true,
       show_low_marker: true,
@@ -330,7 +391,8 @@ export class SaltWatchCard extends HTMLElement {
 
   public setConfig(config: SaltWatchCardConfig): void {
     const locale = resolveLocale(this.activeLanguage());
-    const deviceChanged = config.device_id !== this.config?.device_id;
+    const resolutionChanged = !this.config ||
+      saltWatchConfigResolutionKey(config) !== saltWatchConfigResolutionKey(this.config);
     this.clearInteractionTimers();
     const displayMode = config.display_mode === "tank" || config.display_mode === "details"
       ? config.display_mode
@@ -339,27 +401,35 @@ export class SaltWatchCard extends HTMLElement {
       ? config.metric_mode
       : "level";
     const sectionOrder = config.section_order === "details-first" ? "details-first" : "tank-first";
+    const dataSource = saltWatchDataSource(config);
+    const configuredForecast = dataSource === "device" || Boolean(config.forecast_entity?.trim());
     this.config = {
       ...config,
+      source: config.source === "device" || config.source === "entities" ? config.source : undefined,
+      low_threshold: validatedLowThreshold(config.low_threshold, locale),
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
-      metric_mode: metricMode,
+      metric_mode: configuredForecast ? metricMode : "level",
       section_order: sectionOrder,
       tap_action: validatedAction(config.tap_action, DEFAULT_TAP_ACTION, locale),
       hold_action: validatedAction(config.hold_action, DEFAULT_NO_ACTION, locale),
       double_tap_action: validatedAction(config.double_tap_action, DEFAULT_NO_ACTION, locale),
     };
-    if (deviceChanged) {
+    if (resolutionChanged) {
       this.lastThreshold = undefined;
       this.resolvedEntities = undefined;
       this.resolution = undefined;
       this.resolutionError = undefined;
       this.resolutionKey = undefined;
     }
+    if (dataSource === "entities") {
+      this.resolvedEntities = configuredSaltWatchEntities(this.config);
+      this.resolutionKey = saltWatchConfigResolutionKey(this.config);
+    }
     this.lastRenderKey = undefined;
     this.render();
-    if (deviceChanged) void this.resolveConfiguredDevice();
+    if (resolutionChanged && dataSource === "device") void this.resolveConfiguredDevice();
   }
 
   public getCardSize(): number {
@@ -409,10 +479,11 @@ export class SaltWatchCard extends HTMLElement {
 
   private async resolveConfiguredDevice(): Promise<void> {
     if (!this.config || !this.hassData) return;
-    const deviceId = this.config.device_id;
+    if (saltWatchDataSource(this.config) !== "device") return;
+    const deviceId = this.config.device_id?.trim();
     if (!deviceId) return;
     const entityIds = saltWatchDeviceEntityIds(this.hassData, deviceId);
-    const key = `${deviceId}|${entityIds.join("|")}`;
+    const key = `${saltWatchConfigResolutionKey(this.config)}|${entityIds.join("|")}`;
     if (key === this.resolutionKey && (this.resolution || this.resolutionError)) return;
     this.resolutionKey = key;
     const request = ++this.resolutionRequest;
@@ -423,11 +494,21 @@ export class SaltWatchCard extends HTMLElement {
     this.render();
     try {
       const resolution = await resolveSaltWatchDevice(this.hassData, deviceId);
-      if (request !== this.resolutionRequest || this.config?.device_id !== deviceId) return;
+      if (
+        request !== this.resolutionRequest ||
+        !this.config ||
+        saltWatchDataSource(this.config) !== "device" ||
+        this.config.device_id?.trim() !== deviceId
+      ) return;
       this.resolution = resolution;
       this.resolvedEntities = resolution.entities;
     } catch (error) {
-      if (request !== this.resolutionRequest || this.config?.device_id !== deviceId) return;
+      if (
+        request !== this.resolutionRequest ||
+        !this.config ||
+        saltWatchDataSource(this.config) !== "device" ||
+        this.config.device_id?.trim() !== deviceId
+      ) return;
       this.resolutionError = error instanceof Error ? error.message : String(error);
     }
     this.lastRenderKey = undefined;
@@ -444,8 +525,10 @@ export class SaltWatchCard extends HTMLElement {
   private currentRenderKey(): string | undefined {
     if (!this.config || !this.states) return undefined;
     const entities = this.resolvedEntities;
-    if (!entities) return `${this.config.device_id}:${this.resolutionError ?? "resolving"}`;
-    return [
+    if (!entities) {
+      return `${saltWatchConfigResolutionKey(this.config)}:${this.resolutionError ?? "resolving"}`;
+    }
+    const entityStates = [
       entities.level,
       entities.status,
       entities.threshold,
@@ -453,27 +536,40 @@ export class SaltWatchCard extends HTMLElement {
         ? []
         : [entities.forecast, entities.forecastStatus, entities.forecastDetails]),
     ].map((entityId) => `${entityId ?? ""}:${entity(this.states, entityId)?.state ?? "missing"}`).join("|");
+    return `${saltWatchDataSource(this.config)}|fallback:${this.config.low_threshold ?? ""}|${entityStates}`;
   }
 
   private render(): void {
     if (!this.shadowRoot || !this.config) return;
     const language = this.activeLanguage();
     const locale = resolveLocale(language);
-    if (!this.config.device_id) {
+    const dataSource = saltWatchDataSource(this.config);
+    if (dataSource === "device" && !this.config.device_id?.trim()) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${escapeHtml(localize("deviceRequiredTitle", locale))}</strong><small>${escapeHtml(localize("deviceRequiredHelp", locale))}</small></div></ha-card>`;
       return;
     }
-    if (!this.states || !this.hassData || (!this.resolution && !this.resolutionError)) {
+    if (dataSource === "entities" && !this.resolvedEntities) {
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-empty" role="status"><svg class="configuration-empty-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="8" width="34" height="27" rx="4"></rect><path d="M15 40H33M24 35V40M14 16H34"></path><circle cx="15" cy="25" r="2"></circle><circle cx="24" cy="25" r="2"></circle><circle cx="33" cy="25" r="2"></circle></svg><strong>${escapeHtml(localize("levelEntityRequiredTitle", locale))}</strong><small>${escapeHtml(localize("levelEntityRequiredHelp", locale))}</small></div></ha-card>`;
+      return;
+    }
+    if (
+      !this.states ||
+      !this.hassData ||
+      (dataSource === "device" && !this.resolution && !this.resolutionError)
+    ) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;
     }
 
-    if (this.resolutionError) {
+    if (dataSource === "device" && this.resolutionError) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${escapeHtml(localize("registryError", locale))}</strong><span>${escapeHtml(this.resolutionError)}</span></div></ha-card>`;
       return;
     }
 
-    if (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0) {
+    if (
+      dataSource === "device" &&
+      (!this.resolvedEntities || !this.resolution || this.resolution.disabled.length > 0)
+    ) {
       const problems = [
         ...this.resolution?.missing.map(saltWatchRoleLabel) ?? [],
         ...this.resolution?.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${localize("duplicate", locale)})`) ?? [],
@@ -483,14 +579,20 @@ export class SaltWatchCard extends HTMLElement {
       return;
     }
 
-    const entities = this.resolvedEntities;
+    const entities = this.resolvedEntities!;
+    if (dataSource === "entities" && !entity(this.states, entities.level)) {
+      this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="configuration-error"><strong>${escapeHtml(localize("entityNotFound", locale))}</strong><span>${escapeHtml(entities.level)}</span><small>${escapeHtml(localize("entityNotFoundHelp", locale))}</small></div></ha-card>`;
+      return;
+    }
 
     const levelEntity = entity(this.states, entities.level);
     const rawLevel = entityNumber(levelEntity);
     const level = rawLevel === undefined ? undefined : clamp(rawLevel);
     const thresholdValue = entityNumber(entity(this.states, entities.threshold));
     if (thresholdValue !== undefined) this.lastThreshold = clamp(thresholdValue);
-    const threshold = this.lastThreshold;
+    const threshold = this.lastThreshold ?? (
+      dataSource === "entities" ? this.config.low_threshold ?? 20 : undefined
+    );
     if (threshold === undefined) {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${escapeHtml(localize("noCurrentReading", locale))}</div></ha-card>`;
       return;

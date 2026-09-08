@@ -54,6 +54,7 @@ export interface HomeAssistant {
 export type SaltWatchDisplayMode = "both" | "tank" | "details";
 export type SaltWatchMetricMode = "level" | "forecast" | "both";
 export type SaltWatchSectionOrder = "tank-first" | "details-first";
+export type SaltWatchDataSource = "device" | "entities";
 
 export interface LovelaceActionConfig {
   action: string;
@@ -62,7 +63,15 @@ export interface LovelaceActionConfig {
 
 export interface SaltWatchCardConfig {
   type: string;
-  device_id: string;
+  source?: SaltWatchDataSource;
+  device_id?: string;
+  level_entity?: string;
+  threshold_entity?: string;
+  low_threshold?: number;
+  status_entity?: string;
+  forecast_entity?: string;
+  forecast_status_entity?: string;
+  forecast_details_entity?: string;
   grid_options?: {
     columns?: number | "full";
     rows?: number | "auto";
