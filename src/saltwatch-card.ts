@@ -641,13 +641,18 @@ export class SaltWatchCard extends HTMLElement {
       <div class="metric-value level">${displayLevel}</div>
       <div class="metric-label level-label">${escapeHtml(metricMode === "both" ? localize("saltLevel", locale) : localize("estimatedLevel", locale))}</div>
     </div>`;
+    const forecastDetailMarkup = forecastDetail
+      ? `<div class="forecast-detail">${escapeHtml(forecastDetail)}</div>`
+      : "";
     const forecastMetric = `<div class="metric forecast-metric${forecastDays === undefined ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${forecastDays === undefined ? '<span class="forecast-placeholder">—</span>' : forecastDisplay}</div>
       <div class="metric-label forecast-label">${escapeHtml(forecastLabel)}</div>
-      ${forecastDetail ? `<div class="forecast-detail">${escapeHtml(forecastDetail)}</div>` : ""}
+      ${metricMode === "both" ? "" : forecastDetailMarkup}
     </div>`;
+    const pairedForecastDetail = metricMode === "both" ? forecastDetailMarkup : "";
+    const hasPairedForecastDetail = Boolean(pairedForecastDetail);
     const metricsMarkup = metricMode === "both"
-      ? `${levelMetric}<span class="metric-divider" aria-hidden="true"></span>${forecastMetric}`
+      ? `${levelMetric}<span class="metric-divider" aria-hidden="true"></span>${forecastMetric}${pairedForecastDetail}`
       : metricMode === "forecast"
         ? forecastMetric
         : levelMetric;
@@ -695,7 +700,7 @@ export class SaltWatchCard extends HTMLElement {
               <div class="status"><span class="status-dot"></span>${escapeHtml(statusLabel)}</div>
             </header>` : ""}
             <div class="reading metric-mode-${metricMode}${level === undefined ? " state-reading" : ""}">
-              ${level === undefined ? this.stateSymbol(status.translationKey, status.tone) : `<div class="metrics metrics-${metricMode}">${metricsMarkup}</div>`}
+              ${level === undefined ? this.stateSymbol(status.translationKey, status.tone) : `<div class="metrics metrics-${metricMode}${hasPairedForecastDetail ? " has-forecast-detail" : ""}">${metricsMarkup}</div>`}
               ${level === undefined && this.config.show_status
                 ? ""
                 : level === undefined
@@ -1186,6 +1191,19 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .card-shell.mode-both .tank-panel { border:0; border-right:1px solid var(--sw-panel-divider); }
         .fixed-height .card-shell.mode-both.order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
         .fixed-height .card-shell.mode-both .tank { height:calc(100cqh - 12px); }
+      }
+      .metrics-both.has-forecast-detail { grid-template-areas:"level divider forecast" ". . detail"; row-gap:0; position:relative; }
+      .metrics-both.has-forecast-detail > .level-metric { grid-area:level; }
+      .metrics-both.has-forecast-detail > .metric-divider { grid-area:divider; position:absolute; }
+      .metrics-both.has-forecast-detail > .forecast-metric { grid-area:forecast; }
+      .metrics-both.has-forecast-detail > .forecast-detail { grid-area:detail; width:100%; min-width:0; overflow:hidden; text-align:center; }
+      @container saltwatch (max-width:400px) {
+        .metrics-both.has-forecast-detail { grid-template-areas:"level" "divider" "forecast" "detail"; gap:0; }
+        .metrics-both.has-forecast-detail > .metric-divider { position:static; margin-block:clamp(12px,5cqw,18px); }
+      }
+      @container card (max-width:400px) and (max-height:260px) {
+        .fixed-height .metrics-both.has-forecast-detail { grid-template-areas:"level divider forecast" ". . detail"; column-gap:clamp(4px,2cqw,8px); row-gap:0; }
+        .fixed-height .metrics-both.has-forecast-detail > .metric-divider { position:absolute; margin-block:0; }
       }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }

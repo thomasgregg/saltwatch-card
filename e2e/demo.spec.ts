@@ -362,6 +362,106 @@ test("keeps paired values aligned when one label wraps", async ({ page }) => {
   expect(result.forecastTop).toBeCloseTo(result.levelTop, 0);
 });
 
+test("centers the paired divider on primary metrics for every forecast explanation", async ({ page }) => {
+  const frame = page.locator(".demo-frame");
+  const card = page.locator("saltwatch-card");
+  await frame.evaluate((element) => {
+    element.style.width = "582px";
+    element.style.height = "436px";
+  });
+  await card.evaluate((element) => {
+    (element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void }).setConfig({
+      type: "custom:saltwatch-card",
+      device_id: "saltwatch-demo-device",
+      display_mode: "both",
+      metric_mode: "both",
+      show_status: true,
+      show_low_marker: true,
+      grid_options: { columns: 6, rows: 8 },
+    });
+  });
+
+  const readLayout = () => card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const surface = root.querySelector<HTMLElement>("ha-card")!.getBoundingClientRect();
+    const metrics = root.querySelector<HTMLElement>(".metrics-both")!;
+    const level = root.querySelector<HTMLElement>(".level-metric")!.getBoundingClientRect();
+    const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
+    const forecast = root.querySelector<HTMLElement>(".forecast-metric")!.getBoundingClientRect();
+    const detailElement = root.querySelector<HTMLElement>(".forecast-detail")!;
+    const detail = detailElement.getBoundingClientRect();
+    const primaryCenter = (
+      Math.min(level.top, forecast.top) + Math.max(level.bottom, forecast.bottom)
+    ) / 2;
+    return {
+      dividerCenterOffset: divider.top + divider.height / 2 - primaryCenter,
+      primaryTopOffset: level.top - forecast.top,
+      detailBelowPrimary: detail.top >= forecast.bottom - 0.5,
+      detailInsideForecastColumn: detail.left >= forecast.left - 1 && detail.right <= forecast.right + 1,
+      detailDirectChild: detailElement.parentElement === metrics,
+      forecastContainsDetail: root.querySelector<HTMLElement>(".forecast-metric")!.contains(detailElement),
+      contentInside: [level, divider, forecast, detail].every((box) =>
+        box.top >= surface.top - 1 && box.bottom <= surface.bottom + 1 &&
+        box.left >= surface.left - 1 && box.right <= surface.right + 1
+      ),
+      metricsClientWidth: metrics.clientWidth,
+      metricsScrollWidth: metrics.scrollWidth,
+    };
+  });
+  const assertAlignedLayout = (layout: Awaited<ReturnType<typeof readLayout>>) => {
+    expect(Math.abs(layout.dividerCenterOffset)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(layout.primaryTopOffset)).toBeLessThanOrEqual(0.5);
+    expect(layout.detailBelowPrimary).toBe(true);
+    expect(layout.detailInsideForecastColumn).toBe(true);
+    expect(layout.detailDirectChild).toBe(true);
+    expect(layout.forecastContainsDetail).toBe(false);
+    expect(layout.contentInside).toBe(true);
+    expect(layout.metricsScrollWidth).toBeLessThanOrEqual(layout.metricsClientWidth + 1);
+  };
+
+  const forecastStates = [
+    "Initializing",
+    "Sensor Fault",
+    "Calibration Required",
+    "Waiting for Measurement",
+    "Waiting for Time",
+    "Learning",
+    "Confirming Refill",
+    "Insufficient Change",
+  ];
+  for (const forecastState of forecastStates) {
+    await page.locator("#forecast-state").selectOption(forecastState);
+    await expect(card.locator(".metrics-both.has-forecast-detail > .forecast-detail")).toBeVisible();
+    assertAlignedLayout(await readLayout());
+  }
+
+  for (const language of ["en-GB", "de-DE", "da-DK"]) {
+    await page.locator("#language").selectOption(language);
+    await page.locator("#forecast-state").selectOption("Learning");
+    await expect(card.locator(".metrics-both.has-forecast-detail > .forecast-detail")).toBeVisible();
+    assertAlignedLayout(await readLayout());
+  }
+
+  await card.locator(".forecast-detail").evaluate((element) => {
+    element.textContent = "UnbrokenForecastDiagnostic".repeat(8);
+  });
+  const longCustomDetail = await card.evaluate((element) => {
+    const root = element.shadowRoot!;
+    const metrics = root.querySelector<HTMLElement>(".metrics-both")!;
+    const detail = root.querySelector<HTMLElement>(".forecast-detail")!;
+    return {
+      overflow: getComputedStyle(detail).overflow,
+      detailClientWidth: detail.clientWidth,
+      detailScrollWidth: detail.scrollWidth,
+      metricsClientWidth: metrics.clientWidth,
+      metricsScrollWidth: metrics.scrollWidth,
+    };
+  });
+  expect(longCustomDetail.overflow).toBe("hidden");
+  expect(longCustomDetail.detailScrollWidth).toBeGreaterThan(longCustomDetail.detailClientWidth);
+  expect(longCustomDetail.metricsScrollWidth).toBeLessThanOrEqual(longCustomDetail.metricsClientWidth + 1);
+});
+
 test("keeps the percentage visible in a 6 by 4 horizontal details card", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
@@ -400,9 +500,10 @@ test("keeps the percentage visible in a 6 by 4 horizontal details card", async (
   expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
 });
 
-test("keeps the percentage and vertical divider visible in a scaled 6 by 4 preview", async ({ page }) => {
+test("keeps forecast detail and its centered divider visible in a scaled 6 by 4 preview", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
+  await page.locator("#forecast-state").selectOption("Learning");
   await frame.evaluate((element) => {
     element.style.width = "220px";
     element.style.height = "240px";
@@ -424,16 +525,23 @@ test("keeps the percentage and vertical divider visible in a scaled 6 by 4 previ
     const root = element.shadowRoot!;
     const levelMetric = root.querySelector<HTMLElement>(".level-metric")!;
     const forecastMetric = root.querySelector<HTMLElement>(".forecast-metric")!;
+    const detailElement = root.querySelector<HTMLElement>(".forecast-detail")!;
     const levelValue = root.querySelector<HTMLElement>(".level-metric .metric-value")!;
     const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
     const levelBounds = levelMetric.getBoundingClientRect();
     const forecastBounds = forecastMetric.getBoundingClientRect();
+    const detail = detailElement.getBoundingClientRect();
     return {
       metricsAreHorizontal: forecastBounds.left > levelBounds.right,
       valueClientWidth: levelValue.clientWidth,
       valueScrollWidth: levelValue.scrollWidth,
       dividerWidth: divider.width,
       dividerHeight: divider.height,
+      dividerCenterOffset: divider.top + divider.height / 2 -
+        (Math.min(levelBounds.top, forecastBounds.top) + Math.max(levelBounds.bottom, forecastBounds.bottom)) / 2,
+      detailDirectChild: detailElement.parentElement === root.querySelector(".metrics-both"),
+      detailBelowForecast: detail.top >= forecastBounds.bottom - 0.5,
+      detailInsideForecastColumn: detail.left >= forecastBounds.left - 1 && detail.right <= forecastBounds.right + 1,
     };
   });
 
@@ -441,6 +549,10 @@ test("keeps the percentage and vertical divider visible in a scaled 6 by 4 previ
   expect(result.valueScrollWidth).toBeLessThanOrEqual(result.valueClientWidth + 1);
   expect(result.dividerWidth).toBeCloseTo(1, 0);
   expect(result.dividerHeight).toBeGreaterThan(20);
+  expect(Math.abs(result.dividerCenterOffset)).toBeLessThanOrEqual(0.5);
+  expect(result.detailDirectChild).toBe(true);
+  expect(result.detailBelowForecast).toBe(true);
+  expect(result.detailInsideForecastColumn).toBe(true);
 });
 
 test("keeps every fixed-row card mode inside its assigned height", async ({ page }) => {
@@ -476,6 +588,7 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
         root.querySelector<HTMLElement>(".tank"),
         root.querySelector<HTMLElement>(".status"),
         ...root.querySelectorAll<HTMLElement>(".metric-value,.metric-label"),
+        root.querySelector<HTMLElement>(".forecast-detail"),
         root.querySelector<HTMLElement>(".threshold-summary"),
       ].filter((item): item is HTMLElement => Boolean(item));
       return {
@@ -497,6 +610,7 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
 test("keeps the stacked metric divider thin without clipping the forecast label", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
+  await page.locator("#forecast-state").selectOption("Learning");
   await frame.evaluate((element) => {
     element.style.width = "360px";
     element.style.height = "420px";
@@ -521,11 +635,15 @@ test("keeps the stacked metric divider thin without clipping the forecast label"
     const level = root.querySelector<HTMLElement>(".level-metric .metric-value")!.getBoundingClientRect();
     const forecast = root.querySelector<HTMLElement>(".forecast-metric .metric-value")!.getBoundingClientRect();
     const forecastLabel = root.querySelector<HTMLElement>(".forecast-metric .metric-label")!.getBoundingClientRect();
+    const forecastMetric = root.querySelector<HTMLElement>(".forecast-metric")!.getBoundingClientRect();
+    const forecastDetail = root.querySelector<HTMLElement>(".forecast-detail")!.getBoundingClientRect();
     return {
       dividerHeight: divider.height,
       dividerWidth: divider.width,
       metricsAreStacked: forecast.top > level.bottom,
       forecastLabelInside: forecastLabel.bottom <= surface.bottom + 1,
+      forecastDetailBelowMetric: forecastDetail.top >= forecastMetric.bottom - 0.5,
+      forecastDetailInside: forecastDetail.bottom <= surface.bottom + 1,
     };
   });
 
@@ -533,11 +651,14 @@ test("keeps the stacked metric divider thin without clipping the forecast label"
   expect(result.dividerWidth).toBeGreaterThan(100);
   expect(result.metricsAreStacked).toBe(true);
   expect(result.forecastLabelInside).toBe(true);
+  expect(result.forecastDetailBelowMetric).toBe(true);
+  expect(result.forecastDetailInside).toBe(true);
 });
 
 test("keeps the divider horizontal when a natural-height details card stacks its metrics", async ({ page }) => {
   const frame = page.locator(".demo-frame");
   const card = page.locator("saltwatch-card");
+  await page.locator("#forecast-state").selectOption("Learning");
   await frame.evaluate((element) => {
     element.style.width = "360px";
     element.style.height = "auto";
@@ -560,11 +681,15 @@ test("keeps the divider horizontal when a natural-height details card stacks its
     const divider = root.querySelector<HTMLElement>(".metric-divider")!.getBoundingClientRect();
     const level = root.querySelector<HTMLElement>(".level-metric")!.getBoundingClientRect();
     const forecast = root.querySelector<HTMLElement>(".forecast-metric")!.getBoundingClientRect();
+    const detailElement = root.querySelector<HTMLElement>(".forecast-detail")!;
+    const detail = detailElement.getBoundingClientRect();
     return {
       dividerHeight: divider.height,
       dividerWidth: divider.width,
       metricsAreStacked: forecast.top > level.bottom,
       dividerBetweenMetrics: divider.top >= level.bottom && divider.bottom <= forecast.top,
+      detailDirectChild: detailElement.parentElement === root.querySelector(".metrics-both"),
+      detailBelowForecast: detail.top >= forecast.bottom - 0.5,
     };
   });
 
@@ -572,6 +697,8 @@ test("keeps the divider horizontal when a natural-height details card stacks its
   expect(result.dividerWidth).toBeGreaterThan(100);
   expect(result.metricsAreStacked).toBe(true);
   expect(result.dividerBetweenMetrics).toBe(true);
+  expect(result.detailDirectChild).toBe(true);
+  expect(result.detailBelowForecast).toBe(true);
 });
 
 test("enters and exits compact mode as an inferred height constraint changes", async ({ page }) => {
@@ -635,11 +762,16 @@ test("switches between salt level, forecast, and both values", async ({ page }) 
   await expect(card.locator(".level")).toHaveText("62%");
   await expect(card.locator(".forecast-value")).toHaveText("18");
   await expect(card.locator(".metric-divider")).toBeVisible();
+  await expect(card.locator(".metrics-both")).not.toHaveClass(/has-forecast-detail/);
+  await expect(card.locator(".metrics-both > .forecast-detail")).toHaveCount(0);
 
   await page.locator("#forecast-state").selectOption("Learning");
   await expect(card.locator(".forecast-placeholder")).toHaveText("—");
   await expect(card.locator(".forecast-label")).toHaveText("Forecast");
   await expect(card.locator(".forecast-detail")).toHaveText("4 of 7 days collected");
+  await expect(card.locator(".metrics-both")).toHaveClass(/has-forecast-detail/);
+  await expect(card.locator(".metrics-both > .forecast-detail")).toHaveCount(1);
+  await expect(card.locator(".forecast-metric .forecast-detail")).toHaveCount(0);
   const levelValue = await card.locator(".level-metric .metric-value").boundingBox();
   const forecastValue = await card.locator(".forecast-metric .metric-value").boundingBox();
   const levelLabel = await card.locator(".level-metric .metric-label").boundingBox();

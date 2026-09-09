@@ -389,6 +389,8 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".metrics-both .level")?.textContent).toBe("62%");
     expect(card.shadowRoot?.querySelector(".metrics-both .forecast-value")?.textContent).toBe("18");
     expect(card.shadowRoot?.querySelector(".metric-divider")).not.toBeNull();
+    expect(card.shadowRoot?.querySelector(".metrics-both")?.classList).not.toContain("has-forecast-detail");
+    expect(card.shadowRoot?.querySelector(".metrics-both > .forecast-detail")).toBeNull();
     expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("18 Days until low salt");
   });
 
@@ -414,6 +416,8 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".forecast-placeholder")?.textContent).toBe("—");
     expect(card.shadowRoot?.querySelector(".forecast-label")?.textContent).toBe("Forecast");
     expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe("4 of 7 days collected");
+    expect(card.shadowRoot?.querySelector(".forecast-detail")?.parentElement?.classList).toContain("forecast-metric");
+    expect(card.shadowRoot?.querySelector(".metrics-forecast")?.classList).not.toContain("has-forecast-detail");
     expect(card.shadowRoot?.querySelector(".forecast-metric")?.classList).toContain("unavailable");
 
     hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
@@ -426,6 +430,45 @@ describe("SaltWatchCard", () => {
     );
     pushStates(hass);
     expect(card.shadowRoot?.querySelector(".forecast-detail")?.textContent).toBe("Readings are too inconsistent");
+  });
+
+  it("separates paired forecast details from the primary metric row", () => {
+    card.setConfig({
+      ...config,
+      metric_mode: "both",
+    });
+    const hass = makeHass();
+    hass.states["sensor.saltwatch_estimated_days_until_low_salt"] = makeEntity(
+      "sensor.saltwatch_estimated_days_until_low_salt",
+      "unavailable",
+    );
+    hass.states["sensor.saltwatch_forecast_status"] = makeEntity(
+      "sensor.saltwatch_forecast_status",
+      "Learning",
+    );
+    hass.states["sensor.saltwatch_forecast_details"] = makeEntity(
+      "sensor.saltwatch_forecast_details",
+      "4 of 7 days collected",
+    );
+    pushStates(hass);
+
+    const metrics = card.shadowRoot?.querySelector(".metrics-both");
+    const forecastMetric = metrics?.querySelector(".forecast-metric");
+    const detail = metrics?.querySelector(":scope > .forecast-detail");
+    expect(metrics?.classList).toContain("has-forecast-detail");
+    expect(detail?.textContent).toBe("4 of 7 days collected");
+    expect(detail?.parentElement).toBe(metrics);
+    expect(forecastMetric?.contains(detail ?? null)).toBe(false);
+    expect(metrics?.querySelectorAll(".forecast-detail")).toHaveLength(1);
+
+    card.setConfig({
+      ...config,
+      metric_mode: "forecast",
+    });
+    const forecastOnlyDetail = card.shadowRoot?.querySelector(".forecast-detail");
+    expect(card.shadowRoot?.querySelector(".metrics-forecast")?.classList).not.toContain("has-forecast-detail");
+    expect(forecastOnlyDetail?.parentElement?.classList).toContain("forecast-metric");
+    expect(card.shadowRoot?.querySelectorAll(".forecast-detail")).toHaveLength(1);
   });
 
   it("explains every unavailable forecast state while keeping a valid tank", () => {
@@ -534,6 +577,8 @@ describe("SaltWatchCard", () => {
     expect(styles).toContain(".forecast-placeholder { display:block;");
     expect(styles).toContain(".forecast-detail { max-width:30ch;");
     expect(styles).toContain(".metric-divider { align-self:center;");
+    expect(styles).toContain(".metrics-both.has-forecast-detail > .metric-divider { grid-area:divider; position:absolute;");
+    expect(styles).toContain(".metrics-both.has-forecast-detail > .forecast-detail { grid-area:detail; width:100%; min-width:0; overflow:hidden; text-align:center;");
     expect(styles).toContain("background:var(--sw-panel-divider);");
     expect(styles).toContain(".forecast-metric.unavailable .metric-value { color:var(--primary-text-color); }");
   });
