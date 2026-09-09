@@ -30,6 +30,14 @@ describe("localization", () => {
     );
   });
 
+  it("uses the reviewed Danish terminology for the low marker", () => {
+    const translations = getTranslations("da");
+    expect(translations.lowMarker).toBe("Minimumsmærke");
+    expect(translations.lowMarkerAt).toBe("Minimumsmærke ved {value}");
+    expect(translations.marker).toBe("Oversigt over minimumsmærke");
+    expect(translations.showLowMarker).toBe("Vis minimumsmærke under værdierne");
+  });
+
   it("formats percentages using the full Home Assistant language tag", () => {
     expect(formatPercentage(62, "en-GB")).toBe("62%");
     expect(formatPercentage(62, "da-DK").replace(/\s/g, "")).toBe("62%");

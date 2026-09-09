@@ -925,7 +925,9 @@ describe("SaltWatchCard", () => {
     pushLanguage("da-DK");
     card.setConfig(config);
     expect(card.shadowRoot?.textContent).toContain("Estimeret saltniveau");
-    expect(card.shadowRoot?.textContent).toContain("Lavgrænse");
+    expect(card.shadowRoot?.textContent).toContain("Minimumsmærke");
+    expect(card.shadowRoot?.querySelector(".threshold-summary")?.getAttribute("aria-label"))
+      .toContain("Minimumsmærke ved");
     expect(card.shadowRoot?.textContent).toContain("God");
   });
 

@@ -65,11 +65,11 @@ const ke = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   levelAndForecast: "Saltniveau og prognose",
   loadingDevices: "Indlæser SaltWatch-enheder…",
   lowBadge: "LAVT",
-  lowMarker: "Lavgrænse",
-  lowMarkerAt: "Lavgrænse ved {value}",
+  lowMarker: "Minimumsmærke",
+  lowMarkerAt: "Minimumsmærke ved {value}",
   lowSalt: "Lavt saltniveau",
   lowThresholdReached: "Grænsen for lavt saltniveau er nået",
-  marker: "Oversigt over lavgrænse",
+  marker: "Oversigt over minimumsmærke",
   markerHelp: "Vis grænseværdien under værdierne",
   missingDeviceError: "SaltWatch Card kræver en SaltWatch-enhed.",
   missingLevelEntityError: "SaltWatch Card kræver en saltniveau-entitet, når en anden enhed bruges.",
@@ -89,7 +89,7 @@ const ke = "data:image/webp;base64,UklGRoKfAABXRUJQVlA4IHafAAAQgwOdASqAAoACPm0sk
   selectDeviceHelp: "Vælg den enhed, som kortet skal vise.",
   selectDeviceTitle: "Vælg en SaltWatch-enhed",
   selectSaltWatchDevice: "Vælg en komplet SaltWatch-enhed.",
-  showLowMarker: "Vis lavgrænse under værdierne",
+  showLowMarker: "Vis minimumsmærke under værdierne",
   showStatus: "Vis status",
   status: "Status",
   statusEntity: "Statusentitet",
@@ -1622,7 +1622,7 @@ class We extends HTMLElement {
     `;
   }
 }
-const Me = "0.6.3-beta.1", Ge = {
+const Me = "0.6.3-beta.2", Ge = {
   version: Me
 }, A = "saltwatch-card", je = Ge.version;
 customElements.get(A) || customElements.define(A, He);

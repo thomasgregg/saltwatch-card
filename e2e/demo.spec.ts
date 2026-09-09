@@ -843,7 +843,11 @@ test("switches the Home Assistant language context without clipping translated c
   await page.locator("#language").selectOption("da-DK");
   await expect(card.locator(".status")).toHaveText("God");
   await expect(card.locator(".level-label")).toHaveText("Estimeret saltniveau");
-  await expect(card.locator(".threshold-summary")).toContainText("Lavgrænse");
+  await expect(card.locator(".threshold-summary")).toContainText("Minimumsmærke");
+  await expect(card.locator(".threshold-summary")).toHaveAttribute(
+    "aria-label",
+    /Minimumsmærke ved/,
+  );
 
   await frame.evaluate((element) => {
     element.style.width = "360px";
