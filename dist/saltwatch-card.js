@@ -1622,7 +1622,7 @@ class We extends HTMLElement {
     `;
   }
 }
-const Me = "0.6.3-beta.2", Ge = {
+const Me = "0.6.3", Ge = {
   version: Me
 }, A = "saltwatch-card", je = Ge.version;
 customElements.get(A) || customElements.define(A, He);
