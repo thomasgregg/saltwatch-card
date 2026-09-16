@@ -55,6 +55,11 @@ interface InternationalizationContextRequestEvent extends CustomEvent {
   ) => void;
 }
 
+interface MarkupUpdate {
+  layoutChanged: boolean;
+  thresholdMarkerChanged: boolean;
+}
+
 function entity(states: HassStates | undefined, entityId: string | undefined): HassEntity | undefined {
   return entityId ? states?.[entityId] : undefined;
 }
@@ -141,6 +146,7 @@ export class SaltWatchCard extends HTMLElement {
   private languageObserver?: MutationObserver;
   private heightObserver?: ResizeObserver;
   private heightFrame?: number;
+  private interactionCard?: HTMLElement;
 
   public constructor() {
     super();
@@ -393,6 +399,11 @@ export class SaltWatchCard extends HTMLElement {
     const locale = resolveLocale(this.activeLanguage());
     const resolutionChanged = !this.config ||
       saltWatchConfigResolutionKey(config) !== saltWatchConfigResolutionKey(this.config);
+    const stoppedUsingFixedRows = typeof this.config?.grid_options?.rows === "number" &&
+      typeof config.grid_options?.rows !== "number";
+    if (stoppedUsingFixedRows) {
+      this.shadowRoot?.querySelector("ha-card")?.classList.remove("fixed-height");
+    }
     this.clearInteractionTimers();
     const displayMode = config.display_mode === "tank" || config.display_mode === "details"
       ? config.display_mode
@@ -688,7 +699,7 @@ export class SaltWatchCard extends HTMLElement {
       "Z",
     ].join(" ");
 
-    this.shadowRoot.innerHTML = `
+    const markup = `
       <style>${this.styles()}</style>
       <ha-card class="tone-${status.tone}${fixedHeight ? " fixed-height" : ""}"${interactive ? ' tabindex="0" role="button"' : ""} aria-label="${title}: ${escapeHtml(accessibleMetrics)}, ${escapeHtml(statusLabel)}">
         <div class="card-shell mode-${displayMode} order-${this.config.section_order ?? "tank-first"}">
@@ -715,13 +726,138 @@ export class SaltWatchCard extends HTMLElement {
           </section>` : ""}
         </div>
       </ha-card>`;
+    const markupUpdate = this.updateMarkup(markup);
 
     const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
     if (card) {
-      this.configureInteractions(card);
-      this.scheduleHeightModeUpdate();
+      const isNewCard = card !== this.interactionCard;
+      if (isNewCard) {
+        this.configureInteractions(card);
+        this.interactionCard = card;
+      }
+      if (isNewCard || markupUpdate.layoutChanged) {
+        this.scheduleHeightModeUpdate();
+      } else if (markupUpdate.thresholdMarkerChanged) {
+        this.updateThresholdMarkerPosition();
+      }
     }
     this.lastRenderKey = this.currentRenderKey();
+  }
+
+  private updateMarkup(markup: string): MarkupUpdate {
+    const update: MarkupUpdate = { layoutChanged: false, thresholdMarkerChanged: false };
+    if (!this.shadowRoot) return update;
+    if (!this.shadowRoot.firstChild) {
+      this.shadowRoot.innerHTML = markup;
+      update.layoutChanged = true;
+      return update;
+    }
+
+    const template = document.createElement("template");
+    template.innerHTML = markup;
+    this.updateChildNodes(this.shadowRoot, template.content, update);
+    return update;
+  }
+
+  private updateChildNodes(currentParent: Node, nextParent: Node, update: MarkupUpdate): void {
+    let index = 0;
+    while (index < nextParent.childNodes.length || index < currentParent.childNodes.length) {
+      const currentNode = currentParent.childNodes[index];
+      const nextNode = nextParent.childNodes[index];
+
+      if (!nextNode) {
+        currentNode?.parentNode?.removeChild(currentNode);
+        update.layoutChanged = true;
+        continue;
+      }
+      if (!currentNode) {
+        currentParent.appendChild(nextNode.cloneNode(true));
+        update.layoutChanged = true;
+        index += 1;
+        continue;
+      }
+
+      this.updateNode(currentNode, nextNode, update);
+      index += 1;
+    }
+  }
+
+  private updateNode(currentNode: Node, nextNode: Node, update: MarkupUpdate): void {
+    const currentNamespace = currentNode instanceof Element ? currentNode.namespaceURI : undefined;
+    const nextNamespace = nextNode instanceof Element ? nextNode.namespaceURI : undefined;
+    if (
+      currentNode.nodeType !== nextNode.nodeType ||
+      currentNode.nodeName !== nextNode.nodeName ||
+      currentNamespace !== nextNamespace
+    ) {
+      currentNode.parentNode?.replaceChild(nextNode.cloneNode(true), currentNode);
+      update.layoutChanged = true;
+      return;
+    }
+
+    if (currentNode.nodeType === Node.TEXT_NODE || currentNode.nodeType === Node.COMMENT_NODE) {
+      if (currentNode.nodeValue !== nextNode.nodeValue) {
+        currentNode.nodeValue = nextNode.nodeValue;
+        const parent = currentNode.parentElement;
+        if (!parent?.matches(".metric-value,.threshold-summary strong,.threshold-label text")) {
+          update.layoutChanged = true;
+        }
+      }
+      return;
+    }
+
+    if (!(currentNode instanceof Element) || !(nextNode instanceof Element)) return;
+    if (currentNode.isEqualNode(nextNode)) return;
+
+    // Replacing only the animated highlight restarts the existing settle motion
+    // without discarding the expensive SVG filter tree around it.
+    if (
+      currentNode.classList.contains("salt-highlight") &&
+      nextNode.classList.contains("salt-highlight") &&
+      currentNode.getAttribute("d") !== nextNode.getAttribute("d")
+    ) {
+      currentNode.parentNode?.replaceChild(nextNode.cloneNode(true), currentNode);
+      return;
+    }
+
+    for (const attribute of [...currentNode.attributes]) {
+      if (!nextNode.hasAttribute(attribute.name)) currentNode.removeAttribute(attribute.name);
+    }
+    const thresholdGeometryUnchanged = currentNode.classList.contains("threshold-label") &&
+      currentNode.getAttribute("data-preferred-x") === nextNode.getAttribute("data-preferred-x") &&
+      currentNode.getAttribute("data-marker-y") === nextNode.getAttribute("data-marker-y");
+    for (const attribute of [...nextNode.attributes]) {
+      if (attribute.name === "transform" && thresholdGeometryUnchanged) continue;
+      let nextValue = attribute.value;
+      if (
+        attribute.name === "class" &&
+        currentNode.localName === "ha-card" &&
+        currentNode.classList.contains("fixed-height") &&
+        !nextNode.classList.contains("fixed-height") &&
+        typeof this.config?.grid_options?.rows !== "number"
+      ) {
+        nextValue = `${nextValue} fixed-height`;
+      }
+      const currentValue = currentNode.getAttribute(attribute.name);
+      if (currentValue !== nextValue) {
+        currentNode.setAttribute(attribute.name, nextValue);
+        if (attribute.name === "class") {
+          const withoutTone = (value: string | null) => (value ?? "")
+            .split(/\s+/)
+            .filter((name) => name && !name.startsWith("tone-"))
+            .sort()
+            .join(" ");
+          if (withoutTone(currentValue) !== withoutTone(nextValue)) update.layoutChanged = true;
+        }
+        if (
+          currentNode.classList.contains("threshold") ||
+          currentNode.classList.contains("threshold-label")
+        ) {
+          update.thresholdMarkerChanged = true;
+        }
+      }
+    }
+    this.updateChildNodes(currentNode, nextNode, update);
   }
 
   private scheduleHeightModeUpdate(): void {
@@ -764,7 +900,7 @@ export class SaltWatchCard extends HTMLElement {
     if (!this.shadowRoot) return;
     const card = this.shadowRoot.querySelector<HTMLElement>("ha-card");
     const panel = this.shadowRoot.querySelector<HTMLElement>(".tank-panel");
-    const svg = this.shadowRoot.querySelector<SVGSVGElement>("svg.tank");
+    const svg = this.shadowRoot.querySelector<SVGSVGElement>("svg.tank-overlay");
     const label = this.shadowRoot.querySelector<SVGGElement>(".threshold-label");
     if (!card || !panel || !svg || !label) return;
 
@@ -957,75 +1093,91 @@ export class SaltWatchCard extends HTMLElement {
       : localize("estimatedLevel", locale) + `: ${formatPercentage(level, language)}`;
 
     return `
-      <svg class="tank" viewBox="-64 30 548 534" role="img" aria-label="${escapeHtml(tankLabel)}">
-        <defs>
-          <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
-          </linearGradient>
-          <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1b2226"/><stop offset=".15" stop-color="#424a4f"/><stop offset=".27" stop-color="#242b2f"/><stop offset=".76" stop-color="#171d21"/><stop offset="1" stop-color="#353d42"/>
-          </linearGradient>
-          <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
-          </linearGradient>
-          <radialGradient id="tank-glass" cx="50%" cy="40%" r="74%">
-            <stop offset="0" stop-color="#565a5c"/><stop offset=".5" stop-color="#404548"/><stop offset=".82" stop-color="#303538"/><stop offset="1" stop-color="#1e2326"/>
-          </radialGradient>
-          <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
-          </linearGradient>
-          <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#fff" stop-opacity=".08"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".02"/><stop offset="1" stop-color="#625744" stop-opacity=".1"/>
-          </linearGradient>
-          <radialGradient id="window-vignette" cx="50%" cy="46%" r="72%">
-            <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".05"/><stop offset="100%" stop-color="#000" stop-opacity=".18"/>
-          </radialGradient>
-          <pattern id="hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="13" height="13" fill="transparent"/><rect width="3" height="13" fill="#d6dde0" fill-opacity=".14"/>
-          </pattern>
-          <clipPath id="tank-window"><path d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
-          <clipPath id="salt-shape"><path d="${saltPath}"/></clipPath>
-          <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#000" flood-opacity=".48"/></filter>
-          <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
-            <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="noise"/>
-            <feColorMatrix in="noise" values=".28 0 0 0 0  0 .28 0 0 0  0 0 .28 0 0  0 0 0 .12 0" result="grain"/>
-            <feComposite in="grain" in2="SourceAlpha" operator="in" result="masked-grain"/>
-            <feBlend in="SourceGraphic" in2="masked-grain" mode="soft-light"/>
-          </filter>
-          <filter id="inner-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#000" flood-opacity=".88"/></filter>
-          <filter id="salt-shadow" x="-10%" y="-12%" width="120%" height="130%">
-            <feTurbulence type="fractalNoise" baseFrequency=".08 .18" numOctaves="2" seed="13" result="noise"/>
-            <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
-            <feComposite in="mono" in2="SourceAlpha" operator="in" result="texture"/>
-            <feBlend in="SourceGraphic" in2="texture" mode="soft-light" result="grain"/>
-            <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
-          </filter>
-        </defs>
-        <g class="tank-visual">
-        <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
-        <g filter="url(#frame-shadow)">
-          <g filter="url(#polymer)">
-            <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
-            <path d="M74 91L80 82Q83 79 96 77Q210 74 324 77Q337 79 340 82L346 91V104Q346 108 342 108H78Q74 108 74 104Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5" stroke-linejoin="round"/>
-            <path class="tank-base" d="M112 492H308L302 518H275L267 511H153L145 518H118Z" fill="url(#tank-edge)" stroke-width="3"/>
+      <div class="tank-stack">
+        <svg class="tank tank-static" viewBox="-64 30 548 534" role="img" aria-label="${escapeHtml(tankLabel)}">
+          <defs>
+            <linearGradient id="tank-frame" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fbfbf8"/><stop offset=".1" stop-color="#ecefed"/><stop offset=".34" stop-color="#d9dfe0"/><stop offset=".7" stop-color="#bdc6c9"/><stop offset=".91" stop-color="#f1f3f1"/><stop offset="1" stop-color="#aeb8bc"/>
+            </linearGradient>
+            <linearGradient id="tank-edge" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#1b2226"/><stop offset=".15" stop-color="#424a4f"/><stop offset=".27" stop-color="#242b2f"/><stop offset=".76" stop-color="#171d21"/><stop offset="1" stop-color="#353d42"/>
+            </linearGradient>
+            <linearGradient id="lid-face" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fffefa"/><stop offset=".16" stop-color="#ecefed"/><stop offset=".55" stop-color="#d4dadb"/><stop offset=".82" stop-color="#b7c0c3"/><stop offset="1" stop-color="#e5e8e6"/>
+            </linearGradient>
+            <radialGradient id="tank-glass" cx="50%" cy="40%" r="74%">
+              <stop offset="0" stop-color="#565a5c"/><stop offset=".5" stop-color="#404548"/><stop offset=".82" stop-color="#303538"/><stop offset="1" stop-color="#1e2326"/>
+            </radialGradient>
+            <filter id="frame-shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#000" flood-opacity=".48"/></filter>
+            <filter id="polymer" x="-8%" y="-8%" width="116%" height="116%">
+              <feTurbulence type="fractalNoise" baseFrequency=".55" numOctaves="2" seed="9" result="noise"/>
+              <feColorMatrix in="noise" values=".28 0 0 0 0  0 .28 0 0 0  0 0 .28 0 0  0 0 0 .12 0" result="grain"/>
+              <feComposite in="grain" in2="SourceAlpha" operator="in" result="masked-grain"/>
+              <feBlend in="SourceGraphic" in2="masked-grain" mode="soft-light"/>
+            </filter>
+            <filter id="inner-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#000" flood-opacity=".88"/></filter>
+          </defs>
+          <g class="tank-visual">
+            <g class="ruler"><path class="scale-spine" d="M82 132V474"/>${rulerMarks}</g>
+            <g filter="url(#frame-shadow)">
+              <g filter="url(#polymer)">
+                <path d="M80 104Q80 88 96 82H324Q340 88 340 104V452Q340 486 306 492H114Q80 486 80 452Z" fill="url(#tank-frame)" stroke="#7e888d" stroke-width="2.5"/>
+                <path d="M74 91L80 82Q83 79 96 77Q210 74 324 77Q337 79 340 82L346 91V104Q346 108 342 108H78Q74 108 74 104Z" fill="url(#lid-face)" stroke="#7e888d" stroke-width="2.5" stroke-linejoin="round"/>
+                <path class="tank-base" d="M112 492H308L302 518H275L267 511H153L145 518H118Z" fill="url(#tank-edge)" stroke-width="3"/>
+              </g>
+              <path d="M84 86Q91 82 101 81Q210 78 319 81Q329 82 336 86" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
+              <path d="M76 101H344" stroke="#697378" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+            <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
+            <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
           </g>
-          <path d="M84 86Q91 82 101 81Q210 78 319 81Q329 82 336 86" fill="none" stroke="#fff" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
-          <path d="M76 101H344" stroke="#697378" stroke-opacity=".62" stroke-width="1.5" stroke-linecap="round"/>
-        </g>
-        <path d="M91 134Q91 109 116 109H304Q329 109 329 134V449Q329 479 299 479H121Q91 479 91 449Z" fill="#080c0e" filter="url(#inner-shadow)"/>
-        <path class="tank-glass" d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z" fill="url(#tank-glass)"/>
-        <g clip-path="url(#tank-window)">
-          ${unavailable
-            ? `<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
-            : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
-          <rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/>
-        </g>
-        <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX} ${thresholdY.toFixed(1)}H${thresholdEndX}"/>
-        </g>
-        <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${preferredLowBadgeX.toFixed(1)} ${lowBadgeY})">
-          <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
-        </g>
-      </svg>`;
+        </svg>
+        <svg class="tank-layer tank-salt" viewBox="-64 30 548 534" aria-hidden="true">
+          <defs>
+            <radialGradient id="salt-tank-glass" cx="50%" cy="40%" r="74%">
+              <stop offset="0" stop-color="#565a5c"/><stop offset=".5" stop-color="#404548"/><stop offset=".82" stop-color="#303538"/><stop offset="1" stop-color="#1e2326"/>
+            </radialGradient>
+            <linearGradient id="salt-base" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f4efe4"/><stop offset=".18" stop-color="#e8e0d1"/><stop offset=".72" stop-color="#d7cebd"/><stop offset="1" stop-color="#c8beab"/>
+            </linearGradient>
+            <linearGradient id="salt-shade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff" stop-opacity=".08"/><stop offset=".52" stop-color="#8d806c" stop-opacity=".02"/><stop offset="1" stop-color="#625744" stop-opacity=".1"/>
+            </linearGradient>
+            <pattern id="salt-hatch" width="13" height="13" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="13" height="13" fill="transparent"/><rect width="3" height="13" fill="#d6dde0" fill-opacity=".14"/>
+            </pattern>
+            <clipPath id="salt-tank-window"><path d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
+            <clipPath id="salt-shape"><path d="${saltPath}"/></clipPath>
+            <filter id="salt-shadow" x="-10%" y="-12%" width="120%" height="130%">
+              <feTurbulence type="fractalNoise" baseFrequency=".08 .18" numOctaves="2" seed="13" result="noise"/>
+              <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
+              <feComposite in="mono" in2="SourceAlpha" operator="in" result="texture"/>
+              <feBlend in="SourceGraphic" in2="texture" mode="soft-light" result="grain"/>
+              <feDropShadow in="grain" dx="0" dy="-1" stdDeviation="5" flood-color="#000" flood-opacity=".28"/>
+            </filter>
+          </defs>
+          <g class="tank-visual" clip-path="url(#salt-tank-window)">
+            ${unavailable
+              ? `<rect class="unavailable-base" x="96" y="115" width="228" height="359" fill="url(#salt-tank-glass)"/><rect class="unavailable-hatch" x="96" y="115" width="228" height="359" fill="url(#salt-hatch)"/><text class="no-reading" x="210" y="320" text-anchor="middle">?</text>`
+              : `<path class="salt-fill" data-level="${level}" data-surface-y="${saltY.toFixed(1)}" d="${saltPath}" fill="url(#salt-base)" filter="url(#salt-shadow)"/><image class="salt-photo" href="${saltTextureUrl}" x="78.5" y="82" width="263" height="420" preserveAspectRatio="xMidYMid slice" clip-path="url(#salt-shape)"/><path class="salt-depth" d="${saltPath}" fill="url(#salt-shade)"/><path class="salt-highlight" d="${surfacePath}"/>`}
+          </g>
+        </svg>
+        <svg class="tank-layer tank-overlay" viewBox="-64 30 548 534" aria-hidden="true">
+          <defs>
+            <radialGradient id="window-vignette" cx="50%" cy="46%" r="72%">
+              <stop offset="72%" stop-color="#000" stop-opacity="0"/><stop offset="90%" stop-color="#000" stop-opacity=".05"/><stop offset="100%" stop-color="#000" stop-opacity=".18"/>
+            </radialGradient>
+            <clipPath id="overlay-tank-window"><path d="M96 137Q96 115 118 115H302Q324 115 324 137V448Q324 474 298 474H122Q96 474 96 448Z"/></clipPath>
+          </defs>
+          <g class="tank-visual">
+            <g clip-path="url(#overlay-tank-window)"><rect class="window-vignette" x="96" y="115" width="228" height="359" fill="url(#window-vignette)"/></g>
+            <path class="threshold tone-${tone}" data-threshold="${threshold}" data-threshold-y="${thresholdY.toFixed(1)}" d="M${thresholdStartX} ${thresholdY.toFixed(1)}H${thresholdEndX}"/>
+          </g>
+          <g class="threshold-label tone-${tone}" data-preferred-x="${preferredLowBadgeX.toFixed(1)}" data-marker-y="${lowBadgeY}" transform="translate(${preferredLowBadgeX.toFixed(1)} ${lowBadgeY})">
+            <rect width="${lowBadgeWidth}" height="30" rx="9"/><text x="${lowBadgeWidth / 2}" y="20" text-anchor="middle">${escapeHtml(lowBadge)}</text>
+          </g>
+        </svg>
+      </div>`;
   }
 
   private styles(): string {
@@ -1051,7 +1203,9 @@ export class SaltWatchCard extends HTMLElement {
       .mode-tank .tank-panel { padding-block:20px; border:0; }
       .tank-panel { grid-area:tank; min-width:0; display:grid; place-items:center; padding:6px 18px 6px 28px; background:radial-gradient(circle at 46% 43%,rgba(255,255,255,.055),transparent 62%); border-right:1px solid var(--sw-panel-divider); }
       .order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
-      .tank { width:min(100%,582px); height:auto; overflow:visible; }
+      .tank-stack { position:relative; width:min(100%,582px); height:auto; line-height:0; }
+      .tank,.tank-layer { display:block; width:100%; height:auto; overflow:visible; }
+      .tank-layer { position:absolute; inset:0; }
       .ruler { fill:var(--secondary-text-color,#b1b8bc); stroke:var(--secondary-text-color,#b1b8bc); stroke-width:1.15; font:15px system-ui,sans-serif; }
       .ruler text { stroke:none; }
       .ruler .scale-spine { opacity:.28; stroke-width:.8; }
@@ -1102,7 +1256,8 @@ export class SaltWatchCard extends HTMLElement {
       .fixed-height .card-shell,.fixed-height .tank-panel,.fixed-height .content-panel { min-height:0; }
       .fixed-height .tank-panel,.fixed-height .content-panel { overflow:hidden; }
       .fixed-height .tank-panel { container-type:size; }
-      .fixed-height .tank { width:auto; height:calc(100cqh - 12px); max-width:min(100%,582px); max-height:none; }
+      .fixed-height .tank-stack { width:auto; height:calc(100cqh - 12px); max-width:min(100%,582px); aspect-ratio:548 / 534; }
+      .fixed-height .tank,.fixed-height .tank-layer { width:100%; height:100%; max-height:none; }
       @container card (max-height:460px) {
         .fixed-height .card-shell.mode-both { grid-template-columns:1fr 1fr; grid-template-areas:"tank details"; }
         .fixed-height .card-shell.mode-both.order-details-first { grid-template-areas:"details tank"; }
@@ -1139,7 +1294,7 @@ export class SaltWatchCard extends HTMLElement {
         .card-shell.mode-tank { grid-template-areas:"tank"; }.card-shell.mode-details { grid-template-areas:"details"; }
         .fixed-height .card-shell.mode-both { grid-template-rows:minmax(0,1fr) minmax(0,1fr); }
         .fixed-height .card-shell.mode-tank,.fixed-height .card-shell.mode-details { grid-template-rows:minmax(0,1fr); }
-        .fixed-height .card-shell.mode-both .tank { height:calc(100cqh - 36px); }
+        .fixed-height .card-shell.mode-both .tank-stack { height:calc(100cqh - 36px); }
         .tank-panel,.order-details-first .tank-panel { padding:8px 30px; border-right:0; border-left:0; border-bottom:1px solid var(--sw-panel-divider); }
         .order-details-first .tank-panel { border-top:1px solid var(--sw-panel-divider); border-bottom:0; }
         .mode-tank .tank-panel { border:0; }
@@ -1190,7 +1345,7 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .card-shell.mode-both.order-details-first { grid-template-areas:"details tank"; }
         .fixed-height .card-shell.mode-both .tank-panel { border:0; border-right:1px solid var(--sw-panel-divider); }
         .fixed-height .card-shell.mode-both.order-details-first .tank-panel { border-right:0; border-left:1px solid var(--sw-panel-divider); }
-        .fixed-height .card-shell.mode-both .tank { height:calc(100cqh - 12px); }
+        .fixed-height .card-shell.mode-both .tank-stack { height:calc(100cqh - 12px); }
       }
       .metrics-both.has-forecast-detail { grid-template-areas:"level divider forecast" ". . detail"; row-gap:0; position:relative; }
       .metrics-both.has-forecast-detail > .level-metric { grid-area:level; }

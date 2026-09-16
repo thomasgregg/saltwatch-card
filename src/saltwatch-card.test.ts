@@ -347,9 +347,16 @@ describe("SaltWatchCard", () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
-  it("does not rebuild for unrelated Home Assistant state updates", () => {
+  it("preserves the rendered card and its SVG filters across Home Assistant state updates", () => {
     const hass = makeHass();
     const initialShell = card.shadowRoot?.querySelector(".card-shell");
+    const initialTank = card.shadowRoot?.querySelector(".tank");
+    const initialSaltLayer = card.shadowRoot?.querySelector(".tank-salt");
+    const initialOverlayLayer = card.shadowRoot?.querySelector(".tank-overlay");
+    const initialPolymerFilter = card.shadowRoot?.querySelector("#polymer");
+    const initialSaltShadowFilter = card.shadowRoot?.querySelector("#salt-shadow");
+    const initialSaltFill = card.shadowRoot?.querySelector(".salt-fill");
+    const initialHighlight = card.shadowRoot?.querySelector(".salt-highlight");
     pushStates({ ...hass,
       states: {
         ...hass.states,
@@ -358,7 +365,15 @@ describe("SaltWatchCard", () => {
     });
     expect(card.shadowRoot?.querySelector(".card-shell")).toBe(initialShell);
     pushStates(makeHass("63"));
-    expect(card.shadowRoot?.querySelector(".card-shell")).not.toBe(initialShell);
+    expect(card.shadowRoot?.querySelector(".card-shell")).toBe(initialShell);
+    expect(card.shadowRoot?.querySelector(".tank")).toBe(initialTank);
+    expect(card.shadowRoot?.querySelector(".tank-salt")).toBe(initialSaltLayer);
+    expect(card.shadowRoot?.querySelector(".tank-overlay")).toBe(initialOverlayLayer);
+    expect(card.shadowRoot?.querySelector("#polymer")).toBe(initialPolymerFilter);
+    expect(card.shadowRoot?.querySelector("#salt-shadow")).toBe(initialSaltShadowFilter);
+    expect(card.shadowRoot?.querySelector(".salt-fill")).toBe(initialSaltFill);
+    expect(card.shadowRoot?.querySelector(".salt-highlight")).not.toBe(initialHighlight);
+    expect(card.shadowRoot?.querySelector(".salt-fill")?.getAttribute("data-level")).toBe("63");
     expect(card.shadowRoot?.textContent).toContain("63%");
   });
 
