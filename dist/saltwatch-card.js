@@ -1700,7 +1700,7 @@ class Ge extends HTMLElement {
     `;
   }
 }
-const je = "0.6.4-beta.1", Ve = {
+const je = "0.6.4", Ve = {
   version: je
 }, Z = "saltwatch-card", Pe = Ve.version;
 customElements.get(Z) || customElements.define(Z, Me);
