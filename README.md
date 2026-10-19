@@ -2,7 +2,7 @@
 
 [![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
 [![Validate](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml/badge.svg)](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml)
-[![HACS custom repository](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/thomasgregg/saltwatch-card/blob/main/LICENSE)
 
 ### See your water-softener salt level at a glance
@@ -140,15 +140,16 @@ state instead.
 
 [![Open your Home Assistant instance and open SaltWatch Card in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 
-Select the button above to open SaltWatch Card directly in HACS, then download
-the latest release. If the button cannot find the repository, add it manually:
+SaltWatch Card is included in the HACS default repository list. Use the button
+above or:
 
-1. In HACS, open **Custom repositories**.
-2. Add `https://github.com/thomasgregg/saltwatch-card` as a **Dashboard**
-   repository.
-3. Find **SaltWatch Card** in HACS and install it.
-4. Reload your Home Assistant dashboard.
-5. Add **SaltWatch Card** from the dashboard card picker.
+1. Open **HACS** and search for **SaltWatch Card**.
+2. Download the card.
+3. Reload your Home Assistant dashboard.
+4. Add **SaltWatch Card** from the dashboard card picker.
+
+No custom repository setup is needed. Existing installations continue to receive
+updates through HACS without reinstalling.
 
 The graphical editor lists detected SaltWatch devices, keeps the everyday
 layout choices up front, and groups tap, hold, and double-tap behaviour in a
