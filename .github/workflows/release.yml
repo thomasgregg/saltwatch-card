@@ -21,7 +21,13 @@ jobs:
       - name: Verify tag matches package version
         run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
       - name: Verify version-specific release notes
-        run: test -s ".github/release-notes/${GITHUB_REF_NAME}.md"
+        run: |
+          notes=".github/release-notes/${GITHUB_REF_NAME}.md"
+          test -s "$notes"
+          if grep -Eiq '^[[:space:]]{0,3}#{1,6}[[:blank:]]+SaltWatch Card[[:blank:]]+v?[0-9]+[.][0-9]+[.][0-9]+' "$notes"; then
+            echo "Remove the version heading from $notes. GitHub shows the version in the release title."
+            exit 1
+          fi
       - name: Publish release asset
         env:
           GH_TOKEN: ${{ github.token }}
