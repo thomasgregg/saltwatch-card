@@ -138,6 +138,52 @@ describe("SaltWatchCard", () => {
     await vi.waitFor(() => expect(card.shadowRoot?.querySelector(".card-shell")).not.toBeNull());
   });
 
+  it("applies fixed decimal precision only to the single salt-level metric", () => {
+    card.hass = makeCustomHass("25.40");
+    const base = { type: "custom:saltwatch-card", source: "entities" as const,
+      level_entity: "sensor.greenline_salt_level", forecast_entity: "sensor.greenline_days_until_low" };
+    for (const [decimals, expected] of [[0, "25%"], [1, "25.4%"], [2, "25.40%"]] as const) {
+      card.setConfig({ ...base, decimals });
+      expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe(expected);
+    }
+    card.setConfig({ ...base, decimals: 2, metric_mode: "both" });
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("25%");
+    card.setConfig({ ...base, decimals: 2, metric_mode: "level" });
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("25.40%");
+    expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("25.40%");
+    for (const decimals of [-1, 3, 1.5, "2", null, NaN]) {
+      expect(() => card.setConfig({ ...base, decimals } as SaltWatchCardConfig)).toThrow("Decimal places");
+    }
+  });
+
+  it("uses a native precision dropdown and remembers precision across value modes", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    editor.hass = makeCustomHass();
+    editor.setConfig({ source: "entities", level_entity: "sensor.greenline_salt_level",
+      forecast_entity: "sensor.greenline_days_until_low" });
+    const changed = vi.fn();
+    editor.addEventListener("config-changed", changed);
+    const form = editor.shadowRoot!.querySelector("#precision-form ha-form") as HTMLElement & { data: Record<string, unknown>; schema: Array<{ selector: unknown }> };
+    expect(form.data.decimals).toBe("0");
+    expect(form.schema[0]!.selector).toEqual({ select: { mode: "dropdown", options: [
+      { value: "0", label: "0 — 25%" }, { value: "1", label: "1 — 25.4%" }, { value: "2", label: "2 — 25.40%" },
+    ] } });
+    form.dispatchEvent(new CustomEvent("value-changed", { detail: { value: { decimals: "2" } } }));
+    expect(changed.mock.calls.at(-1)![0].detail.config.decimals).toBe(2);
+    editor.shadowRoot!.querySelector<HTMLButtonElement>('[data-field="metric_mode"][data-value="both"]')!.click();
+    expect(editor.shadowRoot!.querySelector("#precision-form")).toBeNull();
+    expect(editor.shadowRoot!.querySelector(".values-section ha-input-helper-text")?.textContent).toBe("Combined view always uses whole percentages.");
+    editor.shadowRoot!.querySelector<HTMLButtonElement>('[data-field="metric_mode"][data-value="forecast"]')!.click();
+    expect(editor.shadowRoot!.querySelector("#precision-form")).toBeNull();
+    editor.shadowRoot!.querySelector<HTMLButtonElement>('[data-field="metric_mode"][data-value="level"]')!.click();
+    expect((editor.shadowRoot!.querySelector("#precision-form ha-form") as typeof form).data.decimals).toBe("2");
+    editor.shadowRoot!.querySelector<HTMLButtonElement>('[data-field="display_mode"][data-value="tank"]')!.click();
+    expect(editor.shadowRoot!.querySelector("#precision-form")).toBeNull();
+  });
+
   it("renders a dynamic granular level and configured metadata", () => {
     expect(card.shadowRoot?.textContent).toContain("62%");
     expect(card.shadowRoot?.textContent).toContain("Estimated salt level");
@@ -893,7 +939,7 @@ describe("SaltWatchCard", () => {
       .toBe("sensor.greenline_salt_level");
     expect(editor.shadowRoot?.querySelector(".notice.success")).not.toBeNull();
     expect(editor.shadowRoot?.textContent).toContain("Card layout");
-    expect(editor.shadowRoot?.textContent).not.toContain("Values");
+    expect(editor.shadowRoot?.querySelector("#precision-form ha-form")).not.toBeNull();
 
     editor.shadowRoot?.querySelector("#entity-form ha-form")?.dispatchEvent(new CustomEvent(
       "value-changed",

@@ -948,3 +948,29 @@ test("keeps the user's mobile scroll position stable", async ({ page }, testInfo
   const second = await page.evaluate(() => window.scrollY);
   expect(Math.abs(second - first)).toBeLessThanOrEqual(2);
 });
+
+test("keeps decimal percentages inside the single-level metric at narrow widths", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+  for (const width of [220, 320, 400, 720, 1200]) {
+    await page.locator(".demo-frame").evaluate((element, width) => { element.style.width = `${width}px`; }, width);
+    for (const displayMode of ["both", "details"]) {
+      await card.evaluate((element, displayMode) => {
+        const instance = element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void; hass: { states: Record<string, { state: string }> } };
+        instance.hass = { ...instance.hass, states: { ...instance.hass.states,
+          "sensor.saltwatch_salt_level": { ...instance.hass.states["sensor.saltwatch_salt_level"], state: "100" },
+        } };
+        instance.setConfig({ type: "custom:saltwatch-card", device_id: "saltwatch-demo-device", display_mode: displayMode, metric_mode: "level", decimals: 2 });
+      }, displayMode);
+      await expect(card.locator(".level")).toHaveText("100.00%");
+      const bounds = await card.locator(".level").evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const text = range.getBoundingClientRect();
+        const metric = element.closest(".metric")!.getBoundingClientRect();
+        return { textLeft: text.left, textRight: text.right, left: metric.left, right: metric.right };
+      });
+      expect(bounds.textLeft).toBeGreaterThanOrEqual(bounds.left - 1);
+      expect(bounds.textRight).toBeLessThanOrEqual(bounds.right + 1);
+    }
+  }
+});

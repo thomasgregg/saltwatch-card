@@ -38,6 +38,12 @@ describe("localization", () => {
     expect(translations.showLowMarker).toBe("Vis minimumsmærke under værdierne");
   });
 
+  it("formats fixed precision with localized separators and trailing zeroes", () => {
+    expect(formatPercentage(25.4, "en-GB", 2)).toBe("25.40%");
+    expect(formatPercentage(25.4, "de-DE", 2).replace(/\s/g, "")).toBe("25,40%");
+    expect(formatPercentage(25.4, "da-DK", 1).replace(/\s/g, "")).toBe("25,4%");
+  });
+
   it("formats percentages using the full Home Assistant language tag", () => {
     expect(formatPercentage(62, "en-GB")).toBe("62%");
     expect(formatPercentage(62, "da-DK").replace(/\s/g, "")).toBe("62%");

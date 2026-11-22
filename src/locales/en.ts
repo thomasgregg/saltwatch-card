@@ -1,4 +1,8 @@
 export const en = {
+  decimalPlaces: "Decimal places",
+  decimalPlacesHelp: "Choose how precisely the salt level is displayed.",
+  combinedPrecisionHelp: "Combined view always uses whole percentages.",
+  invalidDecimalsError: "Decimal places must be 0, 1, or 2.",
   actions: "Actions",
   actionsHelp: "Tap, hold and double-tap",
   both: "Both",

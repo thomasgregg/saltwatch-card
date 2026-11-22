@@ -83,6 +83,7 @@ export interface SaltWatchCardConfig {
   show_low_marker?: boolean;
   display_mode?: SaltWatchDisplayMode;
   metric_mode?: SaltWatchMetricMode;
+  decimals?: 0 | 1 | 2;
   section_order?: SaltWatchSectionOrder;
   show_web_interface?: boolean;
   web_interface_url?: string;

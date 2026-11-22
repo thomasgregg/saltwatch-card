@@ -1,4 +1,4 @@
-import { getTranslations, resolveLanguage, resolveLocale } from "./localize";
+import { formatPercentage, getTranslations, resolveLanguage, resolveLocale } from "./localize";
 import {
   hasChromiumLink,
   normalizeWebInterfaceUrl,
@@ -227,7 +227,7 @@ export class SaltWatchCardEditor extends HTMLElement {
     if (!this.shadowRoot || !this._config) return;
     const copy = getTranslations(resolveLocale(this.activeLanguage()));
     const displayMode = this._config.display_mode ?? "both";
-    const metricMode = this._config.metric_mode ?? "level";
+    const configuredMetricMode = this._config.metric_mode ?? "level";
     const sectionOrder = this._config.section_order ?? "tank-first";
     const showDetailsControls = displayMode !== "tank";
     const config = this._config;
@@ -248,6 +248,7 @@ export class SaltWatchCardEditor extends HTMLElement {
     );
     const complete = automaticSource ? automaticComplete : customComplete && !customLevelMissing;
     const hasForecast = automaticSource || Boolean(config.forecast_entity?.trim());
+    const metricMode = hasForecast ? configuredMetricMode : "level";
     const problems = resolution ? [
       ...resolution.missing.map(saltWatchRoleLabel),
       ...resolution.duplicates.map((role) => `${saltWatchRoleLabel(role)} (${copy.duplicate})`),
@@ -360,13 +361,14 @@ export class SaltWatchCardEditor extends HTMLElement {
             </div>` : ""}
         </section>
 
-        ${showDetailsControls && hasForecast ? `<section class="section compact-section">
+        ${showDetailsControls ? `<section class="section compact-section values-section">
           <h3>${copy.values}</h3>
-          <div class="segments three" role="group" aria-label="${copy.values}">
+          ${hasForecast ? `<div class="segments three" role="group" aria-label="${copy.values}">
             ${this.segmentButton("metric_mode", "level", copy.level, metricMode)}
             ${this.segmentButton("metric_mode", "forecast", copy.forecast, metricMode)}
             ${this.segmentButton("metric_mode", "both", copy.both, metricMode)}
-          </div>
+          </div>` : ""}
+          ${metricMode === "level" ? '<div id="precision-form"></div>' : metricMode === "both" ? `<ha-input-helper-text>${escapeAttribute(copy.combinedPrecisionHelp)}</ha-input-helper-text>` : ""}
         </section>` : ""}
 
         ${showDetailsControls ? `<section class="section compact-section">
@@ -419,6 +421,21 @@ export class SaltWatchCardEditor extends HTMLElement {
         forecast_details_entity: `${copy.forecastDetailsEntity} (${copy.optional})`,
       });
     }
+
+    this.setupForm("precision-form", [{
+      name: "decimals",
+      required: true,
+      selector: { select: { mode: "dropdown", options: [0, 1, 2].map((decimals) => ({
+        value: String(decimals),
+        label: `${decimals} — ${formatPercentage(25.4, this.activeLanguage(), decimals)}`,
+      })) } },
+    }], { decimals: String(config.decimals ?? 0) }, { decimals: copy.decimalPlaces }, {
+      helpers: { decimals: copy.decimalPlacesHelp },
+      onChange: (value) => {
+        const decimals = Number(value.decimals);
+        if (decimals === 0 || decimals === 1 || decimals === 2) this.updateConfig({ decimals });
+      },
+    });
 
     this.setupForm("visible-elements-form", [
       { name: "show_status", selector: { boolean: {} } },
@@ -590,6 +607,8 @@ export class SaltWatchCardEditor extends HTMLElement {
       .chevron { font-size:20px; transform:rotate(0); transition:.15s; }
       details[open] .chevron { transform:rotate(180deg); }
       .fold-content { display:grid; gap:16px; padding:16px; border-top:1px solid var(--divider-color,#ddd); }
+      .values-section { display:grid; gap:var(--ha-space-3,12px); }
+      .values-section h3 { margin:0; }
       .web-interface-settings { display:grid; gap:var(--ha-space-3,12px); }
       .web-interface-settings h3 { margin:0; }
       .web-interface-field ha-input-helper-text { display:block; margin-block-start:var(--ha-space-2,8px); }

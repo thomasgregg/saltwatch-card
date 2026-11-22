@@ -1,6 +1,10 @@
 import type { TranslationCatalog } from "./en";
 
 export const de = {
+  decimalPlaces: "Nachkommastellen",
+  decimalPlacesHelp: "Wähle, wie genau der Salzstand angezeigt wird.",
+  combinedPrecisionHelp: "Die kombinierte Ansicht zeigt immer ganze Prozentwerte.",
+  invalidDecimalsError: "Die Anzahl der Nachkommastellen muss 0, 1 oder 2 sein.",
   actions: "Aktionen",
   actionsHelp: "Tippen, halten und doppelt tippen",
   both: "Beide",

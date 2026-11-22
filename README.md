@@ -160,7 +160,7 @@ versions.
 The `/config/www/` directory is exposed under the `/local/` URL path. When
 updating a manual install, replace the JavaScript file and update the existing
 resource URL with a version query that matches the release you installed
-(e.g., `?v=0.6.5`) so clients load the new build.
+(e.g., `?v=0.6.6`) so clients load the new build.
 
 <!-- ha-marketplace:exclude-end -->
 
@@ -274,6 +274,7 @@ labels and values legible and prevent clipped or overlapping layouts.
 | `show_low_marker` | Shows or hides the low-marker summary below the values. The marker on the tank remains visible. | `true` |
 | `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
 | `metric_mode` | Shows the current level (`level`), refill forecast (`forecast`), or both values side by side (`both`). | `level` |
+| `decimals` | Decimal places for the salt level: `0`, `1`, or `2`. Applies only when `metric_mode: level`; combined view always uses whole percentages. | `0` |
 | `section_order` | Places the tank first (`tank-first`) or the details first (`details-first`) in the complete layout. | `tank-first` |
 | `show_web_interface` | Enables the web interface shortcut in the selected layout. | `false` |
 | `web_interface_open_with` | Opens the device in the current browser (`browser`) or through the registered Chromium Link launcher (`chromium_link`). Falls back to the current browser when the launcher is unavailable. | `browser` |

@@ -102,6 +102,14 @@ function validatedLowThreshold(
   return value;
 }
 
+function validatedDecimals(value: unknown, locale = resolveLocale()): 0 | 1 | 2 {
+  if (value === undefined) return 0;
+  if (value !== 0 && value !== 1 && value !== 2) {
+    throw new Error(localize("invalidDecimalsError", locale));
+  }
+  return value;
+}
+
 function formatForecastDays(value: number, language: string): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(value);
 }
@@ -386,6 +394,7 @@ export class SaltWatchCard extends HTMLElement {
           throw new Error(localize("missingLevelEntityError"));
         }
         validatedLowThreshold(config.low_threshold);
+        validatedDecimals(config.decimals);
         if (config.web_interface_url && !normalizeWebInterfaceUrl(config.web_interface_url)) {
           throw new Error(localize("invalidWebInterfaceUrl"));
         }
@@ -443,6 +452,7 @@ export class SaltWatchCard extends HTMLElement {
       ...config,
       source: config.source === "device" || config.source === "entities" ? config.source : undefined,
       low_threshold: validatedLowThreshold(config.low_threshold, locale),
+      decimals: validatedDecimals(config.decimals, locale),
       show_status: config.show_status ?? true,
       show_low_marker: config.show_low_marker ?? true,
       display_mode: displayMode,
@@ -670,7 +680,7 @@ export class SaltWatchCard extends HTMLElement {
         ? `href="${CHROMIUM_LINK_PATH}${escapeHtml(encodeURIComponent(webInterfaceUrl))}" aria-label="${webLinkLabel}"`
         : `href="${escapeHtml(webInterfaceUrl)}" target="_blank" rel="noopener" aria-label="${webLinkLabel}"`
       : "";
-    const displayLevel = level === undefined ? "—" : formatPercentage(level, language);
+    const displayLevel = level === undefined ? "—" : formatPercentage(level, language, metricMode === "level" ? this.config.decimals : 0);
     const accessibleLevel = level === undefined
       ? localize("noCurrentReading", locale)
       : displayLevel;

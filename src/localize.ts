@@ -41,9 +41,10 @@ export function localize(
   );
 }
 
-export function formatPercentage(value: number, language = resolveLanguage()): string {
+export function formatPercentage(value: number, language = resolveLanguage(), decimals = 0): string {
   return new Intl.NumberFormat(resolveLanguage(language), {
     style: "percent",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   }).format(value / 100);
 }

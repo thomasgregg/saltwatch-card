@@ -1,6 +1,10 @@
 import type { TranslationCatalog } from "./en";
 
 export const da = {
+  decimalPlaces: "Decimaler",
+  decimalPlacesHelp: "Vælg, hvor præcist saltniveauet vises.",
+  combinedPrecisionHelp: "Den kombinerede visning viser altid hele procenter.",
+  invalidDecimalsError: "Antallet af decimaler skal være 0, 1 eller 2.",
   actions: "Handlinger",
   actionsHelp: "Tryk, hold og dobbelttryk",
   both: "Begge",
