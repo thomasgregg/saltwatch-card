@@ -1,3 +1,5 @@
+<!-- ha-marketplace:exclude-start -->
+
 # SaltWatch Card
 
 [![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
@@ -5,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/thomasgregg/saltwatch-card/blob/main/LICENSE)
 
 ### See your water-softener salt level at a glance
+
+<!-- ha-marketplace:exclude-end -->
 
 SaltWatch Card is the visual Home Assistant companion for
 [SaltWatch](https://github.com/thomasgregg/saltwatch). It turns SaltWatch's
@@ -19,24 +23,6 @@ SaltWatch Card is optimized for devices running the official SaltWatch
 firmware, with automatic and rename-safe entity discovery. Other water
 softener integrations can use the same card by mapping their existing Home
 Assistant entities in the graphical editor.
-
-## Contents
-
-- [Why use it?](#why-use-it)
-- [Made for SaltWatch](#made-for-saltwatch)
-- [Other water softeners](#other-water-softeners)
-- [What the states mean](#what-the-states-mean)
-- [Installation](#installation)
-  - [Marketplace](#marketplace)
-  - [HACS](#hacs)
-  - [Manual installation](#manual-installation)
-- [Graphical editor](#graphical-editor)
-  - [Web interface shortcut](#web-interface-shortcut)
-    - [Open remotely with Chromium Link](#open-remotely-with-chromium-link)
-  - [Dashboard sizing](#dashboard-sizing)
-- [Card options](#card-options)
-- [Home Assistant friendly by design](#home-assistant-friendly-by-design)
-- [Languages](#languages)
 
 ## Why use it?
 
@@ -138,6 +124,8 @@ When the level is unavailable, the card never leaves an old percentage on
 screen as though it were current. The tank switches to an explicit no-reading
 state instead.
 
+<!-- ha-marketplace:exclude-start -->
+
 ## Installation
 
 ### Marketplace
@@ -171,7 +159,10 @@ versions.
 
 The `/config/www/` directory is exposed under the `/local/` URL path. When
 updating a manual install, replace the JavaScript file and update the existing
-resource URL with a version query such as `?v=0.6.4` so clients load the new build.
+resource URL with a version query that matches the release you installed
+(e.g., `?v=0.6.5`) so clients load the new build.
+
+<!-- ha-marketplace:exclude-end -->
 
 ## Graphical editor
 

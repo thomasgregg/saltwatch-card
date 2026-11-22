@@ -1840,7 +1840,7 @@ class Ze extends HTMLElement {
     `;
   }
 }
-const Be = "0.6.4", Ye = {
+const Be = "0.6.5", Ye = {
   version: Be
 }, X = "saltwatch-card", Xe = Ye.version;
 customElements.get(X) || customElements.define(X, Qe);
