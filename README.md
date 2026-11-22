@@ -2,7 +2,6 @@
 
 [![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
 [![Validate](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml/badge.svg)](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml)
-[![Open SaltWatch Card in Home Assistant Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/thomasgregg/saltwatch-card/blob/main/LICENSE)
 
 ### See your water-softener salt level at a glance
@@ -142,6 +141,8 @@ state instead.
 ## Installation
 
 ### Marketplace
+
+[![Open SaltWatch Card in Home Assistant Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 
 On Home Assistant 2026.11 and later, open **Settings → Marketplace** and
 search for **SaltWatch Card**. Install it, reload your dashboard, and add
