@@ -49,6 +49,18 @@ duplicate, or disabled card entities are reported explicitly rather than
 guessed from entity names. Other devices need only a numeric salt-level entity;
 all other mappings are optional.
 
+## Open the device web interface
+
+Turn on **Web interface → Enable shortcut** in the card editor. Click the
+tank in tank-only view or use the external-link icon in details-only view.
+The complete card offers both. Use the detected SaltWatch address or enter
+a full URL for any mapped device.
+
+The shortcut opens in your own browser by default. With **Chromium Link
+0.2.0 or later** configured and available to your administrator account, choose
+**Open with → Chromium Link** to open the device through Home Assistant while
+away. This requires the **Mincka Chromium app**. [Chromium Link setup](https://github.com/thomasgregg/chromium-link#installation) · [Chromium app](https://github.com/Mincka/ha-addons/tree/main/chromium)
+
 ## Responsive dashboard sizing
 
 The card uses automatic height by default. In a Sections dashboard, the Layout
@@ -64,5 +76,4 @@ editor keeps each view at a readable minimum:
 Changing the selected content or displayed values updates these resizing
 limits automatically, preventing clipped or overlapping layouts.
 
-See the repository README for installation, configuration, and all available
-display options.
+[Installation and card options](https://github.com/thomasgregg/saltwatch-card#installation) · [Web interface shortcut guide](https://github.com/thomasgregg/saltwatch-card#web-interface-shortcut)

@@ -40,12 +40,15 @@ export interface DeviceRegistryEntry {
   name_by_user?: string | null;
   area_id?: string | null;
   disabled_by?: string | null;
+  configuration_url?: string | null;
 }
 
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   entities: Record<string, EntityRegistryDisplayEntry>;
   devices: Record<string, DeviceRegistryEntry>;
+  panels?: Record<string, { config?: { _panel_custom?: { name?: string } } | null }>;
+  user?: { is_admin: boolean };
   callWS<T>(message: Record<string, unknown>): Promise<T>;
   language?: string;
   locale?: HomeAssistantInternationalization["locale"];
@@ -81,6 +84,9 @@ export interface SaltWatchCardConfig {
   display_mode?: SaltWatchDisplayMode;
   metric_mode?: SaltWatchMetricMode;
   section_order?: SaltWatchSectionOrder;
+  show_web_interface?: boolean;
+  web_interface_url?: string;
+  web_interface_open_with?: "browser" | "chromium_link";
   tap_action?: LovelaceActionConfig;
   hold_action?: LovelaceActionConfig;
   double_tap_action?: LovelaceActionConfig;

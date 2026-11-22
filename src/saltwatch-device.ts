@@ -56,6 +56,22 @@ export function saltWatchDataSource(config: SaltWatchCardConfig): SaltWatchDataS
   return configuredEntityId(config.level_entity) ? "entities" : "device";
 }
 
+export const CHROMIUM_LINK_PANEL = "chromium-link";
+
+export function hasChromiumLink(hass: HomeAssistant | undefined): boolean {
+  return hass?.user?.is_admin !== false &&
+    hass?.panels?.[CHROMIUM_LINK_PANEL]?.config?._panel_custom?.name === "chromium-link-panel";
+}
+
+export function normalizeWebInterfaceUrl(value: unknown): string | undefined {
+  if (typeof value !== "string" || !/^https?:\/\//i.test(value.trim())) return undefined;
+  try {
+    return new URL(value.trim()).href;
+  } catch {
+    return undefined;
+  }
+}
+
 export function configuredSaltWatchEntities(
   config: SaltWatchCardConfig,
 ): SaltWatchEntityMap | undefined {

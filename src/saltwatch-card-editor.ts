@@ -1,5 +1,7 @@
 import { getTranslations, resolveLanguage, resolveLocale } from "./localize";
 import {
+  hasChromiumLink,
+  normalizeWebInterfaceUrl,
   resolveSaltWatchEntries,
   saltWatchDataSource,
   saltWatchRoleLabel,
@@ -14,6 +16,11 @@ import type {
 } from "./types";
 
 type EditorConfig = Omit<SaltWatchCardConfig, "type"> & { type?: string };
+type EditorForm = HTMLElement & Record<string, unknown>;
+interface FormOptions {
+  helpers?: Record<string, string>;
+  onChange?: (value: Partial<EditorConfig>, form: EditorForm) => void;
+}
 const SUPPORTED_ACTIONS = ["more-info", "toggle", "navigate", "url", "perform-action", "assist", "none"];
 
 function escapeAttribute(value: string): string {
@@ -169,6 +176,7 @@ export class SaltWatchCardEditor extends HTMLElement {
   private hassRenderKey(): string {
     if (!this._config) return "";
     const source = saltWatchDataSource(this._config as SaltWatchCardConfig);
+    const openWithAvailable = this._config.show_web_interface === true && hasChromiumLink(this._hass);
     if (source === "entities") {
       const configuredIds = [
         this._config.level_entity,
@@ -180,13 +188,14 @@ export class SaltWatchCardEditor extends HTMLElement {
       ];
       return [
         source,
+        openWithAvailable,
         ...configuredIds.map((entityId) => `${entityId ?? ""}:${Boolean(entityId && this._hass?.states[entityId])}`),
       ].join("|");
     }
     const resolution = this._config.device_id
       ? this.deviceResolutions.get(this._config.device_id)
       : undefined;
-    return `${source}|${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
+    return `${source}|${openWithAvailable}|${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
   }
 
   private updateFormHass(): void {
@@ -224,6 +233,10 @@ export class SaltWatchCardEditor extends HTMLElement {
     const config = this._config;
     const source = saltWatchDataSource(config as SaltWatchCardConfig);
     const automaticSource = source === "device";
+    const webInterfaceEnabled = config.show_web_interface === true;
+    const showOpenWith = webInterfaceEnabled && hasChromiumLink(this._hass);
+    const chromiumHelp = showOpenWith && config.web_interface_open_with === "chromium_link";
+    const addressHelp = automaticSource ? copy.webInterfaceAutomaticHelp : copy.webInterfaceManualHelp;
     const resolution = automaticSource && config.device_id
       ? this.deviceResolutions.get(config.device_id)
       : undefined;
@@ -358,9 +371,21 @@ export class SaltWatchCardEditor extends HTMLElement {
 
         ${showDetailsControls ? `<section class="section compact-section">
           <h3>${copy.visible}</h3>
-          ${this.toggle("show_status", copy.status, copy.statusHelp, config.show_status !== false)}
-          ${this.toggle("show_low_marker", copy.marker, copy.markerHelp, config.show_low_marker !== false)}
+          <div id="visible-elements-form"></div>
         </section>` : ""}
+
+        <section class="section web-interface-settings">
+          <h3>${copy.webInterface}</h3>
+          <div id="web-interface-toggle"></div>
+          ${showOpenWith ? `<div class="web-interface-field"${chromiumHelp ? ' role="group" aria-describedby="web-interface-chromium-help"' : ""}>
+            <div id="web-interface-options"></div>
+            ${chromiumHelp ? `<ha-input-helper-text id="web-interface-chromium-help">${escapeAttribute(copy.webInterfaceChromiumHelp)}</ha-input-helper-text>` : ""}
+          </div>` : ""}
+          ${webInterfaceEnabled ? `<div class="web-interface-field" role="group" aria-describedby="web-interface-address-help">
+            <div id="web-interface-address"></div>
+            <ha-input-helper-text id="web-interface-address-help">${escapeAttribute(addressHelp)}</ha-input-helper-text>
+          </div>` : ""}
+        </section>
 
         <details class="fold" id="actions" ${this.actionsOpen ? "open" : ""}>
           <summary><span><strong>${copy.actions}</strong><small>${copy.actionsHelp}</small></span><span class="chevron">⌄</span></summary>
@@ -395,11 +420,58 @@ export class SaltWatchCardEditor extends HTMLElement {
       });
     }
 
+    this.setupForm("visible-elements-form", [
+      { name: "show_status", selector: { boolean: {} } },
+      { name: "show_low_marker", selector: { boolean: {} } },
+    ], {
+      show_status: config.show_status !== false,
+      show_low_marker: config.show_low_marker !== false,
+    }, {
+      show_status: copy.status,
+      show_low_marker: copy.marker,
+    }, {
+      helpers: { show_status: copy.statusHelp, show_low_marker: copy.markerHelp },
+    });
+
     this.setupForm("actions-form", [
       { name: "tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "more-info" } } },
       { name: "hold_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } } },
       { name: "double_tap_action", selector: { ui_action: { actions: SUPPORTED_ACTIONS, default_action: "none" } } },
     ], config, { tap_action: copy.tap, hold_action: copy.hold, double_tap_action: copy.doubleTap });
+
+    this.setupForm("web-interface-toggle", [
+      { name: "show_web_interface", selector: { boolean: {} } },
+    ], { show_web_interface: webInterfaceEnabled }, {
+      show_web_interface: copy.showWebInterface,
+    }, { helpers: { show_web_interface: copy.showWebInterfaceHelp } });
+
+    this.setupForm("web-interface-options", [{
+      name: "web_interface_open_with",
+      required: true,
+      selector: { select: { mode: "dropdown", options: [
+        { value: "browser", label: copy.webInterfaceBrowser },
+        { value: "chromium_link", label: "Chromium Link" },
+      ] } },
+    }], { web_interface_open_with: config.web_interface_open_with ?? "browser" }, {
+      web_interface_open_with: copy.webInterfaceOpenWith,
+    });
+    this.setupForm("web-interface-address", [
+      { name: "web_interface_url", selector: { text: { type: "url" } } },
+    ], { web_interface_url: config.web_interface_url }, {
+      web_interface_url: copy.webInterfaceUrl,
+    }, {
+      onChange: (value, form) => {
+        const url = value.web_interface_url?.trim();
+        if (url && !normalizeWebInterfaceUrl(url)) {
+          form.error = { web_interface_url: copy.invalidWebInterfaceUrl };
+          return;
+        }
+        form.error = undefined;
+        if ((url || undefined) !== this._config?.web_interface_url) {
+          this.updateConfig({ web_interface_url: url || undefined }, false);
+        }
+      },
+    });
 
     this.shadowRoot.querySelectorAll<HTMLButtonElement>("button[data-field]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -414,9 +486,6 @@ export class SaltWatchCardEditor extends HTMLElement {
         this.updateConfig({ [field]: value } as Partial<EditorConfig>);
       });
     });
-    this.shadowRoot.querySelectorAll<HTMLInputElement>("input[data-field]").forEach((input) => {
-      input.addEventListener("change", () => this.updateConfig({ [input.dataset.field!]: input.checked }));
-    });
     this.shadowRoot.querySelector<HTMLDetailsElement>("#actions")?.addEventListener("toggle", (event) => {
       this.actionsOpen = (event.currentTarget as HTMLDetailsElement).open;
     });
@@ -430,18 +499,23 @@ export class SaltWatchCardEditor extends HTMLElement {
     schema: Array<Record<string, unknown>>,
     data: Record<string, unknown>,
     labels: Record<string, string>,
+    options: FormOptions = {},
   ): void {
     const host = this.shadowRoot?.querySelector<HTMLElement>(`#${hostId}`);
     if (!host) return;
-    const form = document.createElement("ha-form") as HTMLElement & Record<string, unknown>;
+    const form = document.createElement("ha-form") as EditorForm;
     form.hass = this._hass;
     form.data = data;
     form.schema = schema;
     form.computeLabel = (item: { name: string }) => labels[item.name] ?? item.name;
+    if (options.helpers) {
+      form.computeHelper = (item: { name: string }) => options.helpers?.[item.name];
+    }
     form.addEventListener("value-changed", (event) => {
       const value = (event as CustomEvent<{ value?: Partial<EditorConfig> }>).detail?.value;
       if (!value) return;
-      this.updateConfig(value);
+      if (options.onChange) options.onChange(value, form);
+      else this.updateConfig(value);
     });
     host.append(form);
   }
@@ -468,10 +542,6 @@ export class SaltWatchCardEditor extends HTMLElement {
   private segmentButton(field: string, value: string, label: string, selected: string): string {
     const active = value === selected;
     return `<button type="button" class="segment${active ? " selected" : ""}" data-field="${field}" data-value="${value}" aria-pressed="${active}">${escapeAttribute(label)}</button>`;
-  }
-
-  private toggle(field: string, label: string, helper: string, checked: boolean): string {
-    return `<label class="toggle-row"><span><strong>${escapeAttribute(label)}</strong><small>${escapeAttribute(helper)}</small></span><span class="switch"><input type="checkbox" data-field="${field}" ${checked ? "checked" : ""}><i></i></span></label>`;
   }
 
   private styles(): string {
@@ -512,15 +582,6 @@ export class SaltWatchCardEditor extends HTMLElement {
       .segment { min-height:38px; padding:7px; border:0; border-radius:8px; color:var(--secondary-text-color); background:transparent; cursor:pointer; font-size:13px; }
       .segment.selected { color:var(--primary-text-color); background:var(--card-background-color,#fff); box-shadow:0 1px 3px rgba(0,0,0,.16); font-weight:600; }
       .compact-section h3 { margin-bottom:12px; }
-      .toggle-row { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:9px 0; cursor:pointer; }
-      .toggle-row+ .toggle-row { border-top:1px solid color-mix(in srgb,var(--divider-color,#ddd) 60%,transparent); }
-      .toggle-row>span:first-child { display:grid; gap:2px; }
-      .toggle-row strong { font-size:14px; font-weight:500; }
-      .switch { position:relative; flex:0 0 40px; width:40px; height:24px; }
-      .switch input { position:absolute; opacity:0; inset:0; }
-      .switch i { display:block; width:40px; height:24px; border-radius:14px; background:var(--disabled-color,#9e9e9e); transition:.15s; }
-      .switch i::after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); transition:.15s; }
-      .switch input:checked+i { background:var(--sw-accent); }.switch input:checked+i::after { transform:translateX(16px); }
       .fold { padding:0; overflow:hidden; }
       summary { min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:13px 16px; cursor:pointer; list-style:none; }
       summary::-webkit-details-marker { display:none; }
@@ -528,7 +589,11 @@ export class SaltWatchCardEditor extends HTMLElement {
       summary strong { font-size:14px; }
       .chevron { font-size:20px; transform:rotate(0); transition:.15s; }
       details[open] .chevron { transform:rotate(180deg); }
-      .fold-content { padding:2px 16px 16px; border-top:1px solid var(--divider-color,#ddd); }
+      .fold-content { display:grid; gap:16px; padding:16px; border-top:1px solid var(--divider-color,#ddd); }
+      .web-interface-settings { display:grid; gap:var(--ha-space-3,12px); }
+      .web-interface-settings h3 { margin:0; }
+      .web-interface-field ha-input-helper-text { display:block; margin-block-start:var(--ha-space-2,8px); }
+      #web-interface-address { --ha-input-padding-bottom:0; }
       .mapping-fold { margin-top:10px; border-top:1px solid var(--divider-color,#ddd); }
       .mapping-fold summary { min-height:54px; padding:11px 2px; }
       .mapping-content { padding:2px 0 0; }

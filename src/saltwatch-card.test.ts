@@ -5,6 +5,9 @@ import { resolveSaltWatchDevice } from "./saltwatch-device";
 import type { EntityRegistryEntry, HassEntity, HomeAssistant, SaltWatchCardConfig } from "./types";
 
 const DEVICE_ID = "saltwatch-device";
+const CHROMIUM_LINK_PANELS: NonNullable<HomeAssistant["panels"]> = {
+  "chromium-link": { config: { _panel_custom: { name: "chromium-link-panel" } } },
+};
 
 const makeEntity = (entityId: string, state: string): HassEntity => ({
   entity_id: entityId,
@@ -153,6 +156,86 @@ describe("SaltWatchCard", () => {
     expect(card.shadowRoot?.querySelector(".tank")?.getAttribute("aria-label")).toBe(
       "Estimated salt level: 62%",
     );
+  });
+
+  it("enables the shortcut only with an explicit setting and a valid URL", () => {
+    const automaticUrl = "http://saltwatch-device.local/";
+    const hass = makeHass();
+    hass.devices[DEVICE_ID]!.configuration_url = automaticUrl;
+    card.hass = hass;
+    const icon = () => card.shadowRoot?.querySelector(".web-interface-link");
+    const tank = () => card.shadowRoot?.querySelector(".tank-web-interface");
+
+    expect(icon()).toBeNull();
+    card.setConfig({ ...config, show_web_interface: true });
+    expect(icon()?.getAttribute("href")).toBe(automaticUrl);
+    expect(tank()?.getAttribute("href")).toBe(automaticUrl);
+    expect(icon()?.hasAttribute("title")).toBe(false);
+
+    const updatedUrl = "http://saltwatch-device-new.local/";
+    card.hass = { ...hass, devices: { [DEVICE_ID]: { ...hass.devices[DEVICE_ID]!, configuration_url: updatedUrl } } };
+    expect(icon()?.getAttribute("href")).toBe(updatedUrl);
+    card.setConfig({ ...config, show_web_interface: true, web_interface_url: "javascript:alert(1)" });
+    expect(icon()).toBeNull();
+    expect(tank()).toBeNull();
+  });
+
+  it("uses a manual shortcut on mapped cards and only renders the controls for the selected layout", () => {
+    const mappedConfig: SaltWatchCardConfig = {
+      type: config.type,
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+      show_web_interface: true,
+    };
+    card.hass = makeCustomHass("unavailable");
+    card.setConfig(mappedConfig);
+    expect(card.shadowRoot?.querySelector(".web-interface-link")).toBeNull();
+
+    const url = "https://saltwatch.example.test/device?location=utility&view=maintenance";
+    card.setConfig({ ...mappedConfig, display_mode: "tank", web_interface_url: url });
+    expect(card.shadowRoot?.querySelector(".web-interface-link")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".tank-web-interface")?.getAttribute("href")).toBe(url);
+
+    card.setConfig({ ...mappedConfig, display_mode: "details", show_status: false, web_interface_url: url });
+    expect(card.shadowRoot?.querySelector(".tank-web-interface")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".status")).toBeNull();
+    expect(card.shadowRoot?.querySelector(".web-interface-link")?.getAttribute("href")).toBe(url);
+  });
+
+  it("sends either shortcut through Home Assistant Navigate when Chromium Link is selected", () => {
+    const url = "https://saltwatch.example.test/service?a=b%2Bc&mode=advanced#status";
+    const listener = vi.fn();
+    card.addEventListener("hass-action", listener);
+    card.setConfig({
+      ...config,
+      show_web_interface: true,
+      web_interface_url: url,
+      web_interface_open_with: "chromium_link",
+      tap_action: { action: "none" },
+    });
+
+    const icon = () => card.shadowRoot?.querySelector(".web-interface-link");
+    expect(icon()?.getAttribute("href")).toBe(url);
+
+    const hass = card.hass!;
+    card.hass = { ...hass, panels: CHROMIUM_LINK_PANELS };
+    const navigationPath = `/chromium-link?url=${encodeURIComponent(url)}`;
+    const targets = card.shadowRoot!.querySelectorAll(".web-interface-link,.tank-web-interface");
+    expect(targets).toHaveLength(2);
+    for (const target of targets) {
+      const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+      expect(target.getAttribute("href")).toBe(navigationPath);
+      expect(target.hasAttribute("target")).toBe(false);
+      expect(target.dispatchEvent(click)).toBe(false);
+    }
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener.mock.calls[0]?.[0].detail).toEqual({
+      action: "tap",
+      config: { tap_action: { action: "navigate", navigation_path: navigationPath } },
+    });
+    card.hass = { ...hass, panels: CHROMIUM_LINK_PANELS, user: { is_admin: false } };
+    expect(icon()?.getAttribute("href")).toBe(url);
+    expect(icon()?.getAttribute("target")).toBe("_blank");
   });
 
   it("inherits Home Assistant surface and state theme colors", () => {
@@ -333,12 +416,13 @@ describe("SaltWatchCard", () => {
     const actions = form.schema.find((item) => item.type === "expandable" && item.schema?.some(
       (field) => field.name === "tap_action",
     ));
-    expect(actions?.schema?.map((item) => item.name)).toEqual([
+    expect(actions?.schema?.filter((item) => item.selector?.ui_action).map((item) => item.name)).toEqual([
       "tap_action",
       "hold_action",
       "double_tap_action",
     ]);
-    expect(actions?.schema?.every((item) => item.selector?.ui_action)).toBe(true);
+    const webInterface = form.schema.find((item) => item.schema?.some((field) => field.name === "show_web_interface"));
+    expect(webInterface?.schema?.map((item) => item.name)).toEqual(["show_web_interface", "web_interface_url"]);
   });
 
   it("subscribes to current HA state context and unsubscribes on disconnect", () => {
@@ -351,8 +435,6 @@ describe("SaltWatchCard", () => {
     const hass = makeHass();
     const initialShell = card.shadowRoot?.querySelector(".card-shell");
     const initialTank = card.shadowRoot?.querySelector(".tank");
-    const initialSaltLayer = card.shadowRoot?.querySelector(".tank-salt");
-    const initialOverlayLayer = card.shadowRoot?.querySelector(".tank-overlay");
     const initialPolymerFilter = card.shadowRoot?.querySelector("#polymer");
     const initialSaltShadowFilter = card.shadowRoot?.querySelector("#salt-shadow");
     const initialSaltFill = card.shadowRoot?.querySelector(".salt-fill");
@@ -367,8 +449,6 @@ describe("SaltWatchCard", () => {
     pushStates(makeHass("63"));
     expect(card.shadowRoot?.querySelector(".card-shell")).toBe(initialShell);
     expect(card.shadowRoot?.querySelector(".tank")).toBe(initialTank);
-    expect(card.shadowRoot?.querySelector(".tank-salt")).toBe(initialSaltLayer);
-    expect(card.shadowRoot?.querySelector(".tank-overlay")).toBe(initialOverlayLayer);
     expect(card.shadowRoot?.querySelector("#polymer")).toBe(initialPolymerFilter);
     expect(card.shadowRoot?.querySelector("#salt-shadow")).toBe(initialSaltShadowFilter);
     expect(card.shadowRoot?.querySelector(".salt-fill")).toBe(initialSaltFill);
@@ -747,6 +827,43 @@ describe("SaltWatchCard", () => {
     await vi.waitFor(() => expect(listener).toHaveBeenCalled());
     expect((listener.mock.calls.at(-1)?.[0] as CustomEvent).detail.config.device_id).toBe(DEVICE_ID);
     expect(editor.shadowRoot?.querySelector(".notice.success")).not.toBeNull();
+  });
+
+  it("shows the Chromium Link choice only while its launcher is available", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) {
+      customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    }
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    const hass = makeCustomHass();
+    editor.setConfig({
+      source: "entities",
+      level_entity: "sensor.greenline_salt_level",
+      show_web_interface: true,
+      web_interface_open_with: "chromium_link",
+    });
+    editor.hass = hass;
+
+    const visibleElements = editor.shadowRoot?.querySelector("#visible-elements-form ha-form") as
+      HTMLElement & { schema: unknown[]; data: Record<string, boolean> };
+    expect(visibleElements.schema).toEqual([
+      { name: "show_status", selector: { boolean: {} } },
+      { name: "show_low_marker", selector: { boolean: {} } },
+    ]);
+    expect(visibleElements.data).toEqual({ show_status: true, show_low_marker: true });
+
+    const openWith = () => editor.shadowRoot?.querySelector("#web-interface-options ha-form");
+    expect(openWith()).toBeNull();
+    expect(editor.shadowRoot?.querySelector("#actions")?.previousElementSibling?.textContent).toContain("Web interface");
+    expect(editor.shadowRoot?.querySelector("#web-interface-toggle ha-form")).not.toBeNull();
+    expect(editor.shadowRoot?.querySelector("#web-interface-address ha-form")).not.toBeNull();
+
+    editor.hass = { ...hass, panels: CHROMIUM_LINK_PANELS };
+    expect(openWith()).not.toBeNull();
+    expect(editor.shadowRoot?.querySelectorAll(".web-interface-field ha-input-helper-text")).toHaveLength(2);
+
+    editor.hass = hass;
+    expect(openWith()).toBeNull();
+    expect(editor.shadowRoot?.querySelectorAll(".web-interface-field ha-input-helper-text")).toHaveLength(1);
   });
 
   it("configures another device without SaltWatch discovery", async () => {

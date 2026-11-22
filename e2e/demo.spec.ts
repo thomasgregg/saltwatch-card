@@ -562,6 +562,9 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
     { displayMode: "details", width: 220, height: 150 },
     { displayMode: "tank", width: 360, height: 180 },
     { displayMode: "both", width: 720, height: 250 },
+    { displayMode: "both", width: 152, height: 248 },
+    { displayMode: "both", width: 375, height: 440, shortcut: true },
+    { displayMode: "tank", width: 190, height: 624, shortcut: true },
   ];
 
   for (const current of cases) {
@@ -578,6 +581,8 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
         show_status: true,
         show_low_marker: true,
         grid_options: { columns: 12, rows: 2 },
+        show_web_interface: options.shortcut,
+        web_interface_url: "http://saltwatch.example.test/",
       });
     }, current);
 
@@ -591,7 +596,12 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
         root.querySelector<HTMLElement>(".forecast-detail"),
         root.querySelector<HTMLElement>(".threshold-summary"),
       ].filter((item): item is HTMLElement => Boolean(item));
+      const tankPanel = root.querySelector(".tank-panel")?.getBoundingClientRect();
+      const glass = root.querySelector(".tank-glass")?.getBoundingClientRect();
       return {
+        tankUnclipped: !tankPanel || Boolean(glass && glass.width > 0 && glass.height > 0 &&
+          glass.left >= tankPanel.left - 1 && glass.right <= tankPanel.right + 1 &&
+          glass.top >= tankPanel.top - 1 && glass.bottom <= tankPanel.bottom + 1),
         fixedHeight: root.querySelector("ha-card")!.classList.contains("fixed-height"),
         height: surface.height,
         contentInside: content.every((item) => {
@@ -604,6 +614,7 @@ test("keeps every fixed-row card mode inside its assigned height", async ({ page
     expect(result.fixedHeight).toBe(true);
     expect(result.height).toBeCloseTo(current.height, 0);
     expect(result.contentInside).toBe(true);
+    expect(result.tankUnclipped).toBe(true);
   }
 });
 

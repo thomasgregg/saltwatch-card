@@ -2,7 +2,7 @@
 
 [![Latest release](https://img.shields.io/github/v/release/thomasgregg/saltwatch-card?display_name=tag&sort=semver)](https://github.com/thomasgregg/saltwatch-card/releases/latest)
 [![Validate](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml/badge.svg)](https://github.com/thomasgregg/saltwatch-card/actions/workflows/ci.yml)
-[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
+[![Open SaltWatch Card in Home Assistant Marketplace](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/thomasgregg/saltwatch-card/blob/main/LICENSE)
 
 ### See your water-softener salt level at a glance
@@ -28,9 +28,12 @@ Assistant entities in the graphical editor.
 - [Other water softeners](#other-water-softeners)
 - [What the states mean](#what-the-states-mean)
 - [Installation](#installation)
+  - [Marketplace](#marketplace)
   - [HACS](#hacs)
   - [Manual installation](#manual-installation)
 - [Graphical editor](#graphical-editor)
+  - [Web interface shortcut](#web-interface-shortcut)
+    - [Open remotely with Chromium Link](#open-remotely-with-chromium-link)
   - [Dashboard sizing](#dashboard-sizing)
 - [Card options](#card-options)
 - [Home Assistant friendly by design](#home-assistant-friendly-by-design)
@@ -48,6 +51,8 @@ Assistant entities in the graphical editor.
   concise reason or progress such as `4 of 7 days collected`.
 - **Spot problems quickly.** Good, low-salt, calibration, and sensor-fault
   states have clear labels and familiar Home Assistant colors.
+- **Open the device from your dashboard.** Enable an optional shortcut to the
+  device's web interface, with Chromium Link support for remote access.
 - **Looks at home in Home Assistant.** The card follows the active light, dark,
   or custom theme and uses native Home Assistant card styling.
 - **Fits your dashboard.** It adapts from a wide two-column card to a clean
@@ -136,24 +141,19 @@ state instead.
 
 ## Installation
 
+### Marketplace
+
+On Home Assistant 2026.11 and later, open **Settings → Marketplace** and
+search for **SaltWatch Card**. Install it, reload your dashboard, and add
+**SaltWatch Card** from the card picker. Home Assistant migrates existing HACS
+installs to the Marketplace. [Home Assistant Marketplace guide](https://www.home-assistant.io/integrations/marketplace/)
+
 ### HACS
 
-[![Open your Home Assistant instance and open SaltWatch Card in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=thomasgregg&repository=saltwatch-card&category=plugin)
-
-SaltWatch Card is included in the HACS default repository list. Use the button
-above or:
-
-1. Open **HACS** and search for **SaltWatch Card**.
-2. Download the card.
-3. Reload your Home Assistant dashboard.
-4. Add **SaltWatch Card** from the dashboard card picker.
-
-No custom repository setup is needed. Existing installations continue to receive
-updates through HACS without reinstalling.
-
-The graphical editor lists detected SaltWatch devices, keeps the everyday
-layout choices up front, and groups tap, hold, and double-tap behaviour in a
-focused Actions section.
+On Home Assistant 2026.10 and earlier, search the HACS default catalog for
+**SaltWatch Card** and download it. Reload your dashboard and add
+**SaltWatch Card** from the card picker. Use HACS to update the card on these
+versions.
 
 ### Manual installation
 
@@ -168,8 +168,9 @@ focused Actions section.
 5. Reload the browser, then add **SaltWatch Card** from the dashboard card
    picker.
 
-The `/config/www/` directory is exposed by Home Assistant under the `/local/`
-URL path, which is why the filesystem and resource paths are different.
+The `/config/www/` directory is exposed under the `/local/` URL path. When
+updating a manual install, replace the JavaScript file and update the existing
+resource URL with a version query such as `?v=0.6.4` so clients load the new build.
 
 ## Graphical editor
 
@@ -188,9 +189,64 @@ threshold, status, and forecast mappings are optional.
 
 Choose the complete, tank-only, or details-only layout visually. In the
 complete layout, you can place the tank or the details first. The editor also
-lets you choose the displayed values and visible elements without touching
-YAML. Tap, hold, and double-tap behavior stays organized in the separate
-**Actions** section.
+lets you choose the displayed values and visible elements with native Home
+Assistant controls. Device access has its own **Web interface** section.
+Tap, hold, and double-tap behavior is configured under **Actions**.
+
+### Web interface shortcut
+
+The shortcut is off by default. To turn it on, edit the card and select
+**Web interface → Enable shortcut**.
+
+- With **SaltWatch device** as the data source, leave **Web interface URL**
+  blank to use the selected device's address from Home Assistant.
+- Enter a full `http://` or `https://` address to override the detected address,
+  or when the card uses **Other device**. The shortcut appears when a valid
+  address is available.
+
+| Card layout | How to open the web interface |
+| --- | --- |
+| **Tank only** | Click or tap the tank. |
+| **Details only** | Use the external-link icon at the top left of the details panel. |
+| **Tank and details** | Click the tank or use the single icon in the details panel. |
+
+The icon aligns with the status and shows a round hover highlight. Both
+shortcut targets support keyboard navigation. Other areas of the card use
+the configured tap, hold, and double-tap actions.
+
+By default, the web interface opens in a new tab on the phone or computer
+viewing the dashboard. That device needs to be able to reach the web address.
+
+#### Open remotely with Chromium Link
+
+Chromium Link opens SaltWatch in a Chromium app running on your Home Assistant
+host. This works while you are away if you can reach your Home Assistant
+dashboard and the host can reach the device.
+
+1. Install and configure **Mincka Chromium 1.7.0 or later** on Home Assistant
+   OS. The setup guide covers enabling remote debugging and leaving its host
+   port unmapped. [Mincka Chromium app](https://github.com/Mincka/ha-addons/tree/main/chromium) · [Chromium app configuration](https://github.com/thomasgregg/chromium-link#1-configure-the-chromium-add-on)
+2. Install **Chromium Link 0.2.0 or later**, then add it under **Settings →
+   Devices & services**. Chromium Link requires Home Assistant OS 2026.11 or
+   later and an administrator account. [Chromium Link installation](https://github.com/thomasgregg/chromium-link#installation)
+3. As an administrator, edit **SaltWatch Card → Web interface** and choose
+   **Open with → Chromium Link**. This choice appears when the integration has
+   registered its launcher. If it becomes unavailable, the shortcut opens in
+   the current browser until the launcher returns.
+
+If Chromium cannot resolve a device's `.local` address, try the device's local
+IP address in **Web interface URL**. You can test the address in the Chromium
+app itself. [Chromium Link troubleshooting](https://github.com/thomasgregg/chromium-link#troubleshooting)
+
+For YAML, add the following to your existing card configuration. Leave out
+`web_interface_open_with` for direct browser access and `web_interface_url`
+to use the selected SaltWatch device's address.
+
+```yaml
+show_web_interface: true
+web_interface_open_with: chromium_link
+web_interface_url: http://saltwatch-a1b2c3.local/
+```
 
 ### Dashboard sizing
 
@@ -227,6 +283,9 @@ labels and values legible and prevent clipped or overlapping layouts.
 | `display_mode` | Shows the complete card (`both`), only the tank (`tank`), or only the values and status (`details`). | `both` |
 | `metric_mode` | Shows the current level (`level`), refill forecast (`forecast`), or both values side by side (`both`). | `level` |
 | `section_order` | Places the tank first (`tank-first`) or the details first (`details-first`) in the complete layout. | `tank-first` |
+| `show_web_interface` | Enables the web interface shortcut in the selected layout. | `false` |
+| `web_interface_open_with` | Opens the device in the current browser (`browser`) or through the registered Chromium Link launcher (`chromium_link`). Falls back to the current browser when the launcher is unavailable. | `browser` |
+| `web_interface_url` | Sets the full address for the shortcut. An empty value uses the selected SaltWatch device’s address, when available. | Optional |
 | `tap_action` | Chooses what happens when the card is tapped. | `more-info` |
 | `hold_action` | Chooses what happens when the card is held. | `none` |
 | `double_tap_action` | Chooses what happens when the card is double-tapped. | `none` |
