@@ -708,7 +708,7 @@ export class SaltWatchCard extends HTMLElement {
         ? localize("lowThresholdReached", locale)
         : localize(forecastDays === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", locale);
     const levelMetric = `<div class="metric level-metric">
-      <div class="metric-value level">${displayLevel}</div>
+      <div class="metric-value level${metricMode === "level" && this.config.decimals ? ` decimals-${this.config.decimals}` : ""}">${displayLevel}</div>
       <div class="metric-label level-label">${escapeHtml(metricMode === "both" ? localize("saltLevel", locale) : localize("estimatedLevel", locale))}</div>
     </div>`;
     const forecastDetailMarkup = forecastDetail
@@ -1460,6 +1460,10 @@ export class SaltWatchCard extends HTMLElement {
         .fixed-height .metrics-both.has-forecast-detail { grid-template-areas:"level divider forecast" ". . detail"; column-gap:clamp(4px,2cqw,8px); row-gap:0; }
         .fixed-height .metrics-both.has-forecast-detail > .metric-divider { position:absolute; margin-block:0; }
       }
+      .metrics-level .level.decimals-1 { font-size:min(158px,24cqw); }
+      .metrics-level .level.decimals-2 { font-size:min(158px,21cqw); }
+      .fixed-height .metrics-level .level.decimals-1 { font-size:min(112px,24cqw,25cqh); }
+      .fixed-height .metrics-level .level.decimals-2 { font-size:min(112px,21cqw,25cqh); }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
         @keyframes salt-settle { from { transform:translateY(-3px); opacity:0; } }

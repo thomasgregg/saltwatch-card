@@ -938,14 +938,14 @@ class Ze extends HTMLElement {
       this.shadowRoot.innerHTML = `<style>${this.styles()}</style><ha-card><div class="loading">${p(r("noCurrentReading", t))}</div></ha-card>`;
       return;
     }
-    const b = H(this.states, n.status), u = s === void 0 || c === void 0 ? void 0 : me(s), m = Pe(b?.state, u, c ?? 0), v = m.translationKey ? r(m.translationKey, t) : m.label, S = this.config.display_mode ?? "both", f = this.config.metric_mode ?? "level", C = S !== "details", z = S !== "tank", F = c !== void 0 && this.config.show_low_marker !== !1, L = typeof this.config.grid_options?.rows == "number", E = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), D = p(r("openWebInterface", t)), R = this.opensWithChromiumLink(), w = d ? R ? `href="${ge}${p(encodeURIComponent(d))}" aria-label="${D}"` : `href="${p(d)}" target="_blank" rel="noopener" aria-label="${D}"` : "", A = u === void 0 ? "—" : K(u, e, f === "level" ? this.config.decimals : 0), q = u === void 0 ? r("noCurrentReading", t) : A, T = te(H(this.states, n.forecast)), x = T === void 0 || T < 0 ? void 0 : Math.round(T), h = x === void 0 ? "—" : Ue(x, e), W = H(this.states, n.forecastStatus)?.state?.trim().toLowerCase() ?? "", Le = H(this.states, n.forecastDetails)?.state, _ = x === void 0 && W !== "available" && W !== "low salt" ? Qe(Le, t) : x === void 0 ? r("forecastUnavailable", t) : void 0, $ = r(x === void 0 ? "forecast" : x === 0 ? "lowThresholdReached" : x === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), se = `<div class="metric level-metric">
-      <div class="metric-value level">${A}</div>
+    const b = H(this.states, n.status), u = s === void 0 || c === void 0 ? void 0 : me(s), m = Pe(b?.state, u, c ?? 0), v = m.translationKey ? r(m.translationKey, t) : m.label, S = this.config.display_mode ?? "both", f = this.config.metric_mode ?? "level", C = S !== "details", z = S !== "tank", F = c !== void 0 && this.config.show_low_marker !== !1, L = typeof this.config.grid_options?.rows == "number", E = this.hasAction("tap") || this.hasAction("hold") || this.hasAction("double_tap"), q = p(r("openWebInterface", t)), D = this.opensWithChromiumLink(), w = d ? D ? `href="${ge}${p(encodeURIComponent(d))}" aria-label="${q}"` : `href="${p(d)}" target="_blank" rel="noopener" aria-label="${q}"` : "", A = u === void 0 ? "—" : K(u, e, f === "level" ? this.config.decimals : 0), R = u === void 0 ? r("noCurrentReading", t) : A, T = te(H(this.states, n.forecast)), x = T === void 0 || T < 0 ? void 0 : Math.round(T), h = x === void 0 ? "—" : Ue(x, e), W = H(this.states, n.forecastStatus)?.state?.trim().toLowerCase() ?? "", Le = H(this.states, n.forecastDetails)?.state, _ = x === void 0 && W !== "available" && W !== "low salt" ? Qe(Le, t) : x === void 0 ? r("forecastUnavailable", t) : void 0, $ = r(x === void 0 ? "forecast" : x === 0 ? "lowThresholdReached" : x === 1 ? "dayUntilLowSalt" : "daysUntilLowSalt", t), se = `<div class="metric level-metric">
+      <div class="metric-value level${f === "level" && this.config.decimals ? ` decimals-${this.config.decimals}` : ""}">${A}</div>
       <div class="metric-label level-label">${p(r(f === "both" ? "saltLevel" : "estimatedLevel", t))}</div>
     </div>`, oe = _ ? `<div class="forecast-detail">${p(_)}</div>` : "", le = `<div class="metric forecast-metric${x === void 0 ? " unavailable" : ""}">
       <div class="metric-value forecast-value">${x === void 0 ? '<span class="forecast-placeholder">—</span>' : h}</div>
       <div class="metric-label forecast-label">${p($)}</div>
       ${f === "both" ? "" : oe}
-    </div>`, ce = f === "both" ? oe : "", Te = !!ce, Ce = f === "both" ? `${se}<span class="metric-divider" aria-hidden="true"></span>${le}${ce}` : f === "forecast" ? le : se, de = x === void 0 ? `${$}: ${_}` : `${h} ${$}`, ze = f === "both" ? `${q}, ${de}` : f === "forecast" ? de : q, De = 132, O = 474, Re = O - De, g = u === void 0 ? O : O - u / 100 * Re, he = [
+    </div>`, ce = f === "both" ? oe : "", Te = !!ce, Ce = f === "both" ? `${se}<span class="metric-divider" aria-hidden="true"></span>${le}${ce}` : f === "forecast" ? le : se, de = x === void 0 ? `${$}: ${_}` : `${h} ${$}`, ze = f === "both" ? `${R}, ${de}` : f === "forecast" ? de : R, qe = 132, O = 474, De = O - qe, g = u === void 0 ? O : O - u / 100 * De, he = [
       `M96 ${(g + 2).toFixed(1)}`,
       `Q108 ${(g - 2).toFixed(1)} 120 ${(g - 3).toFixed(1)}`,
       `Q132 ${(g - 6).toFixed(1)} 145 ${(g - 4).toFixed(1)}`,
@@ -955,7 +955,7 @@ class Ze extends HTMLElement {
       `Q253 ${(g - 4).toFixed(1)} 270 ${(g - 2).toFixed(1)}`,
       `Q288 ${(g + 1).toFixed(1)} 305 ${(g - 1).toFixed(1)}`,
       `Q315 ${(g - 3).toFixed(1)} 324 ${(g + 1).toFixed(1)}`
-    ].join(" "), qe = [
+    ].join(" "), Re = [
       he,
       `L324 ${O}`,
       `L96 ${O}`,
@@ -966,7 +966,7 @@ class Ze extends HTMLElement {
         ${E && w ? `<button class="card-action" type="button" aria-label="${pe}"></button>` : ""}
         <div class="card-shell mode-${S} order-${this.config.section_order ?? "tank-first"}">
           ${C ? `<section class="tank-panel" aria-label="${p(r("tankLevelVisualization", t))}">
-            ${this.tankSvg(u, qe, he, g, c, m.tone, t, e, w)}
+            ${this.tankSvg(u, Re, he, g, c, m.tone, t, e, w)}
           </section>` : ""}
           ${z ? `<section class="content-panel${F ? "" : " without-threshold-summary"}">
             ${this.config.show_status || w ? `<header${w ? ' class="web-interface-header"' : ""}>
@@ -1080,10 +1080,10 @@ class Ze extends HTMLElement {
     if (![o, s].every(Number.isFinite) || !l) return;
     const c = e.getBoundingClientRect(), d = t.getBoundingClientRect(), b = n.getBoundingClientRect(), u = this.shadowRoot.querySelector(".tank-glass")?.getBoundingClientRect(), m = Number.parseFloat(getComputedStyle(t).paddingRight), v = Number.isFinite(m) ? m : 18, S = i.createSVGPoint();
     S.x = o, S.y = s;
-    const f = S.matrixTransform(l).x, C = Math.max(c.left, d.left) + v, z = Math.min(c.right, d.right) - v - b.width, F = u ? u.left - b.width - 8 : z, L = Math.min(z, F), E = L >= C ? Math.min(L, Math.max(f, C)) : C, D = i.createSVGPoint();
-    D.x = E, D.y = d.top;
-    const R = D.matrixTransform(l.inverse()).x;
-    n.setAttribute("transform", `translate(${R.toFixed(1)} ${s.toFixed(1)})`);
+    const f = S.matrixTransform(l).x, C = Math.max(c.left, d.left) + v, z = Math.min(c.right, d.right) - v - b.width, F = u ? u.left - b.width - 8 : z, L = Math.min(z, F), E = L >= C ? Math.min(L, Math.max(f, C)) : C, q = i.createSVGPoint();
+    q.x = E, q.y = d.top;
+    const D = q.matrixTransform(l.inverse()).x;
+    n.setAttribute("transform", `translate(${D.toFixed(1)} ${s.toFixed(1)})`);
   }
   actionConfig(e) {
     return this.config ? e === "tap" ? this.config.tap_action ?? B : e === "hold" ? this.config.hold_action ?? I : this.config.double_tap_action ?? I : I;
@@ -1159,9 +1159,9 @@ class Ze extends HTMLElement {
     </svg>`;
   }
   tankSvg(e, t, i, n, o, s, l, c, d) {
-    const b = Array.from({ length: 21 }, (D, R) => {
-      const w = 100 - R * 5, A = 474 - w / 100 * 342, q = w % 25 === 0, T = !q && w % 10 === 0, x = q ? 60 : T ? 67 : 71;
-      return `${q ? `<text x="52" y="${A + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${q ? "major" : T ? "medium" : "minor"}" d="M${x} ${A}H78"/>`;
+    const b = Array.from({ length: 21 }, (q, D) => {
+      const w = 100 - D * 5, A = 474 - w / 100 * 342, R = w % 25 === 0, T = !R && w % 10 === 0, x = R ? 60 : T ? 67 : 71;
+      return `${R ? `<text x="52" y="${A + 5}" text-anchor="end">${w}%</text>` : ""}<path class="${R ? "major" : T ? "medium" : "minor"}" d="M${x} ${A}H78"/>`;
     }).join(""), u = e === void 0, m = 474 - (o ?? 0) / 100 * 342, v = Math.max(134, Math.min(470, m)), S = r("lowBadge", l), f = l === "de" ? 72 : 54, C = 7, z = C - f, F = 324, L = (v - 15).toFixed(1), E = u ? r("noCurrentReading", l) : r("estimatedLevel", l) + `: ${K(e, c)}`;
     return `
       <svg class="tank" viewBox="-64 30 548 534" role="${d ? "group" : "img"}" aria-label="${p(E)}">
@@ -1441,6 +1441,10 @@ class Ze extends HTMLElement {
         .fixed-height .metrics-both.has-forecast-detail { grid-template-areas:"level divider forecast" ". . detail"; column-gap:clamp(4px,2cqw,8px); row-gap:0; }
         .fixed-height .metrics-both.has-forecast-detail > .metric-divider { position:absolute; margin-block:0; }
       }
+      .metrics-level .level.decimals-1 { font-size:min(158px,24cqw); }
+      .metrics-level .level.decimals-2 { font-size:min(158px,21cqw); }
+      .fixed-height .metrics-level .level.decimals-1 { font-size:min(112px,24cqw,25cqh); }
+      .fixed-height .metrics-level .level.decimals-2 { font-size:min(112px,21cqw,25cqh); }
       @media (prefers-reduced-motion:no-preference) {
         .salt-highlight { animation:salt-settle 500ms ease-out; transform-origin:center; }
         @keyframes salt-settle { from { transform:translateY(-3px); opacity:0; } }
@@ -1580,18 +1584,18 @@ class Be extends HTMLElement {
   }
   render() {
     if (!this.shadowRoot || !this._config) return;
-    const e = Ae(M(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", n = this._config.section_order ?? "tank-first", o = t !== "tank", s = this._config, l = k(s), c = l === "device", d = s.show_web_interface === !0, b = d && re(this._hass), u = b && s.web_interface_open_with === "chromium_link", m = c ? e.webInterfaceAutomaticHelp : e.webInterfaceManualHelp, v = c && s.device_id ? this.deviceResolutions.get(s.device_id) : void 0, S = !!(v?.entities && v.disabled.length === 0), f = s.level_entity?.trim(), C = !!f, z = !!(f && this._hass && !this._hass.states[f]), F = c ? S : C && !z, L = c || !!s.forecast_entity?.trim(), E = L ? i : "level", D = v ? [
+    const e = Ae(M(this.activeLanguage())), t = this._config.display_mode ?? "both", i = this._config.metric_mode ?? "level", n = this._config.section_order ?? "tank-first", o = t !== "tank", s = this._config, l = k(s), c = l === "device", d = s.show_web_interface === !0, b = d && re(this._hass), u = b && s.web_interface_open_with === "chromium_link", m = c ? e.webInterfaceAutomaticHelp : e.webInterfaceManualHelp, v = c && s.device_id ? this.deviceResolutions.get(s.device_id) : void 0, S = !!(v?.entities && v.disabled.length === 0), f = s.level_entity?.trim(), C = !!f, z = !!(f && this._hass && !this._hass.states[f]), F = c ? S : C && !z, L = c || !!s.forecast_entity?.trim(), E = L ? i : "level", q = v ? [
       ...v.missing.map(V),
       ...v.duplicates.map((h) => `${V(h)} (${e.duplicate})`),
       ...v.disabled.map((h) => `${V(h)} (${e.disabled})`)
-    ] : [], R = [...this.deviceResolutions.keys()].map((h) => ({
+    ] : [], D = [...this.deviceResolutions.keys()].map((h) => ({
       value: h,
       label: this.deviceLabel(h)
     })).sort((h, y) => h.label.localeCompare(y.label)), w = !!s.device_id, A = this.registryLoading ? { tone: "info", icon: "i", title: e.selectDeviceTitle, text: e.loadingDevices } : this.registryError ? { tone: "error", icon: "!", title: e.registryError, text: this.registryError } : w ? S ? { tone: "success", icon: "✓", title: e.detectedTitle, text: e.detectedText } : v ? {
       tone: "warning",
       icon: "!",
       title: e.incompleteDevice,
-      text: D.length > 0 ? D.join(", ") : e.incompleteDeviceHelp
+      text: q.length > 0 ? q.join(", ") : e.incompleteDeviceHelp
     } : {
       tone: "error",
       icon: "!",
@@ -1600,9 +1604,9 @@ class Be extends HTMLElement {
     } : {
       tone: "info",
       icon: "i",
-      title: R.length === 0 ? e.noDevicesTitle : e.selectDeviceTitle,
-      text: R.length === 0 ? e.noDevicesFound : e.selectDeviceHelp
-    }, q = f ? z ? {
+      title: D.length === 0 ? e.noDevicesTitle : e.selectDeviceTitle,
+      text: D.length === 0 ? e.noDevicesFound : e.selectDeviceHelp
+    }, R = f ? z ? {
       tone: "error",
       icon: "!",
       title: e.entityNotFound,
@@ -1617,7 +1621,7 @@ class Be extends HTMLElement {
       icon: "i",
       title: e.levelEntityRequiredTitle,
       text: e.levelEntityRequiredHelp
-    }, T = c ? A : q, x = [
+    }, T = c ? A : R, x = [
       { name: "level_entity", required: !0, selector: { entity: {} } },
       { name: "threshold_entity", selector: { entity: {} } },
       ...s.threshold_entity?.trim() ? [] : [{
@@ -1704,7 +1708,7 @@ class Be extends HTMLElement {
           <div class="fold-content" id="actions-form"></div>
         </details>` : ""}
       </div>`, c ? this.setupForm("device-form", [
-      { name: "device_id", required: !0, selector: { select: { mode: "dropdown", options: R } } }
+      { name: "device_id", required: !0, selector: { select: { mode: "dropdown", options: D } } }
     ], { device_id: s.device_id }, { device_id: e.saltWatchDevice }) : (this.setupForm("entity-form", x, {
       level_entity: s.level_entity,
       threshold_entity: s.threshold_entity,
