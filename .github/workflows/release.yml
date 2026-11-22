@@ -3,6 +3,12 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to verify or publish (for example v0.6.6)
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -10,8 +16,14 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
+      - name: Validate release tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]'
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -19,10 +31,10 @@ jobs:
       - run: npm ci
       - run: npm run check
       - name: Verify tag matches package version
-        run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
+        run: test "${RELEASE_TAG#v}" = "$(node -p "require('./package.json').version")"
       - name: Verify version-specific release notes
         run: |
-          notes=".github/release-notes/${GITHUB_REF_NAME}.md"
+          notes=".github/release-notes/${RELEASE_TAG}.md"
           test -s "$notes"
           if grep -Eiq '^[[:space:]]{0,3}#{1,6}[[:blank:]]+SaltWatch Card[[:blank:]]+v?[0-9]+[.][0-9]+[.][0-9]+' "$notes"; then
             echo "Remove the version heading from $notes. GitHub shows the version in the release title."
@@ -32,11 +44,31 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prerelease=()
-          if [[ "${GITHUB_REF_NAME#v}" == *-* ]]; then
-            prerelease=(--prerelease)
+          if gh release view "$RELEASE_TAG" --json assets > "$RUNNER_TEMP/saltwatch-release.json"; then
+            if jq -e '.assets[] | select(.name == "saltwatch-card.js")' "$RUNNER_TEMP/saltwatch-release.json" >/dev/null; then
+              asset_dir=$(mktemp -d)
+              gh release download "$RELEASE_TAG" --pattern saltwatch-card.js --dir "$asset_dir"
+              # A manually published asset can be the checked-in distribution.
+              # Verify against both source-controlled and freshly built bytes.
+              git show HEAD:dist/saltwatch-card.js > "$asset_dir/committed.js"
+              if cmp -s "$asset_dir/saltwatch-card.js" dist/saltwatch-card.js ||
+                 cmp -s "$asset_dir/saltwatch-card.js" "$asset_dir/committed.js"; then
+                echo "Release asset already exists and matches this tag."
+              else
+                echo "::error::Existing release asset differs from this tag; refusing to overwrite it."
+                exit 1
+              fi
+            else
+              gh release upload "$RELEASE_TAG" dist/saltwatch-card.js
+            fi
+          else
+            prerelease=()
+            if [[ "${RELEASE_TAG#v}" == *-* ]]; then
+              prerelease=(--prerelease)
+            fi
+            gh release create "$RELEASE_TAG" dist/saltwatch-card.js \
+              --verify-tag \
+              --notes-file ".github/release-notes/${RELEASE_TAG}.md" \
+              --title "SaltWatch Card $RELEASE_TAG" \
+              "${prerelease[@]}"
           fi
-          gh release create "$GITHUB_REF_NAME" dist/saltwatch-card.js \
-            --notes-file ".github/release-notes/${GITHUB_REF_NAME}.md" \
-            --title "SaltWatch Card $GITHUB_REF_NAME" \
-            "${prerelease[@]}"
