@@ -538,8 +538,13 @@ export class SaltWatchCard extends HTMLElement {
     if (key === this.resolutionKey && (this.resolution || this.resolutionError)) return;
     this.resolutionKey = key;
     const request = ++this.resolutionRequest;
-    this.resolvedEntities = undefined;
-    this.resolution = undefined;
+    // Revalidate a working same-device mapping in the background. Clearing it
+    // here replaces the entire card with a loading state on registry refreshes.
+    // setConfig already clears it when the configured source/device changes.
+    if (!this.resolution?.entities || this.resolution.disabled.length > 0) {
+      this.resolvedEntities = undefined;
+      this.resolution = undefined;
+    }
     this.resolutionError = undefined;
     this.lastRenderKey = undefined;
     this.render();

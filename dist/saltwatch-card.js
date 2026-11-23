@@ -879,7 +879,7 @@ class Be extends HTMLElement {
     if (i === this.resolutionKey && (this.resolution || this.resolutionError)) return;
     this.resolutionKey = i;
     const r = ++this.resolutionRequest;
-    this.resolvedEntities = void 0, this.resolution = void 0, this.resolutionError = void 0, this.lastRenderKey = void 0, this.render();
+    (!this.resolution?.entities || this.resolution.disabled.length > 0) && (this.resolvedEntities = void 0, this.resolution = void 0), this.resolutionError = void 0, this.lastRenderKey = void 0, this.render();
     try {
       const o = await Ve(this.hassData, e);
       if (r !== this.resolutionRequest || !this.config || k(this.config) !== "device" || this.config.device_id?.trim() !== e) return;
@@ -1904,7 +1904,7 @@ class Ye extends HTMLElement {
     `;
   }
 }
-const Xe = "0.6.7", Je = {
+const Xe = "0.6.8", Je = {
   version: Xe
 }, J = "saltwatch-card", _e = Je.version;
 customElements.get(J) || customElements.define(J, Be);

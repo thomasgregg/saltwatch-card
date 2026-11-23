@@ -529,6 +529,46 @@ describe("SaltWatchCard", () => {
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
+  it("keeps the complete card mounted while a same-device registry refresh is pending", async () => {
+    const hass = makeHass("62");
+    const originalCard = card.shadowRoot!.querySelector("ha-card");
+    const originalTank = card.shadowRoot!.querySelector(".tank");
+    let completeRefresh!: () => void;
+    const pending = new Promise<void>((resolve) => { completeRefresh = resolve; });
+    card.hass = {
+      ...hass,
+      entities: { ...hass.entities, "sensor.saltwatch_uptime": {
+        entity_id: "sensor.saltwatch_uptime", device_id: DEVICE_ID, platform: "esphome",
+      } },
+      callWS: async <T>(message: Record<string, unknown>): Promise<T> => {
+        await pending;
+        return hass.callWS<T>(message);
+      },
+    };
+    try {
+      expect(card.shadowRoot!.querySelector("ha-card")).toBe(originalCard);
+      expect(card.shadowRoot!.querySelector(".tank")).toBe(originalTank);
+      expect(card.shadowRoot!.querySelector(".loading")).toBeNull();
+      pushStates(makeHass("63"));
+      expect(card.shadowRoot!.querySelector(".level")?.textContent).toBe("63%");
+    } finally {
+      completeRefresh();
+    }
+    await vi.waitFor(() => expect(card.shadowRoot!.querySelector(".level")?.textContent).toBe("63%"));
+    expect(card.shadowRoot!.querySelector("ha-card")).toBe(originalCard);
+    expect(card.shadowRoot!.querySelector(".tank")).toBe(originalTank);
+  });
+
+  it("still reports invalid mappings when a background registry refresh completes", async () => {
+    const hass = makeHass();
+    card.hass = { ...hass, entities: { ...hass.entities, "sensor.saltwatch_extra": {
+      entity_id: "sensor.saltwatch_extra", device_id: DEVICE_ID, platform: "esphome",
+    } }, callWS: async <T>(): Promise<T> => ({}) as T };
+    expect(card.shadowRoot!.querySelector(".card-shell")).not.toBeNull();
+    await vi.waitFor(() => expect(card.shadowRoot!.querySelector(".configuration-error")).not.toBeNull());
+    expect(card.shadowRoot!.querySelector(".card-shell")).toBeNull();
+  });
+
   it("preserves the rendered card and its SVG filters across Home Assistant state updates", () => {
     const hass = makeHass();
     const initialShell = card.shadowRoot?.querySelector(".card-shell");

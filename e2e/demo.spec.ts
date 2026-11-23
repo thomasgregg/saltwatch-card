@@ -994,3 +994,37 @@ test("updates decimal separators from HA number format without changing language
     await expect(card.locator("ha-card")).toHaveAttribute("aria-label", new RegExp(expected!.replace(".", "\\.")));
   }
 });
+
+test("keeps the whole card visible during asynchronous same-device registry refreshes", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+  const result = await card.evaluate(async (element) => {
+    const instance = element as HTMLElement & {
+      hass: { entities: Record<string, unknown>; callWS: (message: Record<string, unknown>) => Promise<unknown> };
+    };
+    const root = element.shadowRoot!;
+    const surface = root.querySelector("ha-card");
+    const tank = root.querySelector(".tank");
+    const hass = instance.hass;
+    let finish!: () => void;
+    const pending = new Promise<void>((resolve) => { finish = resolve; });
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver((changes) => records.push(...changes));
+    observer.observe(root, { childList: true, subtree: true });
+    const deviceId = (Object.values(hass.entities) as Array<{ device_id?: string }>).find((entry) => entry.device_id)?.device_id;
+    instance.hass = { ...hass, entities: { ...hass.entities,
+      "sensor.saltwatch_extra_diagnostic": { entity_id: "sensor.saltwatch_extra_diagnostic", device_id: deviceId, platform: "esphome" },
+    }, callWS: async (message) => { await pending; return hass.callWS(message); } };
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    const visibleWhilePending = root.querySelector("ha-card") === surface && root.querySelector(".tank") === tank && !root.querySelector(".loading");
+    finish();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+    return {
+      visibleWhilePending: Boolean(visibleWhilePending),
+      preservedAfterRefresh: root.querySelector("ha-card") === surface && root.querySelector(".tank") === tank,
+      removedSurface: records.some((record) => [...record.removedNodes].some((node) => node === surface || node === tank)),
+    };
+  });
+  expect(result).toEqual({ visibleWhilePending: true, preservedAfterRefresh: true, removedSurface: false });
+});

@@ -160,7 +160,7 @@ versions.
 The `/config/www/` directory is exposed under the `/local/` URL path. When
 updating a manual install, replace the JavaScript file and update the existing
 resource URL with a version query that matches the release you installed
-(e.g., `?v=0.6.7`) so clients load the new build.
+(e.g., `?v=0.6.8`) so clients load the new build.
 
 <!-- ha-marketplace:exclude-end -->
 
