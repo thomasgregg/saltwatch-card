@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatPercentage,
+  formatNumber,
   getTranslations,
   resolveLanguage,
   resolveLocale,
@@ -38,15 +39,41 @@ describe("localization", () => {
     expect(translations.showLowMarker).toBe("Vis minimumsmærke under værdierne");
   });
 
+  it.each([
+    ["comma_decimal", "de", "1,234.50", "25.40"],
+    ["decimal_comma", "en", "1.234,50", "25,40"],
+    ["space_comma", "en", "1\u202f234,50", "25,40"],
+    ["quote_decimal", "de", new Intl.NumberFormat("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(1234.5), "25.40"],
+    ["none", "de", "1234.50", "25.40"],
+    ["language", "de-DE", "1.234,50", "25,40"],
+    [undefined, "en-GB", "1,234.50", "25.40"],
+  ])("honors HA number format %s independently of UI language %s", (number_format, language, grouped, percentage) => {
+    const locale = { language: language!, number_format };
+    expect(formatNumber(1234.5, locale, 2)).toBe(grouped);
+    expect(formatPercentage(25.4, locale, 2).replace(/\s/g, "")).toBe(`${percentage}%`);
+    expect(formatNumber(1234.5, locale, 0)).not.toMatch(/[.,]50$/);
+  });
+
+  it("uses the runtime locale for System even when the HA language differs", () => {
+    const expected = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(1234.5);
+    expect(formatNumber(1234.5, { language: "de", number_format: "system" }, 2)).toBe(expected);
+    expect(formatNumber(1234.5, { language: "fr", number_format: "system" }, 2)).toBe(expected);
+  });
+
+  it("keeps HA percent-unit spacing tied to UI language", () => {
+    expect(formatPercentage(25.4, { language: "de", number_format: "comma_decimal" }, 2)).toBe("25.40\u00a0%");
+    expect(formatPercentage(25.4, { language: "en", number_format: "decimal_comma" }, 2)).toBe("25,40%");
+  });
+
   it("formats fixed precision with localized separators and trailing zeroes", () => {
-    expect(formatPercentage(25.4, "en-GB", 2)).toBe("25.40%");
-    expect(formatPercentage(25.4, "de-DE", 2).replace(/\s/g, "")).toBe("25,40%");
-    expect(formatPercentage(25.4, "da-DK", 1).replace(/\s/g, "")).toBe("25,4%");
+    expect(formatPercentage(25.4, { language: "en-GB" }, 2)).toBe("25.40%");
+    expect(formatPercentage(25.4, { language: "de-DE" }, 2).replace(/\s/g, "")).toBe("25,40%");
+    expect(formatPercentage(25.4, { language: "da-DK" }, 1).replace(/\s/g, "")).toBe("25,4%");
   });
 
   it("formats percentages using the full Home Assistant language tag", () => {
-    expect(formatPercentage(62, "en-GB")).toBe("62%");
-    expect(formatPercentage(62, "da-DK").replace(/\s/g, "")).toBe("62%");
-    expect(formatPercentage(62, "de-DE").replace(/\s/g, "")).toBe("62%");
+    expect(formatPercentage(62, { language: "en-GB" })).toBe("62%");
+    expect(formatPercentage(62, { language: "da-DK" }).replace(/\s/g, "")).toBe("62%");
+    expect(formatPercentage(62, { language: "de-DE" }).replace(/\s/g, "")).toBe("62%");
   });
 });

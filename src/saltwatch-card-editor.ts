@@ -1,3 +1,4 @@
+import type { NumberLocale } from "./localize";
 import { formatPercentage, getTranslations, resolveLanguage, resolveLocale } from "./localize";
 import {
   hasChromiumLink,
@@ -31,6 +32,7 @@ export class SaltWatchCardEditor extends HTMLElement {
   private _hass?: HomeAssistant;
   private _config?: EditorConfig;
   private internationalization?: HomeAssistantInternationalization;
+  private formattingLocale?: NumberLocale;
   private unsubscribeInternationalization?: () => void;
   private languageObserver?: MutationObserver;
   private actionsOpen = false;
@@ -73,10 +75,11 @@ export class SaltWatchCardEditor extends HTMLElement {
       event.context = "hassInternationalization";
       event.subscribe = true;
       event.callback = (value, unsubscribe) => {
-        const previousLanguage = this.activeLanguage();
+        const previousLocale = JSON.stringify(this.activeLocale());
         this.internationalization = value;
+        this.formattingLocale = value.locale;
         this.unsubscribeInternationalization = unsubscribe;
-        if (this.activeLanguage() !== previousLanguage) this.render();
+        if (JSON.stringify(this.activeLocale()) !== previousLocale) this.render();
       };
       this.dispatchEvent(event);
     }
@@ -92,14 +95,18 @@ export class SaltWatchCardEditor extends HTMLElement {
   public set hass(hass: HomeAssistant) {
     const previousRenderKey = this.hassRenderKey();
     const registryChanged = this.registryReference !== hass.entities;
+    const previousLocale = JSON.stringify(this.activeLocale());
     this._hass = hass;
+    if (hass.locale || hass.language) {
+      this.formattingLocale = hass.locale ?? { language: resolveLanguage(hass.language) };
+    }
     this.registryReference = hass.entities;
     if (registryChanged) {
       void this.loadSaltWatchDevices();
       return;
     }
     this.refreshResolutions();
-    const shouldRender = !this.shadowRoot?.querySelector(".editor") || previousRenderKey !== this.hassRenderKey();
+    const shouldRender = previousLocale !== JSON.stringify(this.activeLocale()) || !this.shadowRoot?.querySelector(".editor") || previousRenderKey !== this.hassRenderKey();
     if (shouldRender) {
       this.render();
     } else {
@@ -188,6 +195,7 @@ export class SaltWatchCardEditor extends HTMLElement {
       ];
       return [
         source,
+        JSON.stringify(this.activeLocale()),
         openWithAvailable,
         ...configuredIds.map((entityId) => `${entityId ?? ""}:${Boolean(entityId && this._hass?.states[entityId])}`),
       ].join("|");
@@ -195,7 +203,7 @@ export class SaltWatchCardEditor extends HTMLElement {
     const resolution = this._config.device_id
       ? this.deviceResolutions.get(this._config.device_id)
       : undefined;
-    return `${source}|${openWithAvailable}|${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
+    return `${JSON.stringify(this.activeLocale())}|${source}|${openWithAvailable}|${this._config.device_id ?? ""}|${this.registryLoading}|${this.registryError ?? ""}|${resolution?.missing.join(",") ?? ""}|${resolution?.duplicates.join(",") ?? ""}|${resolution?.disabled.join(",") ?? ""}`;
   }
 
   private updateFormHass(): void {
@@ -214,13 +222,12 @@ export class SaltWatchCardEditor extends HTMLElement {
     if (rerender) this.render();
   }
 
+  private activeLocale(): NumberLocale {
+    return this.formattingLocale ?? { language: resolveLanguage() };
+  }
+
   private activeLanguage(): string {
-    return resolveLanguage(
-      this.internationalization?.locale.language ??
-      this.internationalization?.language ??
-      this._hass?.locale?.language ??
-      this._hass?.language,
-    );
+    return resolveLanguage(this.activeLocale().language);
   }
 
   private render(): void {
@@ -427,7 +434,7 @@ export class SaltWatchCardEditor extends HTMLElement {
       required: true,
       selector: { select: { mode: "dropdown", options: [0, 1, 2].map((decimals) => ({
         value: String(decimals),
-        label: `${decimals} — ${formatPercentage(25.4, this.activeLanguage(), decimals)}`,
+        label: `${decimals} — ${formatPercentage(25.4, this.activeLocale(), decimals)}`,
       })) } },
     }], { decimals: String(config.decimals ?? 0) }, { decimals: copy.decimalPlaces }, {
       helpers: { decimals: copy.decimalPlacesHelp },

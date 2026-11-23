@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SaltWatchCard } from "./saltwatch-card";
 import { SaltWatchCardEditor } from "./saltwatch-card-editor";
 import { resolveSaltWatchDevice } from "./saltwatch-device";
-import type { EntityRegistryEntry, HassEntity, HomeAssistant, SaltWatchCardConfig } from "./types";
+import type { EntityRegistryEntry, HassEntity, HomeAssistant, HomeAssistantInternationalization, SaltWatchCardConfig } from "./types";
 
 const DEVICE_ID = "saltwatch-device";
 const CHROMIUM_LINK_PANELS: NonNullable<HomeAssistant["panels"]> = {
@@ -88,6 +88,7 @@ describe("SaltWatchCard", () => {
   let host: HTMLElement;
   let pushStates: (hass: HomeAssistant) => void;
   let pushLanguage: (language: string) => void;
+  let pushLocale: (locale: HomeAssistantInternationalization["locale"]) => void;
   let unsubscribe: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -99,7 +100,7 @@ describe("SaltWatchCard", () => {
     unsubscribe = vi.fn();
     let callback: ((states: HomeAssistant["states"], unsubscribe: () => void) => void) | undefined;
     const languageSubscribers = new Set<(
-      internationalization: { language: string; locale: { language: string } },
+      internationalization: HomeAssistantInternationalization,
       unsubscribe: () => void,
     ) => void>();
     const initialHass = makeHass();
@@ -115,7 +116,7 @@ describe("SaltWatchCard", () => {
       }
       if (request.context === "hassInternationalization") {
         const subscriber = request.callback as unknown as (
-          internationalization: { language: string; locale: { language: string } },
+          internationalization: HomeAssistantInternationalization,
           unsubscribe: () => void,
         ) => void;
         languageSubscribers.add(subscriber);
@@ -125,17 +126,68 @@ describe("SaltWatchCard", () => {
       }
     });
     pushStates = (hass) => callback?.(hass.states, unsubscribe);
-    pushLanguage = (language) => languageSubscribers.forEach((subscriber) => {
-      subscriber({ language, locale: { language } }, () => {
+    pushLocale = (locale) => languageSubscribers.forEach((subscriber) => {
+      subscriber({ language: locale.language, locale }, () => {
         languageSubscribers.delete(subscriber);
       });
     });
+    pushLanguage = (language) => pushLocale({ language });
     document.body.replaceChildren(host);
     card = document.createElement("saltwatch-card-test") as SaltWatchCard;
     card.setConfig(config);
     card.hass = initialHass;
     host.append(card);
     await vi.waitFor(() => expect(card.shadowRoot?.querySelector(".card-shell")).not.toBeNull());
+  });
+
+  it("refreshes all numeric values when only the HA context number format changes", () => {
+    pushStates(makeHass("25.4"));
+    card.setConfig({ ...config, decimals: 2 });
+    pushLocale({ language: "en", number_format: "decimal_comma" });
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("25,40%");
+    expect(card.shadowRoot?.querySelector("ha-card")?.getAttribute("aria-label")).toContain("25,40%");
+    const states = makeHass("25.4");
+    states.states["sensor.saltwatch_estimated_days_until_low_salt"]!.state = "1234";
+    pushStates(states);
+    card.setConfig({ ...config, decimals: 2, metric_mode: "both" });
+    expect(card.shadowRoot?.querySelector(".level")?.textContent).toBe("25%");
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).toBe("1.234");
+    expect(card.shadowRoot?.querySelector(".threshold-summary strong")?.textContent).toBe("20%");
+    expect(card.shadowRoot?.querySelector(".tank")?.getAttribute("aria-label")).toContain("25%");
+    pushLocale({ language: "en", number_format: "comma_decimal" });
+    expect(card.shadowRoot?.querySelector(".forecast-value")?.textContent).toBe("1,234");
+  });
+
+  it("honors hass.locale updates without a context provider or sensor change", () => {
+    card.remove();
+    const standalone = document.createElement("saltwatch-card-test") as SaltWatchCard;
+    const hass = makeCustomHass("25.4");
+    standalone.setConfig({ type: "custom:saltwatch-card", source: "entities", level_entity: "sensor.greenline_salt_level", decimals: 2 });
+    standalone.hass = { ...hass, locale: { language: "en", number_format: "decimal_comma" } };
+    expect(standalone.shadowRoot?.querySelector(".level")?.textContent).toBe("25,40%");
+    standalone.hass = { ...hass, locale: { language: "en", number_format: "comma_decimal" } };
+    expect(standalone.shadowRoot?.querySelector(".level")?.textContent).toBe("25.40%");
+  });
+
+  it("refreshes native editor examples on HA locale and context changes", () => {
+    if (!customElements.get("saltwatch-card-editor-test")) customElements.define("saltwatch-card-editor-test", SaltWatchCardEditor);
+    const editor = document.createElement("saltwatch-card-editor-test") as SaltWatchCardEditor;
+    const hass = makeCustomHass();
+    editor.hass = { ...hass, locale: { language: "en", number_format: "decimal_comma" } };
+    editor.setConfig({ source: "entities", level_entity: "sensor.greenline_salt_level" });
+    const example = () => {
+      const form = editor.shadowRoot!.querySelector("#precision-form ha-form") as HTMLElement & { schema: Array<{ selector: { select: { options: Array<{ label: string }> } } }> };
+      return form.schema[0]!.selector.select.options[2]!.label;
+    };
+    expect(example()).toBe("2 — 25,40%");
+    editor.hass = { ...hass, locale: { language: "en", number_format: "comma_decimal" } };
+    expect(example()).toBe("2 — 25.40%");
+    host.append(editor);
+    pushLocale({ language: "en", number_format: "decimal_comma" });
+    expect(example()).toBe("2 — 25,40%");
+    pushLocale({ language: "en", number_format: "quote_decimal" });
+    expect(example()).toBe("2 — 25.40%");
+    expect(editor.shadowRoot?.textContent).toContain("Values");
   });
 
   it("applies fixed decimal precision only to the single salt-level metric", () => {

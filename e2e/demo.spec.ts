@@ -974,3 +974,23 @@ test("keeps decimal percentages inside the single-level metric at narrow widths"
     }
   }
 });
+
+test("updates decimal separators from HA number format without changing language or sensor state", async ({ page }) => {
+  const card = page.locator("saltwatch-card");
+  await card.evaluate((element) => {
+    const instance = element as HTMLElement & { setConfig: (config: Record<string, unknown>) => void };
+    instance.setConfig({ type: "custom:saltwatch-card", device_id: "saltwatch-demo-device", display_mode: "details", metric_mode: "level", decimals: 2 });
+  });
+  for (const [numberFormat, expected] of [
+    ["decimal_comma", "62,00%"], ["comma_decimal", "62.00%"],
+    ["space_comma", "62,00%"], ["quote_decimal", "62.00%"], ["none", "62.00%"],
+  ]) {
+    await card.evaluate((element, numberFormat) => {
+      const instance = element as HTMLElement & { hass: { locale?: Record<string, unknown> } };
+      instance.hass = { ...instance.hass, locale: { language: "en", number_format: numberFormat } };
+    }, numberFormat);
+    await expect(card.locator(".level")).toHaveText(expected!);
+    await expect(card.locator(".level-label")).toHaveText("Estimated salt level");
+    await expect(card.locator("ha-card")).toHaveAttribute("aria-label", new RegExp(expected!.replace(".", "\\.")));
+  }
+});

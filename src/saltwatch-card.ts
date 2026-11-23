@@ -1,6 +1,8 @@
+import type { NumberLocale } from "./localize";
 import saltTextureUrl from "../assets/salt-tablets.webp?inline";
 import {
   formatPercentage,
+  formatNumber,
   localize,
   resolveLanguage,
   resolveLocale,
@@ -110,10 +112,6 @@ function validatedDecimals(value: unknown, locale = resolveLocale()): 0 | 1 | 2 
   return value;
 }
 
-function formatForecastDays(value: number, language: string): string {
-  return new Intl.NumberFormat(language, { maximumFractionDigits: 0 }).format(value);
-}
-
 function forecastDetailsLabel(state: string | undefined, locale: SupportedLocale): string {
   const value = state?.trim() ?? "";
   const normalized = value.toLowerCase();
@@ -155,6 +153,7 @@ export class SaltWatchCard extends HTMLElement {
   private lastThreshold?: number;
   private unsubscribeStates?: Unsubscribe;
   private internationalization?: HomeAssistantInternationalization;
+  private formattingLocale?: NumberLocale;
   private unsubscribeInternationalization?: Unsubscribe;
   private lastRenderKey?: string;
   private holdTimer?: ReturnType<typeof setTimeout>;
@@ -206,10 +205,11 @@ export class SaltWatchCard extends HTMLElement {
       event.context = "hassInternationalization";
       event.subscribe = true;
       event.callback = (internationalization, unsubscribe) => {
-        const previousLanguage = this.activeLanguage();
+        const previousLocale = JSON.stringify(this.activeLocale());
         this.internationalization = internationalization;
+        this.formattingLocale = internationalization.locale;
         this.unsubscribeInternationalization = unsubscribe;
-        if (this.activeLanguage() !== previousLanguage) {
+        if (JSON.stringify(this.activeLocale()) !== previousLocale) {
           this.lastRenderKey = undefined;
           this.render();
         }
@@ -225,7 +225,12 @@ export class SaltWatchCard extends HTMLElement {
 
   public set hass(hass: HomeAssistant) {
     const registryChanged = this.registryReference !== hass.entities;
+    const previousLocale = JSON.stringify(this.activeLocale());
     this.hassData = hass;
+    if (hass.locale || hass.language) {
+      this.formattingLocale = hass.locale ?? { language: resolveLanguage(hass.language) };
+    }
+    if (JSON.stringify(this.activeLocale()) !== previousLocale) this.lastRenderKey = undefined;
     this.registryReference = hass.entities;
     this.updateStates(hass.states);
     if (registryChanged && this.config && saltWatchDataSource(this.config) === "device") {
@@ -561,11 +566,12 @@ export class SaltWatchCard extends HTMLElement {
     this.render();
   }
 
+  private activeLocale(): NumberLocale {
+    return this.formattingLocale ?? { language: resolveLanguage() };
+  }
+
   private activeLanguage(): string {
-    return resolveLanguage(
-      this.internationalization?.locale.language ??
-      this.internationalization?.language,
-    );
+    return resolveLanguage(this.activeLocale().language);
   }
 
   private webInterfaceUrl(): string | undefined {
@@ -680,7 +686,7 @@ export class SaltWatchCard extends HTMLElement {
         ? `href="${CHROMIUM_LINK_PATH}${escapeHtml(encodeURIComponent(webInterfaceUrl))}" aria-label="${webLinkLabel}"`
         : `href="${escapeHtml(webInterfaceUrl)}" target="_blank" rel="noopener" aria-label="${webLinkLabel}"`
       : "";
-    const displayLevel = level === undefined ? "—" : formatPercentage(level, language, metricMode === "level" ? this.config.decimals : 0);
+    const displayLevel = level === undefined ? "—" : formatPercentage(level, this.activeLocale(), metricMode === "level" ? this.config.decimals : 0);
     const accessibleLevel = level === undefined
       ? localize("noCurrentReading", locale)
       : displayLevel;
@@ -690,7 +696,7 @@ export class SaltWatchCard extends HTMLElement {
       : Math.round(rawForecast);
     const forecastDisplay = forecastDays === undefined
       ? "—"
-      : formatForecastDays(forecastDays, language);
+      : formatNumber(forecastDays, this.activeLocale());
     const forecastState = entity(this.states, entities.forecastStatus)?.state;
     const normalizedForecastState = forecastState?.trim().toLowerCase() ?? "";
     const forecastDetailsState = entity(this.states, entities.forecastDetails)?.state;
@@ -766,7 +772,7 @@ export class SaltWatchCard extends HTMLElement {
         ${interactive && webLinkAttributes ? `<button class="card-action" type="button" aria-label="${cardLabel}"></button>` : ""}
         <div class="card-shell mode-${displayMode} order-${this.config.section_order ?? "tank-first"}">
           ${showTank ? `<section class="tank-panel" aria-label="${escapeHtml(localize("tankLevelVisualization", locale))}">
-            ${this.tankSvg(level, saltPath, surfacePath, saltY, threshold, status.tone, locale, language, webLinkAttributes)}
+            ${this.tankSvg(level, saltPath, surfacePath, saltY, threshold, status.tone, locale, webLinkAttributes)}
           </section>` : ""}
           ${showDetails ? `<section class="content-panel${showLowMarkerSummary ? "" : " without-threshold-summary"}">
             ${this.config.show_status || webLinkAttributes ? `<header${webLinkAttributes ? ' class="web-interface-header"' : ""}>
@@ -783,10 +789,10 @@ export class SaltWatchCard extends HTMLElement {
                   ? `<div class="level-label">${escapeHtml(statusLabel)}</div>`
                   : ""}
             </div>
-            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, language) }))}">
+            ${showLowMarkerSummary ? `<div class="threshold-summary" aria-label="${escapeHtml(localize("lowMarkerAt", locale, { value: formatPercentage(threshold, this.activeLocale()) }))}">
               <span class="marker-line"></span>
               <span>${escapeHtml(localize("lowMarker", locale))}</span>
-              <strong>${formatPercentage(threshold, language)}</strong>
+              <strong>${formatPercentage(threshold, this.activeLocale())}</strong>
             </div>` : ""}
           </section>` : ""}
         </div>
@@ -1152,7 +1158,6 @@ export class SaltWatchCard extends HTMLElement {
     threshold: number | undefined,
     tone: string,
     locale: ReturnType<typeof resolveLocale>,
-    language: string,
     webLinkAttributes: string,
   ): string {
     const rulerMarks = Array.from({ length: 21 }, (_, index) => {
@@ -1162,7 +1167,7 @@ export class SaltWatchCard extends HTMLElement {
       const medium = !major && value % 10 === 0;
       const start = major ? 60 : medium ? 67 : 71;
       const label = major
-        ? `<text x="52" y="${y + 5}" text-anchor="end">${value}%</text>`
+        ? `<text x="52" y="${y + 5}" text-anchor="end">${escapeHtml(formatPercentage(value, this.activeLocale()))}</text>`
         : "";
       return `${label}<path class="${major ? "major" : medium ? "medium" : "minor"}" d="M${start} ${y}H78"/>`;
     }).join("");
@@ -1177,7 +1182,7 @@ export class SaltWatchCard extends HTMLElement {
     const lowBadgeY = (labelY - 15).toFixed(1);
     const tankLabel = unavailable
       ? localize("noCurrentReading", locale)
-      : localize("estimatedLevel", locale) + `: ${formatPercentage(level, language)}`;
+      : localize("estimatedLevel", locale) + `: ${formatPercentage(level, this.activeLocale())}`;
 
     return `
       <svg class="tank" viewBox="-64 30 548 534" role="${webLinkAttributes ? "group" : "img"}" aria-label="${escapeHtml(tankLabel)}">

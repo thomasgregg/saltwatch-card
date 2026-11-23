@@ -41,10 +41,35 @@ export function localize(
   );
 }
 
-export function formatPercentage(value: number, language = resolveLanguage(), decimals = 0): string {
-  return new Intl.NumberFormat(resolveLanguage(language), {
-    style: "percent",
+/** HA frontend number-format preferences, independent of translation language. */
+export interface NumberLocale {
+  language: string;
+  number_format?: string;
+}
+
+// Mirrors HA's common/number/format_number.ts numberFormatToLocale.
+function numberFormatLocale(locale: NumberLocale): string | string[] | undefined {
+  switch (locale.number_format) {
+    case "comma_decimal": return ["en-US", "en"];
+    case "decimal_comma": return ["de", "es", "it"];
+    case "space_comma": return ["fr", "sv", "cs"];
+    case "quote_decimal": return ["de-CH"];
+    case "none": return "en-US";
+    case "system": return undefined;
+    default: return resolveLanguage(locale.language);
+  }
+}
+
+export function formatNumber(value: number, locale: NumberLocale, decimals = 0): string {
+  return new Intl.NumberFormat(numberFormatLocale(locale), {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value / 100);
+    ...(locale.number_format === "none" ? { useGrouping: false } : {}),
+  }).format(value);
+}
+
+export function formatPercentage(value: number, locale: NumberLocale, decimals = 0): string {
+  // HA's blank_before_percent.ts bases unit spacing on language, not number format.
+  const space = ["cs", "de", "fi", "fr", "sk", "sv"].includes(locale.language) ? "\u00a0" : "";
+  return `${formatNumber(value, locale, decimals)}${space}%`;
 }
